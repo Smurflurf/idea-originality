@@ -1,4 +1,4 @@
-import vectorizer
+import client_vectorizer as vectorizer
 import database_manager as db
 
 def main_test():
