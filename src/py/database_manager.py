@@ -19,7 +19,7 @@ def ensure_collection_exists():
         print(f"Erstelle Collection '{COLLECTION_NAME}'...")
         client.create_collection(
             collection_name=COLLECTION_NAME,
-            vectors_config=models.VectorParams(size=384, distance=models.Distance.COSINE)
+            vectors_config=models.VectorParams(size=768, distance=models.Distance.COSINE)
         )
         print("Collection erstellt.")
 
@@ -37,7 +37,6 @@ def upsert_points(vectors: list[list[float]], payloads: list[dict]):
         first_8_bytes = full_hash_bytes[:8]
         deterministic_id_64bit = int.from_bytes(first_8_bytes, 'big')
 
-        hash = "1"
         points_to_upsert.append(
             models.PointStruct(
                 id=deterministic_id_64bit,

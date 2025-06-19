@@ -67,7 +67,7 @@ def process_arxiv_dataset(filepath: str, batch_size: int = 128):
 
                 # Der volle batch wird verarbeitet
                 if len(texts_to_embed) >= batch_size:
-                    print(f"Verarbeite Batch #{i // batch_size + 1}...")
+                    print(f"Verarbeite Batch #{i // batch_size + 1} von {21567} ({((i // batch_size + 1) // 21.567) * 100}%)")
                     
                     # Vektoren erstellen
                     vectors = vectorizer.encode_batch(texts_to_embed)
