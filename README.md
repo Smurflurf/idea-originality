@@ -1,8 +1,8 @@
 # idea originality analyzer
-A tool to analyze the originality of an idea by mapping it into a high-dimensional vector space and comparing it against a large corpus of existing knowledge. This project utilizes the [all-MiniLM-L6-v2](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2) sentence-transformer model.
+A tool to analyze the originality of an idea by mapping it into a high-dimensional vector space and comparing it against a large corpus of existing knowledge. This project utilizes the [e5-base-4k](https://huggingface.co/dwzhu/e5-base-4k) sentence-transformer model.
 
 # Core Concept: The Vector Database
-This project is built upon a self-hosted vector database that contains entries from several datasets. Those entries are embedded into a 384-dimensional vector space using the `all-MiniLM-L6-v2` transformer model.
+This project is built upon a self-hosted vector database that contains entries from several datasets. Those entries are embedded into a 384-dimensional vector space using the `e5-base-4k` transformer model.
 For the database technology, this project uses [Qdrant](https://github.com/qdrant/qdrant), a high-performance, open-source vector database, providing a powerful and scalable alternative to commercial services.
 A suite of Python scripts is used to populate and manage the database.
 Each entry is stored as a `vector : json` pair, where the payload is a JSON object containing two main keys:
