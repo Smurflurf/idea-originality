@@ -33,7 +33,8 @@ def process_arxiv_dataset(filepath: str, batch_size: int = 128):
     und fügt ihn in Batches in die Qdrant-Datenbank ein.
     """
     print(f"Starte Verarbeitung des arXiv-Datensatzes: {filepath}")
-    
+    print("starte von Batch: ")
+    startFromBatch = int(input())
     db.ensure_collection_exists()
 
     texts_to_embed = []
@@ -42,6 +43,8 @@ def process_arxiv_dataset(filepath: str, batch_size: int = 128):
     # Die Datei wird Zeile für Zeile gelesen
     with open(filepath, 'r', encoding='utf-8') as f:
         for i, line in enumerate(f):
+            if(i < startFromBatch):
+                continue
             try:
                 # Jede Zeile ist ein separates JSON-Objekt
                 paper = json.loads(line)

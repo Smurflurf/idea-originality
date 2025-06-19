@@ -1,5 +1,4 @@
 from sentence_transformers import SentenceTransformer, models
-import time
 
 MODEL_NAME = "dwzhu/e5-base-4k"
 
