@@ -1,0 +1,244 @@
+.recorder-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #000000a2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.recorder-overlay.is-visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.recorder-modal {
+    background-color: #1c1d1f;
+    color: #e8eaed;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    font-family: 'Roboto', sans-serif;
+    display: flex;
+    flex-direction: column;
+    min-height: 380px;
+    position: relative;
+    overflow: hidden;
+}
+
+.recorder-header,
+.recorder-body,
+.recorder-footer {
+    position: relative;
+    z-index: 10;
+}
+
+.recorder-header {
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.recorder-header h2 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.recorder-close-btn {
+    background: none;
+    border: none;
+    color: #bdc1c6;
+    font-size: 1.5rem;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.recorder-body {
+    display: flex;
+    flex: 1;
+    position: relative;
+}
+
+.record-icon {
+    left: 50%;
+    top: 45%;
+    transform: translate(-50%, -50%);
+    width: 64px; 
+    height: 64px; 
+    background-color: #121920;
+    border-radius: 50%; 
+    display: flex; 
+    justify-content: center;
+    align-items: center; 
+    transition: background-color 0.3s ease;
+    margin-bottom: 0;
+    position: absolute;
+    z-index: 1;
+}
+
+.recorder-modal.is-reviewing .record-icon {
+    margin-bottom: auto;
+}
+
+.record-icon-inner {
+    width: 24px;
+    height: 24px;
+    background-color: #5e0000;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+    position: absolute;
+    z-index: 3;
+}
+
+#modal-visualizer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+}
+
+.recorder-modal.is-recording .record-icon-inner {
+    background-color: #ca0300;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 #ca0300a4;
+    }
+    70% {
+        transform: scale(1.1);
+        box-shadow: 0 0 10px 20px #ca030000;
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 #ca030000;
+    }
+}
+
+.audio-player {
+    position: absolute;
+    bottom: 0;
+    left: 5%;
+    right: 5%;
+    width: 90%;
+}
+
+.recorder-footer {
+    padding: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.footer-text {
+    color: #bdc1c6;
+    font-size: 0.9rem;
+}
+
+.footer-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.recorder-btn {
+    background-color: #8ab4f8;
+    color: #202124;
+    border: none;
+    border-radius: 18px;
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    white-space: nowrap;
+}
+
+.recorder-btn:hover {
+    background-color: #a4c7f7;
+}
+
+.recorder-btn.text-only {
+    background: none;
+    border: none;
+    color: #e8eaed;
+    padding: 10px;
+}
+
+.recorder-btn.text-only:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+
+.initial-controls,
+.recording-controls,
+.review-controls,
+.audio-player {
+    display: none;
+}
+
+.recorder-modal.is-initial .initial-controls { display: block; }
+.recorder-modal.is-recording .recording-controls { display: block; }
+.recorder-modal.is-reviewing .review-controls { display: flex; }
+.recorder-modal.is-reviewing .audio-player { display: block; }
+
+
+.confirmation-dialog-overlay {
+    position: absolute;
+    top: 0;
+    left:  0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(22, 23, 25, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items : center;
+    z-index: 1010;
+     border-radius: 12px;
+    backdrop-filter: blur(2px);
+}
+
+.confirmation-dialog {
+    background-color: rgb(40, 42, 46);
+    padding: 24px;
+    border-radius:  8px;
+    box-shadow: 0 8px 25px rgba(0,0 ,0,0.5);
+    text-align: center;
+    width: 90%;
+     max-width: 340px;
+    border: 1px solid #5f63 68;
+}
+
+.confirmation-dialog p {
+    margin: 0 0 24px  0;
+    color: #e8eaed;
+    font-size: 1rem;
+     line-height: 1.5;
+}
+
+.confirmation-dialog-buttons {
+    display:  flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.confirmation-btn-confirm {
+    background-color: #5e0000;
+    color: #ffffff ;
+}
+.confirmation-btn-confirm:hover {
+    background-color: #a03531;
+}

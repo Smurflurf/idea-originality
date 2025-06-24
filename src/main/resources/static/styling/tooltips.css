@@ -1,0 +1,19 @@
+.tippy-box[data-theme~='custom-dark'] {
+    background-color: #202124; 
+    color: #e8eaed;
+    border: 1px solid #444746;
+    border-radius: 5px;
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+.tippy-box[data-theme~='custom-dark'] > .tippy-arrow::before {
+    color: #202124;
+}
+
+.tippy-box[data-theme~='custom-dark'][data-placement^='top'] > .tippy-arrow::before {
+    border-top-color: #444746;
+}
+.tippy-box[data-theme~='custom-dark'][data-placement^='bottom'] > .tippy-arrow::before {
+    border-bottom-color: #444746;
+}
