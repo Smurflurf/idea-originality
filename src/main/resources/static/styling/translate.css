@@ -1,0 +1,417 @@
+@import './colours.css';
+
+/* ==========================================================================
+   1. TRANSLATE MODE BASICS (CURSOR & HIGHLIGHTING)
+   ========================================================================== */
+
+/* Versteckt den Standard-Cursor überall, wenn der Modus aktiv ist */
+body.translate-mode-active, body.translate-mode-active * {
+	cursor: none !important;
+}
+
+.custom-translate-cursor {
+	position: fixed;
+	pointer-events: none;
+	z-index: 2147483647;
+	color: var(--color-primary);
+	font-size: 24px;
+	transform: translate(-50%, -50%);
+	text-shadow: 0 0 10px rgba(var(--color-primary-rgb), 0.6);
+	display: none;
+}
+
+/* Cursor auf Touch-Geräten verstecken, dort gibt es keinen Hover */
+@media ( hover : none) and (pointer: coarse) {
+	.custom-translate-cursor {
+		display: none !important;
+	}
+}
+
+/* --- Highlighting Styles --- */
+
+/* Hover-Effekt: Zeigt an, was geklickt werden kann */
+.translate-highlight {
+	background-color: rgba(var(--color-primary-rgb), 0.15) !important;
+	outline: 2px solid var(--color-primary) !important;
+	box-shadow: 0 0 15px rgba(var(--color-primary-rgb), 0.3) !important;
+	border-radius: 4px;
+	cursor: none !important;
+	-webkit-box-decoration-break: clone;
+	box-decoration-break: clone;
+}
+
+/* Loading State: Während der Übersetzung */
+.is-translating {
+	opacity: 0.7;
+	animation: pulse-translate 1s infinite alternate;
+	outline: 2px solid rgba(var(--color-primary-rgb), 0.5) !important;
+	-webkit-box-decoration-break: clone;
+	box-decoration-break: clone;
+	cursor: wait !important;
+}
+
+@keyframes pulse-translate {
+    from { background-color: rgba(var(--color-primary-rgb), 0.05); }
+    to { background-color: rgba(var(--color-primary-rgb), 0.25); }
+}
+
+/* ==========================================================================
+   2. TTS VISUAL FEEDBACK (READING MODE)
+   ========================================================================== */
+
+/* 
+   Helper: Zeigt subtile Rahmen um alle lesbaren Elemente an, 
+   sobald der Modus aktiv ist. Hilft bei der Orientierung.
+   Nutzt box-shadow statt border, um Layout-Shifts zu vermeiden.
+*/
+body.translate-mode-active :is(p, h1, h2, h3, h4, h5, h6, li, blockquote,
+	.expandable-abstract):not(.is-translating):not(.is-reading) {
+	position: relative;
+	border-radius: 4px;
+	transition: box-shadow 0.2s ease;
+	box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.4);
+}
+
+.is-reading {
+	outline: 2px solid var(--color-primary) !important;
+	background-color: rgba(var(--color-primary-rgb), 0.1) !important;
+	border-radius: 4px;
+	-webkit-box-decoration-break: clone;
+	box-decoration-break: clone;
+	/* Die Animation: Pulsiert */
+	animation: pulse-reading 1.5s infinite alternate ease-in-out;
+}
+
+/* 
+   Paused State: Animation einfrieren.
+   Wird via JS gesetzt, wenn der User pausiert.
+*/
+.is-reading.is-paused {
+	animation-play-state: paused;
+	opacity: 0.8;
+    outline-style: dashed !important; /* Gestrichelt bei Pause */
+}
+
+@keyframes pulse-reading {
+    from { box-shadow: 0 0 0 0px rgba(var(--color-primary-rgb), 0.4); }
+    to { box-shadow: 0 0 0 8px rgba(var(--color-primary-rgb), 0); }
+}
+
+/* ==========================================================================
+   3. FLOATING AUDIO PLAYER (Updated Layout with Progress Bar)
+   ========================================================================== */
+#tts-floating-player {
+    position: fixed;
+    bottom: 25px;
+    left: 50%;
+    transform: translateX(-50%) scale(0);
+    opacity: 0;
+    pointer-events: none; 
+    background-color: var(--bg-panel-floating);
+    border: 1px solid var(--border-main);
+    border-radius: 28px; 
+    display: flex;
+    flex-direction: column; 
+    align-items: stretch;   
+    padding: 12px 24px;     
+    gap: 8px;
+    height: auto;
+    min-height: 60px;
+    min-width: 280px;
+    max-width: 90vw; 
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+    z-index: 1900; 
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: 
+        transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15),
+        opacity 0.3s ease;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    cursor: pointer;
+    transform-origin: center bottom;
+}
+
+#tts-floating-player.is-visible {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+#tts-floating-player.is-pressed {
+    transform: translateX(-50%) scale(0.95);
+    transition: transform 0.1s ease-out;
+}
+
+.tts-top-row {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 36px;
+}
+
+.tts-info-wrapper {
+    /* Nimm den gesamten verfügbaren Platz links von den Buttons */
+    flex: 1;
+    display: flex;
+    justify-content: center; /* Zentriert den Text in diesem Bereich */
+    
+    /* WICHTIG: Verhindert, dass Flexbox den Container sprengt bei langem Text */
+    min-width: 0; 
+    margin-right: 12px; /* Abstand zu den Buttons */
+}
+
+.tts-status-text {
+    font-size: 0.95rem;
+    color: var(--color-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%; /* Füllt den Wrapper */
+    font-weight: 600;
+    text-align: center;
+}
+
+.tts-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    
+    /* Buttons behalten ihre Größe und liegen rechts */
+    flex-shrink: 0; 
+}
+
+.tts-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 1.1rem;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.tts-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+.tts-btn.play-pause-btn {
+    background-color: var(--color-primary);
+    color: var(--text-on-accent);
+    width: 42px;
+    height: 42px;
+    font-size: 1.2rem;
+    box-shadow: 0 4px 10px rgba(var(--color-primary-rgb), 0.3);
+}
+
+.tts-btn.play-pause-btn:hover {
+    filter: brightness(1.1);
+    transform: scale(1.05);
+}
+
+.tts-btn.play-pause-btn:disabled {
+    background-color: var(--bg-element);
+    color: var(--text-disabled);
+    box-shadow: none;
+    cursor: wait;
+    transform: none;
+}
+
+/* --- Progress Bar --- */
+.tts-progress-container {
+    position: relative;
+    width: 100%;
+    height: 6px;
+    background-color: var(--bg-progress-track);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 4px;
+    cursor: default;
+}
+
+.tts-progress-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 0%;
+    background-color: var(--color-primary);
+    border-radius: 6px;
+    transition: width 0.3s ease-out;
+    will-change: width;
+}
+
+.tts-progress-bar.is-finished {
+    transition: width 0.1s linear;
+}
+
+
+@keyframes tts-loading-shimmer {
+    0% { background-position: 100% 0; }
+    100% { background-position: -100% 0; }
+}
+
+
+/* Mobile Adjustments */
+@media ( max-width : 768px) {
+	.tts-status-text {
+		max-width: 140px;
+	}
+}
+
+/* ==========================================================================
+   4. MENU & JSON STYLES
+   ========================================================================== */
+
+/* JSON Syntax Highlighting */
+.json-key {
+	color: var(--text-primary);
+	font-weight: bold;
+}
+
+.json-string {
+	color: var(--text-secondary);
+}
+
+.json-number {
+	color: var(--color-star);
+} /* Yellow */
+.json-boolean {
+	color: var(--color-danger-light);
+} /* Red */
+.json-null {
+	color: var(--text-quaternary);
+}
+
+/* Language Search Input */
+.language-search-wrapper {
+	position: relative;
+	padding: 4px 8px;
+	margin-bottom: 4px;
+}
+
+#language-filter-input {
+	width: 100%;
+	background-color: rgba(var(--bg-element-rgb), 0.4);
+	border: 1px solid var(--border-subtle);
+	color: var(--text-primary);
+	border-radius: 6px;
+	padding: 6px 8px 6px 28px;
+	font-size: 0.85rem;
+	outline: none;
+	transition: border-color 0.2s;
+}
+
+#language-filter-input:hover, #language-filter-input:focus {
+	border-color: var(--color-primary);
+	background-color: var(--bg-surface);
+}
+
+#language-filter-input::placeholder {
+	color: var(--text-quaternary);
+}
+
+.language-search-wrapper .search-icon {
+	position: absolute;
+	left: 18px;
+	top: 50%;
+	transform: translateY(-50%);
+	font-size: 0.8rem;
+	color: var(--text-quaternary);
+	pointer-events: none;
+}
+
+/* Scrollable List */
+#translate-language-list {
+	max-height: 160px;
+	overflow-y: auto;
+	overflow-x: hidden;
+	padding-right: 2px;
+	scrollbar-width: thin;
+	scrollbar-color: var(--border-main) transparent;
+}
+
+#translate-language-list::-webkit-scrollbar {
+	width: 4px;
+}
+
+#translate-language-list::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+#translate-language-list::-webkit-scrollbar-thumb {
+	background-color: var(--border-subtle);
+	border-radius: 4px;
+}
+
+/* Active Menu Button State */
+.menu-trigger.is-translate-active {
+	background-color: var(--color-primary);
+	color: var(--text-on-accent);
+	box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.4);
+	transform: scale(1.1);
+}
+
+.menu-trigger.is-translate-active.is-scrolled-away {
+	transform: scale(1.1) !important;
+	opacity: 1 !important;
+	pointer-events: auto !important;
+	visibility: visible !important;
+}
+
+/* Mode Toggle Buttons (Select Text / Read Aloud) */
+.mode-toggle-btn {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	width: 100%;
+	padding: 10px 12px;
+	background: transparent;
+	border: none;
+	color: var(--text-primary);
+	font-size: 0.9rem;
+	cursor: pointer;
+	border-radius: 8px;
+	text-align: left;
+	transition: background-color 0.1s, border-color 0.2s;
+	font-family: inherit;
+	border: 1px solid var(--border-main);
+	border-color: rgba(var(--color-primary-rgb), 0.3);
+	margin-bottom: 6px;
+	font-weight: 600;
+}
+
+.mode-toggle-btn i {
+	color: var(--color-primary);
+	width: 16px;
+	text-align: center;
+	margin-right: 0;
+}
+
+.mode-toggle-btn:hover {
+	border-color: rgba(var(--color-primary-rgb), 1);
+	background-color: rgba(var(--color-primary-rgb), 0.1);
+}
+
+.mode-toggle-btn.is-active-mode {
+	background-color: var(--color-primary);
+	color: var(--text-on-accent);
+	border-color: var(--color-primary);
+}
+
+.mode-toggle-btn.is-active-mode i {
+	color: var(--text-on-accent);
+}
+
+.mode-toggle-btn>span {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}

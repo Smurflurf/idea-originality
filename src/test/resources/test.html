@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Ideenatlas - Testumgebung</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap">
+	<link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css">
+	
+	<!-- Thymeleaf 'th:href' wurde durch Standard 'href' ersetzt -->
+	<link rel="stylesheet" href="/styling/style.css">
+	<link rel="stylesheet" href="/styling/recorder.css">
+	<link rel="stylesheet" href="/styling/queryPopup.css"> 
+    <link rel="stylesheet" href="/styling/tooltips.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+	
+	<script src="https://unpkg.com/@popperjs/core@2"></script>
+    <script src="https://unpkg.com/tippy.js@6"></script>
+</head>
+
+<body>
+	<!-- Thymeleaf 'th:action' wurde entfernt, da der Submit von JS übernommen wird -->
+	<form class="idea-form" method="post">
+		<div class="textarea-wrapper">
+			<textarea name="idea-text" placeholder="Describe your idea, record an audio or upload a pdf... Write 'plain:' as prefix to not use the LLM for solely text."></textarea>
+
+			<button type="submit" 
+				class="run-button" 
+				data-tippy-content="start idea analysis"
+				disabled>
+				Query <i class="fa-solid fa-arrow-turn-right fa-rotate-90"></i>
+			</button>
+
+			<input type="checkbox" id="media-toggle" class="media-toggle-checkbox">
+			<label for="media-toggle" 
+				id="media-toogle-label" 
+				class="media-button-label"
+				data-tippy-content="add additional information">
+				<i class="fa-solid fa-plus"></i>
+			</label>
+			<div class="media-menu">
+				<ul>
+					<li id="upload-button"><i class="fa-solid fa-arrow-up-from-bracket"></i> Upload File</li>
+					<li id="record-button"><i class="fa-solid fa-microphone"></i> Record Audio</li>
+				</ul>
+			</div>
+		</div>
+		<div class="attachments-container-wrapper">
+            <div id="attachments-container" class="attachments-container">
+            </div>
+        </div>
+	</form>
+
+    <!-- Thymeleaf 'th:src' wurde durch Standard 'src' ersetzt -->
+    <script type="module" src="/script/mediaActions.js"></script>
+    <script type="module" src="/script/queryButtonManager.js"></script>
+    <script type="module" src="/script/queryPopup.js"></script>
+    
+    <!-- WICHTIG: handleQuery.js wird durch unser Test-Skript ersetzt -->
+    <!-- <script type="module" src="/script/handleQuery.js"></script> -->
+    
+    <script type="module" src="/script/dragAndDrop.js"></script>
+    <script type="module" src="/script/tooltips.js"></script>
+    
+    <!-- NEU: Unser Test-Harness, das die Logik von handleQuery.js für den Test überschreibt -->
+    <script type="module" src="/test-harness.js"></script>
+</body>
+
+</html>

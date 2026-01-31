@@ -2,97 +2,101 @@
 <html lang="de" xmlns:th="http://www.thymeleaf.org">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Idea Originality Results</title>
-    <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css" />
-    <link rel="stylesheet" th:href="@{/styling/style.css}">
-    <link rel="stylesheet" th:href="@{/styling/results.css}">
-    <link rel="stylesheet" th:href="@{/styling/tooltips.css}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css"
-        integrity="sha384-KiWOvVjnN8qwZuNíjP8LPqMgiT1rV3DPeiQAyUKEuRplZvClMbMguC4mMwgVGZVw" crossorigin="anonymous">
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js"
-        integrity="sha384-hIoBPJpTUs74ddyc4bFZSM1gAUAANpJJvCkh3fOHT5Pa4ob6/0ZgQ4KEhHxTBrs0"
-        crossorigin="anonymous"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/contrib/auto-render.min.js"
-        integrity="sha384-43gBJIJTA_i6yr0pAi8srxRfGyA/bklvEaY_BwJ0mKx//ZNVEhP_RzrlRopTCeVH"
-        crossorigin="anonymous"></script>
-    <script src="https://unpkg.com/@popperjs/core@2"></script>
-    <script src="https://unpkg.com/tippy.js@6"></script>
+<meta charset="UTF-8">
+
+<base th:href="@{/}">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title data-i18n="page_title">Ideenatlas</title>
+<th:block th:replace="~{shared_fragments :: importMapScript}"></th:block>
+
+<!-- STYLESHEETS -->
+<link rel="stylesheet" th:href="@{/vendor/fontawesome/css/all.min.css(v=${appVersion})}">
+<link rel="stylesheet" th:href="@{/dist/main.css(v=${appVersion})}">
+<link rel="stylesheet" th:href="@{/vendor/fonts/roboto.css(v=${appVersion})}">
+<link rel="stylesheet" th:href="@{/dist/menu.css(v=${appVersion})}">
+    
+<!-- 2. Tippy & Popper -->
+<link rel="stylesheet" th:href="@{/vendor/tippy/tippy.css(v=${appVersion})}">
+<script th:src="@{/vendor/tippy/popper.min.js(v=${appVersion})}"></script>
+<script th:src="@{/vendor/tippy/tippy-bundle.umd.min.js(v=${appVersion})}"></script>
+
+<!-- 3. KaTeX -->
+<link rel="stylesheet" th:href="@{/vendor/katex/katex.min.css(v=${appVersion})}">
+<script defer th:src="@{/vendor/katex/katex.min.js(v=${appVersion})}"></script>
+<script defer th:src="@{/vendor/katex/contrib/auto-render.min.js(v=${appVersion})}" 
+        onload="renderMathInElement(document.body);"></script>
+
 </head>
 
-<body>
+<body class="is-scrolling-content is-loading">
+ 	<div th:replace="~{shared_fragments :: sideMenu}"></div>
 
-    <div class="results-container">
-        <h1>Extracted idea:</h1>
-        <p th:text="${query}"></p>
-        <hr style="border-color: #5f6368; margin: 30px 0;">
-        <h2>Similar results:</h2>
+	<div class="results-container" th:if="${isDataAvailable}">
+		<div class="viz-toggle-header">
+			<h3 id="show-own-viz" class="viz-toggle-btn active"
+				data-i18n="tabs.own_idea">Your Idea</h3>
+			<span class="viz-separator">|</span>
+			<h3 id="show-neighbor-viz" class="viz-toggle-btn"
+				data-i18n="tabs.similar_topics">Similar Topics</h3>
+			<span class="viz-separator">|</span>
+			<h3 id="show-serendipity-viz" class="viz-toggle-btn"
+				data-i18n="tabs.serendipity">Serendipity</h3>
+		</div>
 
-        <div th:if="${results == null || results.isEmpty()}">
-            <p>No similar results found in the database.</p>
-        </div>
-
-        <div th:unless="${results == null || results.isEmpty()}">
-            <div th:each="result, iterStat : ${results}" class="result-card">
-                <div class="result-header">
-                    <span class="result-score"
-                        th:text="'Score: ' + ${#numbers.formatDecimal(result.score, 1, 4)}"></span>
-                    <a class="source-link" 
-                        th:href="${result.contentUrl}" 
-                        th:text="${result.payload.get('type')}"
-                        target="_blank"
-                        data-tippy-content="open source paper/post"></a>
-                </div>
-
-                <div class="result-summary">
-                    <h3 th:utext="${result.payload.get('title')}"></h3>
-                    <p class="expandable-abstract" 
-                        th:utext="${result.get('payload').get('abstract')}"></p>
-                </div>
-
-                <button class="toggle-json-btn" data-tippy-content="show/hide raw JSON">
-                    <i class="fa-solid fa-caret-right arrow"></i>
-                </button>
+		<!--  fragments from result_fragments.html -->
+		<div th:replace="~{result_fragments :: ownIdeaView}"></div>
+		<div th:replace="~{result_fragments :: neighborClusterView}"></div>
+		<div th:replace="~{result_fragments :: serendipityView}"></div>
+	</div>
 
 
-                <div class="result-payload" th:id="'payload-' + ${iterStat.index}">
-                    <pre><th:block th:utext="${result.payload.get('prettyJson')}"/></pre>
-                </div>
+	<div class="no-results-message" th:unless="${isDataAvailable}">
+		<i class="fa-solid fa-triangle-exclamation"></i>
+		<h2 data-i18n="errors.job_not_found_title">Error: Job data not
+			found</h2>
+		<p>
+			<span data-i18n="errors.job_not_found_text">The results for this job have expired or could not be found.</span>
+			<br> Please <a
+				href="https://ideenatlas.eu" class="source-link"
+				data-i18n="errors.start_new_query">start a new query</a>.
+		</p>
+	</div>
 
 
-            </div>
-        </div>
-    </div>
 
-    <script>
-        function toggleJsonView(elementId) {
-            const element = document.getElementById(elementId);
-            if (element) {
-                if (element.style.display === 'none') {
-                    element.style.display = 'block';
-                } else {
-                    element.style.display = 'none';
-                }
-            }
+	<!-- INLINE SCRIPTS -->
+	<script id="initial-data-script" type="module" th:inline="javascript">
+		/*<![CDATA[*/
+        const INITIAL_DATA = {
+            JOB_ID: /*[[${jobId}]]*/ null,
+            IS_DATA_AVAILABLE: /*[[${isDataAvailable}]]*/ false,
+			JOB_TITLE: /*[[${jobTitle}]]*/ 'Analysis', 
+            QUERY_VECTOR: /*[[${queryVectorJson}]]*/null,
+            OWN_IDEA_COLOR_MAP: JSON.parse(/*[[${ownColorMapJson}]]*/'{}'),
+            OWN_RESULTS_DATA: JSON.parse(/*[[${ownResultsJson}]]*/'[]'),
+			NEIGHBOR_CLUSTER_COLOR_MAP: JSON.parse(/*[[${neighborsclusterColorMapJson}]]*/'{}'),
+            CROSSHAIR_COORDS: JSON.parse(/*[[${crosshairCoordsJson}]]*/'null'),
+			EMBEDDING_BOUNDS: JSON.parse(/*[[${embeddingBoundsJson}]]*/'null'),
+        	OUTLINE_DATA: JSON.parse(/*[[${outlinesJson}]]*/'{}'),
+        	OWN_LABELS_DATA: JSON.parse(/*[[${ownLabelsJson}]]*/'[]'),
+        	NEIGHBOR_LABELS_DATA: JSON.parse(/*[[${neighborLabelsJson}]]*/'[]'),
+        	CONTEXT_LABELS_DATA: JSON.parse(/*[[${contextLabelsJson}]]*/'[]'),
+			SERENDIPITY_RESULTS: JSON.parse(/*[[${serendipityResultsJson}]]*/'[]'),
+			SERENDIPITY_COLOR_MAP: JSON.parse(/*[[${serendipityColorMapJson}]]*/'{}'),
+			SERENDIPITY_LABELS_DATA: JSON.parse(/*[[${serendipityLabelsJson}]]*/'[]')
+        };
+
+		window.INITIAL_DATA = INITIAL_DATA;
+
+        for (const key in INITIAL_DATA) {
+            window[key] = INITIAL_DATA[key];
         }
 
-        document.addEventListener("DOMContentLoaded", function () {
-            renderMathInElement(document.body, {
-                delimiters: [
-                    { left: '$$', right: '$$', display: true },
-                    { left: '$', right: '$', display: false },
-                    { left: '\\(', right: '\\)', display: false },
-                    { left: '\\[', right: '\\]', display: true }
-                ],
-                throwOnError: false
-            });
-        });
-    </script>
-    <script type="module" th:src="@{/script/toggleAbstractButton.js}"></script>
-    <script type="module" th:src="@{/script/toggleButton.js}"></script>
-    <script type="module" th:src="@{/script/tooltips.js}"></script>
+		/*]]>*/
+	</script>
+
+	<!-- Central Entrypoint -->
+	<script type="module" th:src="@{/dist/main.js(v=${appVersion})}" defer></script>
 </body>
 
 </html>

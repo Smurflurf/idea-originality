@@ -1,0 +1,158 @@
+@import './colours.css';
+
+/* legal.css - Speziell für Textseiten wie Privacy/Impressum */
+
+/* =================================================================== */
+/* ==         SPINNER & FADE-IN ANIMATION FÜR JS-INHALT           == */
+/* =================================================================== */
+
+/* Definiert den Platzhalter, der den Spinner enthält */
+.loading-placeholder {
+    display: flex;
+    justify-content: center;
+    padding: 80px 0;
+    color: var(--text-quaternary);
+    font-size: 1.5rem;
+}
+
+/* Keyframe-Animation für das sanfte Einblenden */
+@keyframes fadeInContent {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.legal-content-wrapper {
+    max-width: 800px;
+    margin: 60px auto; 
+    padding: 0 20px;
+    line-height: 1.7; 
+    color: var(--text-secondary); 
+}
+
+.legal-content-wrapper h1 {
+    font-size: 2.2rem;
+    color: var(--text-primary); 
+    margin-bottom: 40px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.legal-content-wrapper h2 {
+    font-size: 1.5rem;
+    color: var(--text-primary); 
+    margin-top: 50px;
+    margin-bottom: 15px;
+}
+
+.legal-content-wrapper h3 {
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    font-weight: 600;
+    margin-top: 30px;
+    margin-bottom: 10px;
+}
+
+/* Textabsätze */
+.legal-content-wrapper p {
+    margin-bottom: 15px;
+    text-align: left; 
+}
+
+/* Links im Text */
+.legal-content-wrapper a {
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.legal-content-wrapper a:hover {
+    color: var(--color-primary-hover);
+    text-decoration: underline;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 30px;
+    color: var(--text-quaternary);
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.back-link:hover {
+    color: var(--text-primary);
+}
+
+.back-link i {
+    font-size: 0.9rem;
+}
+
+.legal-content-wrapper ul {
+    margin-bottom: 15px;
+    padding-left: 20px;
+}
+
+.legal-content-wrapper li {
+    margin-bottom: 5px;
+}
+
+    
+.legal-warning-box {
+    /* Rahmen: Im Light Mode rot, im Dark Mode angepasst */
+    border: 1px solid var(--color-danger-light); 
+    
+    /* Hintergrund: Wechselt automatisch! 
+       - Dark/Midnight: #5e0000 (Tiefrot)
+       - Light: #fee2e2 (Hellrot/Pastell) */
+    background-color: var(--bg-danger-deep);
+    
+    /* Textfarbe: Passt sich automatisch an (Weiß im Dark, Dunkel im Light) */
+    color: var(--text-primary);
+    
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.legal-warning-box strong {
+    color: var(--text-error-soft);
+}
+
+.legal-content-wrapper .item-link {
+	text-decoration: none;
+	color: var(--text-primary);
+	font-weight: bold;
+}
+
+.legal-content-wrapper .item-link:hover {
+	text-decoration: underline;
+	color: var(--color-primary);
+}
+
+.citation-block {
+    display: block;
+    margin-top: 10px; 
+    margin-bottom: 10px;
+    padding: 12px 15px;
+    background-color: var(--bg-surface); 
+    border-left: 3px solid var(--border-main); 
+    color: var(--text-secondary);
+    font-size: 0.85em; 
+    font-style: italic; 
+    line-height: 1.6;
+    word-break: break-word; 
+    border-radius: 0 4px 4px 0; 
+}
+
+.legal-content-wrapper ul small {
+	color: var(--text-quaternary);
+}

@@ -1,0 +1,227 @@
+:root {
+    /* =========================================
+       CORE BACKGROUNDS
+       ========================================= */
+    
+    /* Level 0: Der absolute Hintergrund (Body) */
+    /* Origin: body, .result-payload */
+    --bg-app: #202124;
+    --bg-app-rgb: 32, 33, 36;
+
+    /* Level 1: Sidebar, Haupt-Modals, Overlays */
+    /* Origin: .sidebar-menu, .recorder-modal, .query-popup-modal, .confirmation-overlay */
+    /* Merged: #1c1d1f, #161719, #121920 */
+    --bg-panel-base: #1c1d1f;
+    --bg-panel-base-rgb: 28, 29, 31;
+
+    /* Level 2: "Schwebende" Elemente (Dialoge, Popups, Glass-Effekte) */
+    /* Origin: .download-popup-modal, .confirmation-dialog, .popup-content-area */
+    /* Merged: #2a2b2e, #282a2e, #292a2d */
+    --bg-panel-floating: #292a2d;
+    --bg-panel-floating-rgb: 41, 42, 45;
+
+    /* Level 3: Cards & Oberflächen (Die häufigste "Box"-Farbe) */
+    /* Origin: .result-card, .attachment-card, .dropdown, .viz-container */
+    --bg-surface: #303134;
+    --bg-surface-rgb: 48, 49, 52;
+
+    /* Spezial: Reines Schwarz (für Dimming Overlays) */
+    --bg-black: #000000;
+    --bg-black-rgb: 0, 0, 0;
+
+    /* Spezial: Sehr dunkler Hintergrund für Visualisierungen */
+    --bg-deep: #0e0e0f;
+    --bg-deep-rgb: 14, 14, 15;
+    
+    /* Spezial: Dunkles Blau-Grau (Recorder Linse) */
+    /* Origin: #121920 */
+    --bg-deep-blue: #121920;
+    --bg-deep-blue-rgb: 18, 25, 32;
+
+
+    /* =========================================
+       INTERACTIVE ELEMENTS (Buttons, Inputs)
+       ========================================= */
+    
+    /* Standard Element (Buttons, Chips, Inputs) */
+    /* Origin: #3c4043 */
+    --bg-element: #3c4043;
+    --bg-element-rgb: 60, 64, 67;
+
+    /* Hover State Standard */
+    /* Origin: #4a4e52 */
+    --bg-element-hover: #4a4e52;
+    --bg-element-hover-rgb: 74, 78, 82;
+
+    /* Hover State Light (für bläuliche Elemente) */
+    /* Origin: #434c5e */
+    --bg-element-hover-light: #434c5e;
+    --bg-element-hover-light-rgb: 67, 76, 94;
+
+
+    /* =========================================
+       TEXT COLORS
+       ========================================= */
+    
+    /* Primary: Überschriften, Fokus, Wichtig */
+    /* Origin: #e8eaed */
+    --text-primary: #e8eaed;
+    --text-primary-rgb: 232, 234, 237;
+
+    /* Secondary: Fließtext, Beschreibungen, Inputs */
+    /* Origin: #bdc1c6, #b7b8bb (merged) */
+    --text-secondary: #bdc1c6;
+    --text-secondary-rgb: 189, 193, 198;
+
+    /* Tertiary: Icons, Metadaten (Helleres Grau) */
+    /* Origin: #9aa0a6 */
+    --text-tertiary: #9aa0a6;
+    --text-tertiary-rgb: 154, 160, 166;
+
+    /* Quaternary: Sehr subtile Infos, inaktive Elemente */
+    /* Origin: #8f9194 */
+    --text-quaternary: #8f9194;
+    --text-quaternary-rgb: 143, 145, 148;
+
+    /* Disabled: Deaktivierte Texte */
+    /* Origin: #5f6368 */
+    --text-disabled: #5f6368;
+    --text-disabled-rgb: 95, 99, 104;
+
+    /* On Accent: Text auf farbigen Buttons */
+    /* Origin: #202124 */
+    --text-on-accent: #202124;
+    --text-on-accent-rgb: 32, 33, 36;
+    
+    /* Input Hover: Textfarbe wenn man über Inputs hovers */
+    /* Origin: #d3d4d8 */
+    --text-input-hover: #d3d4d8;
+    --text-input-hover-rgb: 211, 212, 216;
+
+	/* Spezial: Text Shadow (Im Dark Mode schwarz, im Light Mode weg) */
+    /* Origin: .popup-status-text */
+    --shadow-text: 0 0 5px #000000;
+
+    /* =========================================
+       BORDERS & DIVIDERS
+       ========================================= */
+    
+    /* Starke Rahmen (Boxen) */
+    /* Origin: #5f6368 */
+    --border-main: #5f6368;
+    --border-main-rgb: 95, 99, 104;
+
+    /* Feine Linien (Divider) */
+    /* Origin: #444746 */
+    --border-subtle: #444746;
+    --border-subtle-rgb: 68, 71, 70;
+
+	/* Hierarchy Box Settings (Standard) */
+    --cluster-box-border-width: 1px;
+    --cluster-box-bg-opacity: 4%;
+    --cluster-box-bg-opacity-hover: 15%; 
+
+    /* =========================================
+       ACCENT: BLUE (Google Blue)
+       ========================================= */
+    
+    /* Hauptfarbe */
+    /* Origin: #8ab4f8 */
+    --color-primary: #8ab4f8;
+    --color-primary-rgb: 138, 180, 248;
+
+    /* Hover */
+    /* Origin: #a4c7f7 */
+    --color-primary-hover: #a4c7f7;
+    --color-primary-hover-rgb: 164, 199, 247;
+
+    /* Viz Arrow Standard */
+    /* Origin: #8191a5 */
+    --color-viz-arrow: #8191a5;
+    --color-viz-arrow-rgb: 129, 145, 165;
+
+    /* Viz Arrow Hover */
+    /* Origin: #d8dee9 */
+    --color-viz-arrow-hover: #d8dee9;
+    --color-viz-arrow-hover-rgb: 216, 222, 233;
+
+
+    /* =========================================
+       STATUS: RED (Danger/Record)
+       ========================================= */
+    
+    /* Hintergrund Rot (Dunkel) */
+    /* Origin: #5e0000 */
+    --bg-danger-deep: #5e0000;
+    --bg-danger-deep-rgb: 94, 0, 0;
+
+    /* Aktives Recording (Signalrot) */
+    /* Origin: #ca0300 */
+    --bg-recording-active: #ca0300;
+    --bg-recording-active-rgb: 202, 3, 0;
+
+    /* Hover auf roten Buttons */
+    /* Origin: #a03531 */
+    --btn-danger-hover: #a03531;
+    --btn-danger-hover-rgb: 160, 53, 49;
+
+    /* Helles Rot (Text, Icons, Media Toggle) */
+    /* Origin: #f25858, #f55c5c (merged) */
+    --color-danger-light: #f25858;
+    --color-danger-light-rgb: 242, 88, 88;
+
+    /* Soft Error Text (Pastell) */
+    /* Origin: #f5c5c5 */
+    --text-error-soft: #f5c5c5;
+    --text-error-soft-rgb: 245, 197, 197;
+
+
+    /* =========================================
+       STATUS: YELLOW (Star)
+       ========================================= */
+    
+    /* Star Active */
+    /* Origin: #fbbc04 */
+    --color-star: #fbbc04;
+    --color-star-rgb: 251, 188, 4;
+
+    /* Star Hover */
+    /* Origin: #fcd04b */
+    --color-star-hover: #fcd04b;
+    --color-star-hover-rgb: 252, 208, 75;
+    
+    
+    /* =========================================
+       Special elements (Simulation colors)
+       ========================================= */
+    
+    /* SPINNER (query popup ladespinner) */
+    --color-spinner: #cce0ff;
+    --color-spinner-bg: rgba(204, 224, 255, 0.2);
+    
+    /* GLASS CONTAINER (query popup textcontainer) */
+    --bg-popup-glass: rgba(41, 42, 45, 0.6);
+    --blur-strength: 5px;
+
+    /* WOLKEN: Hellblau / Lila (Standard) */
+    --cloud-rgb-1: 80, 100, 180;
+    --cloud-rgb-2: 140, 90, 180;
+    --cloud-rgb-3: 180, 100, 140;
+    
+    
+    /* =========================================
+       Visualization elements 
+       ========================================= */
+    
+	/* Visualization Image Filter (Standard: Original) */
+    --viz-base-filter: none;
+    
+    /* FADENKREUZ: Hellgelb mit Transparenz */
+    --color-crosshair: rgba(255, 255, 0, 0.7);
+    
+    
+    /* =========================================
+       MODE: READING (TTS)
+       ========================================= */
+    --bg-progress-track: rgba(255, 255, 255, 0.15);
+}

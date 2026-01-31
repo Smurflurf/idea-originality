@@ -1,19 +1,61 @@
+@import './colours.css';
+
+/* Standard-Theme für einfache Text-Tooltips */
 .tippy-box[data-theme~='custom-dark'] {
-    background-color: #202124; 
-    color: #e8eaed;
-    border: 1px solid #444746;
+    background-color: var(--bg-app); 
+    color: var(--text-primary);
+    border: 1px solid var(--border-subtle);
     border-radius: 5px;
     font-size: 0.9em;
     font-weight: 500;
 }
-
 .tippy-box[data-theme~='custom-dark'] > .tippy-arrow::before {
-    color: #202124;
+    color: var(--bg-app);
 }
-
 .tippy-box[data-theme~='custom-dark'][data-placement^='top'] > .tippy-arrow::before {
-    border-top-color: #444746;
+    border-top-color: var(--border-subtle);
 }
 .tippy-box[data-theme~='custom-dark'][data-placement^='bottom'] > .tippy-arrow::before {
-    border-bottom-color: #444746;
+    border-bottom-color: var(--border-subtle);
+}
+
+/* Theme für die interaktiven Ergebnis-Karten */
+.tippy-box[data-theme~='custom-card'] {
+    background-color: transparent;
+    padding: 0;
+    max-width: 750px;
+    border-radius: 12px;
+    /* War: rgba(0, 0, 0, 0.5) */
+    box-shadow: 0 8px 25px rgba(var(--bg-black-rgb), 0.5);
+}
+
+/* Media Query für mobile Geräte, um das Überlaufen zu verhindern */
+@media (max-width: 768px) {
+    .tippy-box[data-theme~='custom-card'] {
+        max-width: 90vw; 
+    }
+}
+
+/* Der Pfeil ist für dieses Theme deaktiviert, aber die Styling-Regeln sind als Fallback vorhanden */
+.tippy-box[data-theme~='custom-card'] > .tippy-arrow { 
+    display: none; 
+}
+
+/* Die Pfeilfarben müssen der Hintergrundfarbe der Cards entsprechen (bg-surface) */
+.tippy-box[data-theme~='custom-card'][data-placement^='top'] > .tippy-arrow::before {
+    /* War: #303134 -> bg-surface */
+    border-top-color: var(--bg-surface); 
+}
+.tippy-box[data-theme~='custom-card'][data-placement^='bottom'] > .tippy-arrow::before {
+    border-bottom-color: var(--bg-surface); 
+}
+.tippy-box[data-theme~='custom-card'][data-placement^='left'] > .tippy-arrow::before {
+    border-left-color: var(--bg-surface); 
+}
+.tippy-box[data-theme~='custom-card'][data-placement^='right'] > .tippy-arrow::before {
+    border-right-color: var(--bg-surface); 
+}
+
+.tippy-box[data-theme~='custom-card'] > .tippy-content { 
+    padding: 0; 
 }

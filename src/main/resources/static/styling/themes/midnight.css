@@ -1,0 +1,143 @@
+[data-theme="midnight"] {
+    /* =========================================
+       CORE BACKGROUNDS -> PURE BLACK
+       ========================================= */
+    
+    /* Alles wird Schwarz */
+    --bg-app: #000000;
+    --bg-app-rgb: 0, 0, 0;
+
+    --bg-panel-base: #000000;
+    --bg-panel-base-rgb: 0, 0, 0;
+
+    --bg-panel-floating: #000000;
+    --bg-panel-floating-rgb: 0, 0, 0;
+
+    --bg-surface: #000000;
+    --bg-surface-rgb: 0, 0, 0;
+
+    --bg-deep: #000000;
+    --bg-deep-rgb: 0, 0, 0;
+    
+    /* Recorder Auge: Fast schwarz, minimal blau */
+    --bg-deep-blue: #050508;
+    --bg-deep-blue-rgb: 5, 5, 8;
+
+
+    /* =========================================
+       INTERACTIVE ELEMENTS
+       ========================================= */
+    
+    /* Elemente: Extrem dunkles Grau, fast Schwarz, damit man sie klicken kann */
+    --bg-element: #0f0f0f;
+    --bg-element-rgb: 15, 15, 15;
+
+    /* Hover: Sichtbares Dunkelgrau */
+    --bg-element-hover: #262626;
+    --bg-element-hover-rgb: 38, 38, 38;
+
+    /* Light Hover (für bläuliche Elemente) - dunkler ziehen */
+    --bg-element-hover-light: #1a1a1a;
+    --bg-element-hover-light-rgb: 26, 26, 26;
+
+
+    /* =========================================
+       TEXT COLORS -> HIGH CONTRAST
+       ========================================= */
+    
+    /* Primary: Reinweiß */
+    --text-primary: #ffffff;
+    --text-primary-rgb: 255, 255, 255;
+
+    /* Secondary: Helles Grau */
+    --text-secondary: #b0b0b0;
+    --text-secondary-rgb: 176, 176, 176;
+
+    /* Tertiary: Mittelgrau */
+    --text-tertiary: #6e6e6e;
+    --text-tertiary-rgb: 110, 110, 110;
+
+    /* Text auf Buttons */
+    --text-on-accent: #000000;
+    --text-on-accent-rgb: 0, 0, 0;
+
+
+    /* =========================================
+       BORDERS -> STRUKTURGEBER
+       ========================================= */
+    
+    /* Da alles schwarz ist, brauchen wir stärkere Rahmen zur Abgrenzung */
+    --border-main: #333333;
+    --border-main-rgb: 51, 51, 51;
+
+    /* Subtile Linien */
+    --border-subtle: #1f1f1f;
+    --border-subtle-rgb: 31, 31, 31;
+
+	/* Midnight Special: Kein Hintergrund-Mix, dafür dicke Rahmen */
+    --cluster-box-bg-opacity: 0%; 
+    --cluster-box-border-width: 1px;
+    --cluster-box-bg-opacity-hover: 10%;
+
+    /* =========================================
+       ACCENT -> NEON POP
+       ========================================= */
+    
+    /* Ein minimal helleres, leuchtenderes Blau für "Cyber"-Look auf Schwarz */
+    --color-primary: #9bbcf2; 
+    --color-primary-rgb: 155, 188, 242;
+
+    /* Hover */
+    --color-primary-hover: #b8d2ff;
+    --color-primary-hover-rgb: 184, 210, 255;
+    
+    /* Viz Arrows: Hellgrau */
+    --color-viz-arrow: #808080;
+    --color-viz-arrow-rgb: 128, 128, 128;
+
+
+    /* =========================================
+       STATUS -> SATTES SIGNAL
+       ========================================= */
+    
+    /* Fehler Header: Tiefes Rot */
+    --bg-danger-deep: #420000;
+    --bg-danger-deep-rgb: 66, 0, 0;
+    
+    /* Text Shadow: Wieder einschalten (wie Base), sieht auf OLED gut aus */
+    --shadow-text: 0 0 5px #000000;
+    
+    
+    /* =========================================
+       Special elements (Simulation colors/visualization filters)
+       ========================================= */
+    
+    /* SPINNER (query popup ladespinner) */
+    --color-spinner: #cce0ff;
+    --color-spinner-bg: rgba(204, 224, 255, 0.2);
+    
+    
+    /* GLASS CONTAINER (query popup textcontainer) */
+    --bg-popup-glass: rgba(0, 0, 0, 0.4);
+    --blur-strength: 12px; 
+
+    /* WOLKEN: Etwas kühleres, helles Blau/Weiß */
+    --cloud-rgb-1: 100, 120, 255;
+    --cloud-rgb-2: 120, 100, 255;
+    --cloud-rgb-3: 150, 150, 255;
+    
+    
+    /* =========================================
+       Visualization elements 
+       ========================================= */
+    
+	/* Visualization Image Filter (Standard: Original) */
+    --viz-base-filter: none;
+    
+    /* FADENKREUZ: Hellgelb mit Transparenz */
+    --color-crosshair: #ffffff;
+	/* =========================================
+       MODE: READING (TTS)
+       ========================================= */
+	--bg-progress-track: rgba(255, 255, 255, 0.15);
+}

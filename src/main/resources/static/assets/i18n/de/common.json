@@ -1,0 +1,85 @@
+{
+	"menu": {
+		"home": "Startseite",
+		"recent": "Verlauf",
+		"translate": "Sprache",
+		"select_text": "Übersetzen",
+		"read_text": "Vorlesen",
+		"translate_to": "Zielsprache",
+		"system": "System",
+		"search_placeholder": "Suche..."
+	},
+	"themes": {
+		"main_label": "Design",
+		"light": "Hell",
+		"dark": "Dunkel",
+		"midnight": "Mitternacht",
+		"system": "System"
+	},
+	"history": {
+		"label": "Zuletzt",
+		"more_options": "Mehr Optionen",
+		"mark_favorite": "Als Favorit markieren",
+		"unmark_favorite": "Favorit entfernen",
+		"delete_entry": "Eintrag löschen",
+		"confirm_delete": "Diesen Eintrag wirklich löschen?"
+	},
+	"footer": {
+		"impressum": "Impressum",
+		"privacy": "Datenschutz",
+		"licenses": "Lizenzen"
+	},
+	"tts": {
+		"loading": "Lädt...",
+		"playing": "Liest vor",
+		"paused": "Pausiert"
+	},
+	"global": {
+		"close": "Schließen",
+		"back": "Zurück",
+		"cancel": "Abbrechen",
+		"confirm": "Bestätigen",
+		"offline_nodata": "Offline / Keine Daten",
+		"error_console": "Fehler aufgetreten. Siehe Konsole.",
+		"new_version_reload": "Neue Version verfügbar, bitte lade die Seite neu.",
+		"analysis": "Analyse",
+		"untitled_analysis": "unbenannte-analyse",
+		"visualization_prefix": "visualisierung-"
+	},
+	"headers": {
+		"extracted_idea": "Extrahierte Idee:",
+		"similar_results": "Ähnliche Ergebnisse:",
+		"explore_topics": "Erkunde Ähnliche Themenfelder",
+		"explore_desc": "Dies sind die semantisch ähnlichsten Themenfelder. Wähle eines aus, um die relevantesten Inhalte zu erkunden.",
+		"discover_serendipity": "Entdecke Unerwartete Verbindungen",
+		"discover_desc": "Diese Cluster sind thematisch divers gestaltet, um ein breites Wissensspektrum abzudecken. Die Relevanz entspricht der des am höchsten bewerteten Eintrags."
+	},
+	"card": {
+		"score": "Score: ",
+		"confidence_prefix": "Konfidenz",
+		"relevance_prefix": "Relevanz",
+		"open_source_tooltip": "Quelle öffnen",
+		"show_hierarchy_tooltip": "Vollständige Hierarchie anzeigen",
+		"toggle_json_tooltip": "Rohes JSON anzeigen/verbergen",
+		"topic_cluster_tooltip": "Themen-Cluster",
+		"info_not_found": "Information nicht gefunden.",
+		"cluster_info": {
+			"list_intro": "Das Cluster enthält ",
+			"list_outro": " Dokumente:",
+			"simple_intro": "Dieses Themen-Cluster enthält ",
+			"simple_outro": " Dokumente."
+		}
+	},
+	"errors": {
+		"job_not_found_title": "Fehler: Job-Daten nicht gefunden",
+		"job_not_found_text": "Die Ergebnisse für diesen Job sind abgelaufen oder konnten nicht gefunden werden.",
+		"start_new_query": "neue Anfrage starten",
+		"load_results_failed": "Fehler: Ergebnisse konnten nicht geladen werden.",
+		"error_prefix": "Fehler: ",
+		"server_error": "Ein Serverfehler ist aufgetreten.",
+		"no_job_id": "Keine Job-ID vom Server empfangen.",
+		"connection_lost": "Die Verbindung zum Server wurde unterbrochen.",
+		"init_failed_prefix": "Initialisierung fehlgeschlagen: ",
+		"results_load_failed": "Fehler: Ergebnisse konnten nicht geladen werden."
+	}
+}

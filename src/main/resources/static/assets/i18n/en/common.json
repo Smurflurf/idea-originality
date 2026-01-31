@@ -1,0 +1,85 @@
+{
+	"menu": {
+		"home": "Home",
+		"recent": "Recent",
+		"translate": "Language",
+		"select_text": "Translate",
+		"read_text": "Read aloud",
+		"translate_to": "Translate to",
+		"system": "System",
+		"search_placeholder": "Search..."
+	},
+	"themes": {
+		"main_label": "Theme",
+		"light": "Light",
+		"dark": "Dark",
+		"midnight": "Midnight",
+		"system": "System"
+	},
+	"history": {
+		"label": "Recent",
+		"more_options": "More options",
+		"mark_favorite": "Mark favorite",
+		"unmark_favorite": "Unmark favorite",
+		"delete_entry": "Delete entry",
+		"confirm_delete": "Delete this entry?"
+	},
+	"footer": {
+		"impressum": "Impressum",
+		"privacy": "Privacy Policy",
+		"licenses": "Licenses"
+	},
+	"tts": {
+		"loading": "Loading...",
+		"playing": "Speaking",
+		"paused": "Paused"
+	},
+	"global": {
+		"close": "Close",
+		"back": "Back",
+		"cancel": "Cancel",
+		"confirm": "Confirm",
+		"offline_nodata": "Offline / No Data",
+		"error_console": "Error occurred. See console.",
+		"new_version_reload": "New version available, please reload the page.",
+		"analysis": "analysis",
+		"untitled_analysis": "untitled-analysis", 
+		"visualization_prefix": "visualization-" 
+	},
+	"headers": {
+		"extracted_idea": "Extracted idea:",
+		"similar_results": "Similar results:",
+		"explore_topics": "Explore Similar Topic Fields",
+		"explore_desc": "Those are the semantically most similar topic fields, select one below and explore its most relevant content.",
+		"discover_serendipity": "Discover Serendipitous Connections",
+		"discover_desc": "These clusters are by design thematically diverse to cover a broad knowledge spectrum. The relevance represents that of their highest rated entry."
+	},
+	"card": {
+		"score": "Score: ",
+		"confidence_prefix": "Confidence",
+		"relevance_prefix": "Relevance",
+		"open_source_tooltip": "open source",
+		"show_hierarchy_tooltip": "Show full hierarchy",
+		"toggle_json_tooltip": "show/hide raw JSON",
+		"topic_cluster_tooltip": "Topic Cluster",
+		"info_not_found": "Information not found.",
+		"cluster_info": {
+			"list_intro": "The cluster contains ",
+			"list_outro": " documents:",
+			"simple_intro": "This topic cluster contains ",
+			"simple_outro": " documents."
+		}
+	},
+	"errors": {
+		"job_not_found_title": "Error: Job data not found",
+		"job_not_found_text": "The results for this job have expired or could not be found.",
+		"start_new_query": "start a new query",
+		"load_results_failed": "Error: Results could not be loaded.",
+		"error_prefix": "Error: ",
+		"server_error": "A server error occurred.", 
+		"no_job_id": "No Job-ID received from server.", 
+		"connection_lost": "Connection to the server was lost.", 
+		"init_failed_prefix": "Initialization failed: ",
+		"results_load_failed": "Error: Results could not be loaded."
+	}
+}

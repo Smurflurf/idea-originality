@@ -1,0 +1,369 @@
+{
+	"page_title": "Datenschutzerklärung",
+	"structure": [
+		{
+			"type": "section_title",
+			"text": "1. Allgemeine Hinweise"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Die folgenden Hinweise geben einen einfachen Überblick darüber, was mit personenbezogenen Daten geschieht, wenn diese Website besucht wird. Personenbezogene Daten sind alle Daten, mit denen eine persönliche Identifizierung möglich ist."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Der Betreiber dieser Seiten nimmt den Schutz persönlicher Daten sehr ernst. Die Nutzung der Webseite ist grundsätzlich ohne Angabe personenbezogener Daten möglich. Soweit auf den Seiten personenbezogene Daten (beispielsweise durch Eingabe in das Suchfeld) erhoben werden, erfolgt dies, soweit möglich, stets auf freiwilliger Basis."
+				}
+			]
+		},
+		{
+			"type": "subsection_title",
+			"text": "Verantwortliche Stelle"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Verantwortlich für die Datenverarbeitung auf dieser Website im Sinne der Datenschutz-Grundverordnung (DSGVO) ist:"
+				}
+			]
+		},
+		{
+			"type": "lines_block",
+			"lines": [
+				"Simon Stumpf",
+				"Waldstraße 16a",
+				"67245 Lambsheim",
+				[
+					{
+						"text": "E-Mail: "
+					},
+					{
+						"text": "support@ideenatlas.eu",
+						"url": "mailto:support@ideenatlas.eu"
+					}
+				]
+			]
+		},
+		{
+			"type": "subsection_title",
+			"text": "Datensicherheit"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Diese Seite nutzt aus Sicherheitsgründen und zum Schutz der Übertragung vertraulicher Inhalte eine TLS-Verschlüsselung. Die Datenbankverbindungen im Hintergrund sind ebenfalls verschlüsselt abgesichert. Eine verschlüsselte Verbindung ist an dem Schloss-Symbol in der Browserzeile und daran, dass die Adresszeile des Browsers von „http://“ auf „https://“ wechselt, zu erkennen."
+				}
+			]
+		},
+		{
+			"type": "section_title",
+			"text": "2. Hosting und Server-Logfiles"
+		},
+		{
+			"type": "subsection_title",
+			"text": "Hosting bei Hetzner"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Diese Website wird bei einem externen Dienstleister gehostet (Hetzner Online GmbH). Die personenbezogenen Daten, die auf dieser Website erfasst werden, werden auf den Servern des Hosters verarbeitet. Die Serverstandorte befinden sich in "
+				},
+				{
+					"text": "Helsinki, Finnland",
+					"bold": true
+				},
+				{
+					"text": " (innerhalb der Europäischen Union)."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Der Hoster ist: "
+				},
+				{
+					"text": "Hetzner Online GmbH, Industriestr. 25, 91710 Gunzenhausen, Deutschland.",
+					"bold": true
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Die Nutzung des Hosters erfolgt im Interesse einer sicheren, schnellen und effizienten Bereitstellung des Online-Angebots (Art. 6 Abs. 1 lit. f DSGVO)."
+				}
+			]
+		},
+		{
+			"type": "subsection_title",
+			"text": "Server-Logfiles"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Der Provider der Seiten erhebt und speichert automatisch Informationen in so genannten Server-Logfiles, die der Browser automatisch übermittelt. Dies sind:"
+				}
+			]
+		},
+		{
+			"type": "list",
+			"items": [
+				{
+					"text": "Browsertyp und Browserversion"
+				},
+				{
+					"text": "Verwendetes Betriebssystem"
+				},
+				{
+					"text": "Referrer URL (die zuvor besuchte Seite)"
+				},
+				{
+					"text": "Hostname des zugreifenden Rechners"
+				},
+				{
+					"text": "Uhrzeit der Serveranfrage"
+				},
+				{
+					"text": "IP-Adresse (ggf. anonymisiert)"
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Eine Zusammenführung dieser Daten mit anderen Datenquellen wird nicht vorgenommen. Die Erfassung dieser Daten erfolgt auf Grundlage von Art. 6 Abs. 1 lit. f DSGVO. Der Websitebetreiber hat ein berechtigtes Interesse an der technisch fehlerfreien Darstellung und der Optimierung seiner Website – hierzu müssen die Server-Logfiles erfasst werden. Die Daten werden in der Regel nach kurzer Zeit automatisch gelöscht."
+				}
+			]
+		},
+		{
+			"type": "subsection_title",
+			"text": "Content Delivery Network (Cloudflare)"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Zum Schutz vor Angriffen und zur Optimierung der Ladezeiten wird der Dienst „Cloudflare“ als Reverse Proxy eingesetzt. Anbieter ist die Cloudflare Inc., 101 Townsend St., San Francisco, CA 94107, USA."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Der Datenverkehr zwischen dieser Website und dem Endgerät des Nutzers fließt durch das Netzwerk von Cloudflare. Cloudflare ist unter dem "
+				},
+				{
+					"text": "EU-US Data Privacy Framework",
+					"bold": true
+				},
+				{
+					"text": " zertifiziert, wodurch ein angemessenes Datenschutzniveau für die Datenübermittlung in die USA gewährleistet ist."
+				}
+			]
+		},
+		{
+			"type": "section_title",
+			"text": "3. Datenerfassung und Speicherung auf dem Endgerät"
+		},
+		{
+			"type": "subsection_title",
+			"text": "Cookies, Local Storage & IndexedDB"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Die Internetseiten verwenden teilweise so genannte Cookies oder nutzen lokale Speichertechnologien des Browsers. Diese richten auf dem Endgerät keinen Schaden an und enthalten keine Viren. Sie dienen dazu, das Angebot nutzerfreundlicher, effektiver und sicherer zu machen."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Es kommen folgende technisch notwendige Technologien zum Einsatz:"
+				}
+			]
+		},
+		{
+			"type": "list",
+			"items": [
+				{
+					"label": "JSESSIONID (Cookie)",
+					"text": "Dient zur Identifikation der aktuellen Sitzung auf dem Server (wird nach Ende der Sitzung gelöscht)."
+				},
+				{
+					"label": "XSRF-TOKEN (Cookie)",
+					"text": "Dient der Sicherheit und verhindert Cross-Site-Request-Forgery-Angriffe."
+				},
+				{
+					"label": "IndexedDB (Lokaler Cache)",
+					"text": "Suchergebnisse werden temporär lokal im Browser gespeichert, um ein versehentliches Löschen dieser zu vermeiden. Diese Daten verbleiben auf dem Endgerät."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Die Speicherung dieser Daten erfolgt auf Grundlage von § 25 Abs. 2 Nr. 2 TDDDG (technisch unbedingt erforderlich). Die nachgelagerte Verarbeitung erfolgt auf Grundlage von Art. 6 Abs. 1 lit. f DSGVO (Berechtigtes Interesse)."
+				}
+			]
+		},
+		{
+			"type": "section_title",
+			"text": "4. Kernfunktionen: KI-Verarbeitung und Suche"
+		},
+		{
+			"type": "subsection_title",
+			"text": "Funktionsweise der Such-Pipeline"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Die Anwendung nimmt Texteingaben entgegen, analysiert diese und sucht in einer internen Datenbank nach relevanten wissenschaftlichen Veröffentlichungen (Papers). Der Prozess gliedert sich technisch in zwei Schritte:"
+				}
+			]
+		},
+		{
+			"type": "list",
+			"ordered": true,
+			"items": [
+				{
+					"label": "Umformulierung (extern)",
+					"text": "Die Eingabe wird zunächst durch eine KI-Schnittstelle optimiert."
+				},
+				{
+					"label": "Vektorsuche (intern)",
+					"text": "Mit dem optimierten Text erfolgt auf dem Server eine Suche im internen Vektorraum. Die Ermittlung der Ergebnisse findet lokal auf dem Server statt; es erfolgt keine Übertragung von Datenbankinhalten an Google oder andere Dritte."
+				}
+			]
+		},
+		{
+			"type": "subsection_title",
+			"text": "Einsatz von Google Gemini"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Zur inhaltlichen Optimierung und Umformulierung der Suchanfrage wird die Schnittstelle (API) von "
+				},
+				{
+					"text": "Google Gemini",
+					"bold": true
+				},
+				{
+					"text": " genutzt. Anbieter ist Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irland für Nutzer im EWR und der Schweiz."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Alle Anfragen an die Google Gemini API werden von Servern innerhalb der Europäischen Union (EU) gesendet. Gemäß den Nutzungsbedingungen von Google für API-Anfragen aus dem EWR, dem Vereinigten Königreich und der Schweiz werden die übermittelten Eingaben (Prompts) sowie die generierten Antworten "
+				},
+				{
+					"text": "nicht zur Verbesserung der Google-Dienste oder zum Training von KI-Modellen verwendet.",
+					"bold": true
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Unabhängig davon wird empfohlen, keine personenbezogenen oder sensiblen Daten in das Suchfeld einzugeben. Die Rechtsgrundlage für die Verarbeitung zur Bereitstellung der Suchfunktion ist das berechtigte Interesse an einem funktionalen und qualitativ hochwertigen Online-Angebot (Art. 6 Abs. 1 lit. f DSGVO)."
+				}
+			]
+		},
+		{
+			"type": "subsection_title",
+			"text": "Echtzeit-Übersetzung (intern)"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Die optionale Übersetzungsfunktion wird direkt auf der Serverinfrastruktur der Anwendung ausgeführt. Wenn ein Text zur Übersetzung ausgewählt wird, wird dieser an den Server gesendet, dort in die Zielsprache übersetzt und das Ergebnis direkt an den Browser zurückgestreamt."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Bei diesem Prozess werden "
+				},
+				{
+					"text": "weder der Originaltext noch die Übersetzung permanent gespeichert.",
+					"bold": true
+				},
+				{
+					"text": " Die Verarbeitung erfolgt ausschließlich zum Zweck der Übersetzung im Moment der Anfrage („Fire-and-Forget“). Es erfolgt keine Weitergabe dieser Daten an externe Dritte wie Google oder andere Dienstanbieter. Die Rechtsgrundlage für diese Verarbeitung ist das berechtigte Interesse an der Bereitstellung einer mehrsprachigen Benutzeroberfläche (Art. 6 Abs. 1 lit. f DSGVO)."
+				}
+			]
+		},
+		{
+			"type": "section_title",
+			"text": "5. Rechte der betroffenen Person"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Im Rahmen der geltenden gesetzlichen Bestimmungen bestehen jederzeit folgende Rechte gegenüber dem Betreiber:"
+				}
+			]
+		},
+		{
+			"type": "list",
+			"items": [
+				{
+					"label": "Recht auf Auskunft (Art. 15 DSGVO)",
+					"text": "Es besteht das Recht, unentgeltlich Auskunft über Herkunft, Empfänger und Zweck der gespeicherten personenbezogenen Daten zu erhalten."
+				},
+				{
+					"label": "Recht auf Berichtigung (Art. 16 DSGVO) oder Löschung (Art. 17 DSGVO)",
+					"text": "Es besteht das Recht, die Berichtigung oder Löschung dieser Daten zu verlangen."
+				},
+				{
+					"label": "Recht auf Einschränkung der Verarbeitung (Art. 18 DSGVO)",
+					"text": "Unter bestimmten Umständen kann die Einschränkung der Verarbeitung der personenbezogenen Daten verlangt werden."
+				},
+				{
+					"label": "Widerspruchsrecht (Art. 21 DSGVO)",
+					"text": "Gegen die Verarbeitung der Daten (insbesondere auf Grundlage von Art. 6 Abs. 1 lit. f DSGVO) kann Widerspruch eingelegt werden."
+				},
+				{
+					"label": "Beschwerderecht (Art. 77 DSGVO)",
+					"text": "Im Falle von Verstößen gegen die DSGVO steht dem Betroffenen ein Beschwerderecht bei einer Aufsichtsbehörde zu."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Zur Ausübung dieser Rechte sowie bei weiteren Fragen zum Thema personenbezogene Daten ist eine Kontaktaufnahme über die oben angegebene E-Mail-Adresse möglich."
+				}
+			]
+		}
+	]
+}

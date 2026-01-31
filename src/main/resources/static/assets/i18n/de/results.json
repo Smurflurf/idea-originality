@@ -1,0 +1,52 @@
+{
+	"tabs": {
+		"own_idea": "Deine Idee",
+		"similar_topics": "Ähnliche Themen",
+		"serendipity": "Serendipität"
+	},
+	"viz_controls": {
+		"crosshair": "Deine Idee",
+		"points": "Punkte",
+		"outlines": "Umrisse",
+		"context": "Kontext",
+		"labels": "Labels",
+		"neighbors": "Nachbarn",
+		"tooltip_crosshair": "Position deiner Idee anzeigen",
+		"tooltip_points": "Farbige Punkte anzeigen",
+		"tooltip_outlines": "Cluster-Umrisse anzeigen",
+		"tooltip_context": "Kontext-Cluster anzeigen",
+		"tooltip_labels": "Cluster-Namen anzeigen",
+		"tooltip_neighbors": "Position der Nachbarn anzeigen",
+		"tooltip_export": "Bild als PNG herunterladen",
+		"tooltip_zoom_in": "Vergrößern",
+		"tooltip_zoom_out": "Verkleinern"
+	},
+	"context_menu": {
+		"center_idea": "Auf Idee zentrieren",
+		"zoom_out": "Rauszoomen",
+		"zoom_in": "Reinzoomen",
+		"save_png": "Bild als PNG speichern",
+		"toggle_debug": "Debug-Infos umschalten"
+	},
+	"download": {
+		"main_btn": "Ergebnisse speichern",
+		"main_tooltip": "Die Ergebnisse als JSON oder als vollständig interagierbare HTML-Datei herunterladen.",
+		"json_btn": "JSON herunterladen",
+		"json_tooltip": "Die Ergebnisse als JSON herunterladen",
+		"popup_title": "Download-Optionen",
+		"popup_html_btn": "Interaktives HTML herunterladen",
+		"popup_json_btn": "Ergebnisse als JSON herunterladen",
+		"offline_banner": "Dies ist eine eigenständige, archivierte Version der Seite.",
+		"error_json": "Konnte JSON-Daten nicht herunterladen.",
+		"error_generic": "Die Datei konnte aufgrund eines Fehlers nicht heruntergeladen werden.",
+		"error_download_format": "Die {format}-Datei konnte aufgrund eines Fehlers nicht heruntergeladen werden."
+	},
+	"debug": {
+		"title": "Debug Info",
+		"container": "Container:",
+		"wrapper": "Wrapper:",
+		"image_coords": "Bild-Koord:",
+		"na": "N/A",
+		"outside": "Außerhalb"
+	}
+}

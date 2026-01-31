@@ -4,43 +4,50 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Idea Originality Analyzer</title>
-	<link rel="preconnect" href="https://fonts.googleapis.com">
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap">
-	<link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css">
-	<link rel="stylesheet" th:href="@{/styling/style.css}">
-	<link rel="stylesheet" th:href="@{/styling/recorder.css}">
-	<link rel="stylesheet" th:href="@{/styling/queryPopup.css}"> 
-    <link rel="stylesheet" th:href="@{/styling/tooltips.css}">
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-	<script src="https://unpkg.com/@popperjs/core@2"></script>
-    <script src="https://unpkg.com/tippy.js@6"></script>
+	<title data-i18n="page_title">Ideenatlas</title>
+    <th:block th:replace="~{shared_fragments :: importMapScript}"></th:block>
+
+	<link rel="stylesheet" th:href="@{/dist/main.css(v=${appVersion})}">
+	<link rel="stylesheet" th:href="@{/vendor/fontawesome/css/all.min.css(v=${appVersion})}">
+	<link rel="stylesheet" th:href="@{/vendor/fonts/roboto.css(v=${appVersion})}">
+	<link rel="stylesheet" th:href="@{/dist/menu.css(v=${appVersion})}">
+    <link rel="stylesheet"
+		th:href="@{/vendor/tippy/tippy.css(v=${appVersion})}">
+	
+	<script th:src="@{/vendor/tippy/popper.min.js(v=${appVersion})}"></script>
+	<script
+		th:src="@{/vendor/tippy/tippy-bundle.umd.min.js(v=${appVersion})}"></script>
 </head>
 
-<body>
+    
+<body class="is-centered-content">
+	<div th:replace="~{shared_fragments :: sideMenu}"></div>
+
 	<form class="idea-form" th:action="@{/query}" method="post">
 		<div class="textarea-wrapper">
-			<textarea name="idea-text" placeholder="Describe your idea..."></textarea>
+			<textarea name="idea-text" placeholder="New version available, reload page."
+				data-i18n="search.placeholder" autofocus></textarea>
 
-			<button type="submit" 
-				class="run-button" 
+			<button type="submit" class="run-button"
 				data-tippy-content="start idea analysis"
-				disabled>
-				Query <i class="fa-solid fa-arrow-turn-right fa-rotate-90"></i>
+				data-i18n="search.tooltip_start" disabled>
+				<span data-i18n="search.btn_query">Query</span>
 			</button>
 
-			<input type="checkbox" id="media-toggle" class="media-toggle-checkbox">
-			<label for="media-toggle" 
-				id="media-toogle-label" 
-				class="media-button-label"
-				data-tippy-content="add additional information">
-				<i class="fa-solid fa-plus"></i>
+			<input type="checkbox" id="media-toggle"
+				class="media-toggle-checkbox"> <label for="media-toggle"
+				id="media-toogle-label" class="media-button-label"
+				data-tippy-content="add additional information"
+				data-i18n="search.tooltip_media"> <i
+				class="fa-solid fa-plus"></i>
 			</label>
 			<div class="media-menu">
 				<ul>
-					<li id="upload-button"><i class="fa-solid fa-arrow-up-from-bracket"></i> Upload File</li>
-					<li id="record-button"><i class="fa-solid fa-microphone"></i> Record Audio</li>
+					<li id="upload-button"><i
+						class="fa-solid fa-arrow-up-from-bracket"></i> <span
+						data-i18n="search.upload">Upload File</span></li>
+					<li id="record-button"><i class="fa-solid fa-microphone"></i>
+						<span data-i18n="search.record">Record Audio</span></li>
 				</ul>
 			</div>
 		</div>
@@ -49,13 +56,8 @@
             </div>
         </div>
 	</form>
-
-    <script type="module" th:src="@{/script/mediaActions.js}"></script>
-    <script type="module" th:src="@{/script/queryButtonManager.js}"></script>
-    <script type="module" th:src="@{/script/queryPopup.js}"></script>
-    <script type="module" th:src="@{/script/handleQuery.js}"></script>
-    <script type="module" th:src="@{/script/dragAndDrop.js}"></script>
-    <script type="module" th:src="@{/script/tooltips.js}"></script>
+	
+	<script type="module" th:src="@{/dist/main.js(v=${appVersion})}" defer></script>
 </body>
 
 </html>

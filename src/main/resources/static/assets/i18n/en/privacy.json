@@ -1,0 +1,369 @@
+{
+	"page_title": "Privacy Policy",
+	"structure": [
+		{
+			"type": "section_title",
+			"text": "1. General Information"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "The following information provides a simple overview of what happens to personal data when this website is visited. Personal data is any data with which a person can be personally identified."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "The operator of these pages takes the protection of personal data very seriously. The use of the website is generally possible without providing personal data. Insofar as personal data is collected on the pages (for example by entering it into the search field), this is always done on a voluntary basis."
+				}
+			]
+		},
+		{
+			"type": "subsection_title",
+			"text": "Responsible Party"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "The party responsible for data processing on this website within the meaning of the General Data Protection Regulation (GDPR) is:"
+				}
+			]
+		},
+		{
+			"type": "lines_block",
+			"lines": [
+				"Simon Stumpf",
+				"Waldstraße 16a",
+				"67245 Lambsheim",
+				[
+					{
+						"text": "Email: "
+					},
+					{
+						"text": "support@ideenatlas.eu",
+						"url": "mailto:support@ideenatlas.eu"
+					}
+				]
+			]
+		},
+		{
+			"type": "subsection_title",
+			"text": "Data Security"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "For security reasons and to protect the transmission of confidential content, this site uses TLS encryption which also extends to the database connections in the background. An encrypted connection can be recognized by the fact that the address line of the browser changes from “http://” to “https://” and the lock symbol that appears beside it."
+				}
+			]
+		},
+		{
+			"type": "section_title",
+			"text": "2. Hosting and Server Log Files"
+		},
+		{
+			"type": "subsection_title",
+			"text": "Hosting by Hetzner"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "This website is hosted by an external service provider (Hetzner Online GmbH). The personal data collected on this website is processed on the host's servers. The server locations are in "
+				},
+				{
+					"text": "Helsinki, Finland",
+					"bold": true
+				},
+				{
+					"text": " (within the European Union)."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "The host is: "
+				},
+				{
+					"text": "Hetzner Online GmbH, Industriestr. 25, 91710 Gunzenhausen, Germany.",
+					"bold": true
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "The host is used in the interest of a secure, fast, and efficient provision of the online offer (Art. 6 Para. 1 lit. f GDPR)."
+				}
+			]
+		},
+		{
+			"type": "subsection_title",
+			"text": "Server Log Files"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "The provider of the pages automatically collects and stores information in so-called server log files, which the browser automatically transmits. These are:"
+				}
+			]
+		},
+		{
+			"type": "list",
+			"items": [
+				{
+					"text": "Browser type and browser version"
+				},
+				{
+					"text": "Operating system used"
+				},
+				{
+					"text": "Referrer URL (the previously visited page)"
+				},
+				{
+					"text": "Hostname of the accessing computer"
+				},
+				{
+					"text": "Time of the server request"
+				},
+				{
+					"text": "IP address (anonymized if applicable)"
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "These data are not combined with other data sources. The collection of this data is based on Art. 6 Para. 1 lit. f GDPR. The website operator has a legitimate interest in the technically error-free presentation and optimization of its website – for this purpose, the server log files must be recorded. The data is generally deleted automatically after a short period."
+				}
+			]
+		},
+		{
+			"type": "subsection_title",
+			"text": "Content Delivery Network (Cloudflare)"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "To protect against attacks and to optimize loading times, the service “Cloudflare” is used as a reverse proxy. The provider is Cloudflare Inc., 101 Townsend St., San Francisco, CA 94107, USA."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Data traffic between this website and the user's end device flows through the Cloudflare network. Cloudflare is certified under the "
+				},
+				{
+					"text": "EU-US Data Privacy Framework",
+					"bold": true
+				},
+				{
+					"text": " ensuring an adequate level of data protection for data transfer to the USA."
+				}
+			]
+		},
+		{
+			"type": "section_title",
+			"text": "3. Data Collection and Storage on the End Device"
+		},
+		{
+			"type": "subsection_title",
+			"text": "Cookies, Local Storage & IndexedDB"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "The internet pages partially use so-called cookies or local storage technologies of the browser. These do not cause any damage to the end device and do not contain viruses. They serve to make the offer more user-friendly, effective, and secure."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "The following technically necessary technologies are used:"
+				}
+			]
+		},
+		{
+			"type": "list",
+			"items": [
+				{
+					"label": "JSESSIONID (Cookie)",
+					"text": "Serves to identify the current session on the server (deleted after the session ends)."
+				},
+				{
+					"label": "XSRF-TOKEN (Cookie)",
+					"text": "Serves security purposes and prevents Cross-Site Request Forgery attacks."
+				},
+				{
+					"label": "IndexedDB (Local Cache)",
+					"text": "Search results are temporarily stored locally in the browser to prevent accidental deletion. This data remains on the end device."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "The storage of this data takes place on the basis of Sect. 25 Para. 2 No. 2 TDDDG (technically strictly necessary). The subsequent processing takes place on the basis of Art. 6 Para. 1 lit. f GDPR (Legitimate Interest)."
+				}
+			]
+		},
+		{
+			"type": "section_title",
+			"text": "4. Core Functions: AI Processing and Search"
+		},
+		{
+			"type": "subsection_title",
+			"text": "Functionality of the Search Pipeline"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "The application accepts text inputs, analyzes them, and searches an internal database for relevant scientific publications (papers). The process is technically divided into two steps:"
+				}
+			]
+		},
+		{
+			"type": "list",
+			"ordered": true,
+			"items": [
+				{
+					"label": "Reformulation (external)",
+					"text": "The input is first optimized by an AI interface."
+				},
+				{
+					"label": "Vector Search (internal)",
+					"text": "With the optimized text, a search is performed in the internal vector space on the server. The determination of results takes place locally on the server; there is no transfer of database content to Google or other third parties."
+				}
+			]
+		},
+		{
+			"type": "subsection_title",
+			"text": "Use of Google Gemini"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "For content optimization and reformulation of the search query, the interface (API) of "
+				},
+				{
+					"text": "Google Gemini",
+					"bold": true
+				},
+				{
+					"text": " is used. The provider for users in the EEA and Switzerland is Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Ireland."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "All requests to the Google Gemini API are sent from servers located within the European Union (EU). According to Google's terms of service for API requests originating from the EEA, the UK, and Switzerland, the submitted inputs (prompts) and the generated responses are "
+				},
+				{
+					"text": "not used to improve Google's services or to train AI models.",
+					"bold": true
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Regardless, it is recommended not to enter any personal or sensitive data into the search field. The legal basis for the processing to provide the search functionality is our legitimate interest in a functional and high-quality online service (Art. 6 Para. 1 lit. f GDPR)."
+				}
+			]
+		},
+		{
+			"type": "subsection_title",
+			"text": "Real-time Translation (internal)"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "The optional translation feature is executed directly on the application's server infrastructure. When a text is selected for translation, it is sent to the server, translated into the target language, and the result is streamed directly back to the browser."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "During this process, "
+				},
+				{
+					"text": "neither the original text nor the translation is permanently stored.",
+					"bold": true
+				},
+				{
+					"text": " The processing occurs solely for the purpose of translation at the moment of the request ('fire-and-forget'). This data is not shared with external third parties such as Google or other service providers. The legal basis for this processing is the legitimate interest in providing a multilingual user interface (Art. 6 Para. 1 lit. f GDPR)."
+				}
+			]
+		},
+		{
+			"type": "section_title",
+			"text": "5. Rights of the Data Subject"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Within the framework of the applicable legal provisions, the following rights exist against the operator at any time:"
+				}
+			]
+		},
+		{
+			"type": "list",
+			"items": [
+				{
+					"label": "Right to access (Art. 15 GDPR)",
+					"text": "There is a right to receive information free of charge about the origin, recipient, and purpose of the stored personal data."
+				},
+				{
+					"label": "Right to rectification (Art. 16 GDPR) or erasure (Art. 17 GDPR)",
+					"text": "There is a right to request the rectification or erasure of this data."
+				},
+				{
+					"label": "Right to restriction of processing (Art. 18 GDPR)",
+					"text": "Under certain circumstances, the restriction of the processing of personal data may be requested."
+				},
+				{
+					"label": "Right to object (Art. 21 GDPR)",
+					"text": "An objection may be lodged against the processing of the data (in particular on the basis of Art. 6 Para. 1 lit. f GDPR)."
+				},
+				{
+					"label": "Right to lodge a complaint (Art. 77 GDPR)",
+					"text": "In the event of infringements of the GDPR, the data subject has a right to lodge a complaint with a supervisory authority."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "To exercise these rights and for further questions regarding personal data, contact can be made via the email address given above."
+				}
+			]
+		}
+	]
+}

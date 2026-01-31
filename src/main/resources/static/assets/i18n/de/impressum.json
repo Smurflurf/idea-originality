@@ -1,0 +1,42 @@
+{
+	"page_title": "Impressum",
+	"intro": "Angaben gemäß § 5 DDG",
+	"structure": [
+		{
+			"type": "lines_block",
+			"headline": "Betreiber der Website",
+			"lines": [
+				"Simon Stumpf",
+				"Waldstraße 16a",
+				"67245 Lambsheim",
+				"",
+				"Betrieben als privates, unabhängiges Forschungsprojekt.",
+				"Dies ist ein Prototyp. Die Website, Datenbasis und Datenverarbeitung sind in aktiver Entwicklung."
+			]
+		},
+		{
+			"type": "lines_block",
+			"headline": "Kontakt",
+			"lines": [
+				[
+					{
+						"text": "E-Mail: "
+					},
+					{
+						"text": "support@ideenatlas.eu",
+						"url": "mailto:support@ideenatlas.eu"
+					}
+				]
+			]
+		},
+		{
+			"type": "lines_block",
+			"headline": "Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV",
+			"lines": [
+				"Simon Stumpf",
+				"Waldstraße 16a",
+				"67245 Lambsheim"
+			]
+		}
+	]
+}

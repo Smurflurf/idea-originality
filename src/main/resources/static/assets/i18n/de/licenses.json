@@ -1,0 +1,243 @@
+{
+	"page_title": "Lizenzen & Credits",
+	"intro": "Der Ideenatlas nutzt und kombiniert diverse Open-Source-Technologien, KI-Forschung und offene Datenquellen. Nachfolgend finden Sie eine Übersicht der verwendeten Komponenten, ihren Einsatzzweck und ihre Lizenzen.",
+	"warning_box": "Alle verwendeten Marken und Produktnamen sind Eigentum ihrer jeweiligen Inhaber. Die Verwendung dieser Open-Source-Software und offenen Daten impliziert keine direkte Unterstützung des Projekts durch die Urheber.",
+	"labels": {
+		"license": "Lizenz",
+		"metadata_license": "Metadaten-Lizenz",
+		"source": "Quelle",
+		"purpose": "Zweck"
+	},
+	"structure": [
+		{
+			"type": "license_section",
+			"title": "Besonderer Dank",
+			"description": "Der Ideenatlas ist ein privates Forschungsprojekt, welches in seiner jetzigen Form ohne externe Unterstützung nicht möglich wäre.",
+			"items": [
+				{
+					"name": "bwHPC (BwUniCluster3.0)",
+					"url": "https://www.bwhpc.de/",
+					"purpose": "Nur durch die Bereitstellung der Hochleistungsrechner im Rahmen des BwUniCluster3.0 ist das Vektorisieren und Clustering der im Ideenatlas gelisteten Forschungsarbeiten in ihrer Menge finanziell und zeitlich tragbar. Ein besonderer Dank gilt außerdem dem Vertrauen, das mir als unabhängigem Studenten für die Umsetzung und aktive Forschung an diesem Projekt entgegengebracht wurde. In diesem Sinne ist das derzeitige Webinterface ein rein unkommerzielles Proof of Concept, welches primär der Vermittlung des Konzepts Ideenatlas dient. Zukünftige Forschung wird das hierarchische Clustering verbessern, um bestmögliche Ergebnisse zu liefern.",
+					"citation": "The authors acknowledge support by the state of Baden-Württemberg through bwHPC."
+				}
+			]
+		},
+		{
+			"type": "license_section",
+			"title": "Datenquellen & Lizenzen",
+			"description": "Der Ideenatlas aggregiert ausschließlich Metadaten aus den folgenden wissenschaftlichen Open-Access-Quellen. Die Lizenzbedingungen für die Volltexte der Artikel bleiben davon unberührt und sind auf den jeweiligen Quellplattformen einsehbar.",
+			"items": [
+				{
+					"name": "arXiv.org",
+					"url": "https://arxiv.org/",
+					"purpose": "Quelle für Preprints aus Physik, Mathematik, Informatik und mehr.",
+					"metadata_license": "Creative Commons CC0 1.0 Universal Public Domain Dedication. Die Metadaten können ohne Einschränkungen genutzt werden."
+				},
+				{
+					"name": "PubMed Central (PMC) Open Access Subset",
+					"url": "https://www.ncbi.nlm.nih.gov/pmc/",
+					"purpose": "Quelle für biomedizinische und biowissenschaftliche Zeitschriftenliteratur.",
+					"metadata_license": "Die Nutzung der Metadaten aus dem \"Non-Commercial Use\"-Subset ist für nicht-kommerzielle Zwecke gestattet. Die Lizenzen der zugehörigen Artikel sind typischerweise CC BY-NC, CC BY-NC-SA oder CC BY-NC-ND.",
+					"citation": "PMC bittet um folgende Nennung:\nPMC Open Access Subset [Internet]. Bethesda (MD): National Library of Medicine. 2003 - [cited YEAR MONTH DAY]. Available from https://pmc.ncbi.nlm.nih.gov/tools/openftlist/."
+				},
+				{
+					"name": "openRxiv (bioRxiv & medRxiv)",
+					"url": "https://www.openrxiv.org/",
+					"purpose": "Quelle für Preprints in den Biowissenschaften und Gesundheitswissenschaften.",
+					"metadata_license": "Die Metadaten werden über eine öffentliche API zur freien Nutzung für Forschungs- und Entdeckungszwecke bereitgestellt. Es gibt keine separate formale Lizenz, die Nutzung im Rahmen eines solchen Projekts ist jedoch vorgesehen."
+				},
+				{
+					"name": "RePEc (Research Papers in Economics)",
+					"url": "http://repec.org/",
+					"purpose": "Quelle für wissenschaftliche Arbeiten aus der Volkswirtschaftslehre.",
+					"metadata_license": "Die Metadaten sind für die nicht-kommerzielle Nutzung frei verfügbar. Die Betreiber bitten um eine Nennung von RePEc als Quelle bei der Verwendung der Daten."
+				},
+				{
+					"name": "PhilPapers",
+					"url": "https://philpapers.org/",
+					"purpose": "Quelle für Forschungsarbeiten aus der Philosophie.",
+					"metadata_license": "Gemäß den Prinzipien der OAI-Initiative (Open Archives Initiative) werden die Metadaten für nicht-kommerzielle Zwecke und zur Förderung der Interoperabilität zwischen wissenschaftlichen Archiven bereitgestellt."
+				}
+			]
+		},
+		{
+			"type": "license_section",
+			"title": "KI-Modelle & API-Dienste",
+			"description": "Die semantische Analyse und Verarbeitung basiert auf:",
+			"items": [
+				{
+					"name": "Google Gemini",
+					"url": "https://deepmind.google/technologies/gemini/",
+					"purpose": "Generierung von Cluster-Namen und thematischen Beschreibungen, Umformulierungen der Nutzer-Eingabetexte.",
+					"license": "API-Dienst von Google."
+				},
+				{
+					"name": "Qwen3-Embedding-0.6B",
+					"url": "https://huggingface.co/Qwen/Qwen3-0.6B",
+					"purpose": "Vektorisierung von Texten (Embeddings) für die semantische Suche.",
+					"license": "Apache 2.0"
+				},
+				{
+					"name": "NLLB-200-distilled-1.3B",
+					"url": "https://huggingface.co/facebook/nllb-200-distilled-1.3B",
+					"purpose": "Übersetzung von Suchanfragen und Dokumenten.",
+					"license": "Creative Commons Attribution Non Commercial 4.0"
+				},
+				{
+					"name": "GlotLID",
+					"url": "https://github.com/cisnlp/GlotLID",
+					"purpose": "Automatische Spracherkennung der Eingabetexte.",
+					"license": "Apache 2.0"
+				},
+				{
+					"name": "Piper Neural TTS",
+					"url": "https://github.com/rhasspy/piper",
+					"purpose": "Lokale Generierung der Sprachausgabe (Text-to-Speech) für die Vorlesefunktion.",
+					"license": "MIT License (Engine)",
+					"citation": "Stimmenmodelle bezogen aus dem 'rhasspy/piper-voices' Repository (https://huggingface.co/rhasspy/piper-voices). Die Lizenzen der einzelnen Stimmen variieren (meist CC0, CC-BY oder Public Domain)."
+				}
+			]
+		},
+		{
+			"type": "license_section",
+			"title": "Python: Data Science, Visualisierung & Backend",
+			"description": "Zur Berechnung des Wissensraums, der Visualisierung und der Server-Logik wird folgendes genutzt:",
+			"items": [
+				{
+					"name": "SentenceTransformers",
+					"url": "https://www.sbert.net/",
+					"purpose": "Framework zur Ausführung der Embedding-Modelle.",
+					"license": "Apache 2.0"
+				},
+				{
+					"name": "UMAP Learn",
+					"url": "https://umap-learn.readthedocs.io/",
+					"purpose": "Dimensionsreduktion an mehreren Stellen, unter anderem für 2D-Kartenpositionen.",
+					"license": "OSI Approved"
+				},
+				{
+					"name": "HDBSCAN",
+					"url": "https://hdbscan.readthedocs.io/",
+					"purpose": "Hierarchischer Clustering-Algorithmus zur Themenfindung.",
+					"license": "BSD License"
+				},
+				{
+					"name": "Scikit-learn",
+					"url": "https://scikit-learn.org/",
+					"purpose": "Maschinelles Lernen (z.B. Normalisierung, TF-IDF).",
+					"license": "BSD 3.0"
+				},
+				{
+					"name": "Matplotlib",
+					"url": "https://matplotlib.org/",
+					"purpose": "Generierung der statischen Karten-Bilder (PNG).",
+					"license": "BSD"
+				},
+				{
+					"name": "Shapely",
+					"url": "https://shapely.readthedocs.io/",
+					"purpose": "Berechnung der geometrischen Umrisse der Cluster.",
+					"license": "BSD 3.0"
+				},
+				{
+					"name": "NetworkX",
+					"url": "https://networkx.org/",
+					"purpose": "Aufbau und Verwaltung des hierarchischen Wissensgraphen.",
+					"license": "BSD 3.0"
+				},
+				{
+					"name": "Plotly",
+					"url": "https://plotly.com/python/",
+					"purpose": "Erstellung interaktiver Graphen-Visualisierungen.",
+					"license": "MIT License"
+				},
+				{
+					"name": "FastText",
+					"url": "https://fasttext.cc/",
+					"purpose": "Basis-Bibliothek für das GlotLID-Modell.",
+					"license": "MIT License"
+				},
+				{
+					"name": "PyCountry",
+					"url": "https://pypi.org/project/pycountry/",
+					"purpose": "Verarbeitung von ISO-Ländercodes und Sprachnamen.",
+					"license": "LGPL v2 (OSI Approved)"
+				},
+				{
+					"name": "Flask",
+					"url": "https://flask.palletsprojects.com/",
+					"purpose": "Webserver für die Python-Microservices.",
+					"license": "BSD-3-Clause License"
+				},
+				{
+					"name": "APScheduler",
+					"url": "https://apscheduler.readthedocs.io/",
+					"purpose": "Planung von Hintergrundaufgaben und Cleanups.",
+					"license": "MIT License"
+				}
+			]
+		},
+		{
+			"type": "license_section",
+			"title": "Frontend",
+			"description": "Die Benutzeroberfläche nutzt folgende Bibliotheken:",
+			"items": [
+				{
+					"name": "Font Awesome Free",
+					"url": "https://fontawesome.com/",
+					"purpose": "Bereitstellung der Icons und Symbole.",
+					"license": "Icons (CC BY 4.0), Fonts (SIL OFL 1.1), Code (MIT License)"
+				},
+				{
+					"name": "KaTeX",
+					"url": "https://katex.org/",
+					"purpose": "Rendering von mathematischen Formeln im Browser.",
+					"license": "MIT License"
+				},
+				{
+					"name": "Tippy.js & Popper",
+					"url": "https://atomiks.github.io/tippyjs/",
+					"purpose": "Darstellung von Tooltips und Popovers.",
+					"license": "MIT License"
+				}
+			]
+		},
+		{
+			"type": "license_section",
+			"title": "Java Backend & Infrastruktur",
+			"description": "Der Anwendungsserver basiert auf:",
+			"items": [
+				{
+					"name": "Spring Boot",
+					"url": "https://spring.io/projects/spring-boot",
+					"purpose": "Haupt-Framework für die Webanwendung.",
+					"license": "Apache 2.0"
+				},
+				{
+					"name": "Qdrant",
+					"url": "https://qdrant.tech/",
+					"purpose": "Vektordatenbank zur Speicherung und Suche der Embeddings.",
+					"license": "Apache 2.0"
+				},
+				{
+					"name": "JGraphT",
+					"url": "https://jgrapht.org/",
+					"purpose": "Analyse von Graphenstrukturen im Backend.",
+					"license": "Dual-licensed LGPL 2.1 / EPL 2.0"
+				},
+				{
+					"name": "SnuggleTeX",
+					"url": "https://github.com/davemckain/snuggletex",
+					"purpose": "Konvertierung von LaTeX zu XML/MathML.",
+					"license": "SnuggleTeX Software License (BSD License)"
+				},
+				{
+					"name": "LaTeX2Unicode",
+					"url": "https://github.com/tomtung/latex2unicode",
+					"purpose": "Umwandlung von LaTeX-Symbolen in Unicode-Text.",
+					"license": "Apache 2.0"
+				}
+			]
+		}
+	]
+}

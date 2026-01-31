@@ -1,0 +1,41 @@
+{
+	"page_title": "Impressum",
+	"intro": "Information pursuant to Sect. 5 DDG",
+	"structure": [
+		{
+			"type": "lines_block",
+			"headline": "Website Operator",
+			"lines": [
+				"Simon Stumpf",
+				"Waldstraße 16a",
+				"67245 Lambsheim",
+				"",
+				"Operated as a private, independent reasearch project."
+			]
+		},
+		{
+			"type": "lines_block",
+			"headline": "Contact",
+			"lines": [
+				[
+					{
+						"text": "Email: "
+					},
+					{
+						"text": "support@ideenatlas.eu",
+						"url": "mailto:support@ideenatlas.eu"
+					}
+				]
+			]
+		},
+		{
+			"type": "lines_block",
+			"headline": "Responsible for content pursuant to Sect. 18 Para. 2 MStV",
+			"lines": [
+				"Simon Stumpf",
+				"Waldstraße 16a",
+				"67245 Lambsheim"
+			]
+		}
+	]
+}

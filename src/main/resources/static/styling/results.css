@@ -1,12 +1,128 @@
+@import './style.css';
+@import './tooltips.css';
+@import './colours.css';
+
+
+.content-header-flex {
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+    flex-wrap: nowrap; 
+    gap: 15px;
+    margin-bottom: 10px;
+	grid-area: header;
+}
+
+.content-header-flex h1 {
+    margin: 0;
+    font-size: 1.3rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text-primary);
+    
+    transition: color 0.1s ease; /* Nur Farbe darf animieren (Theme) */
+    opacity: 1 !important;       /* Erzwinge sofortige Sichtbarkeit */
+    transform: none !important;  /* Keine Bewegung */
+    animation: none !important;  /* Keine Animationen */ 
+}
+
+.result-title-link {
+    text-decoration: none;
+    color: inherit; 
+    transition: color 0.2s ease;
+}
+
+.result-title-link:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
+}
+
+.tippy-box .result-title-link {
+    pointer-events: none; 
+    text-decoration: none !important;
+}
+
+.download-btn-styled {
+    background-color: var(--bg-element);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-main);
+    border-radius: 18px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.download-btn-styled:hover {
+    background-color: var(--bg-element-hover);
+    border-color: var(--text-quaternary); /* #8f9194 */
+    color: var(--text-primary);
+}
+
+.download-btn-styled:disabled {
+    background-color: var(--bg-surface);
+    color: var(--text-disabled);
+    border-color: var(--border-subtle);
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+
+@media (max-width: 768px) {
+    .content-header-flex h1 {
+        font-size: 1.2rem;
+    }
+
+   /* .download-btn-styled span {
+        display: none;
+    }*/
+
+    .download-btn-styled {
+        padding: 8px 10px;
+    }
+}
+
+
 .results-container {
     width: 80%;
-    max-width: 900px;
-    margin-top: 40px;
+    max-width: 900px; 
+    min-height: 100vh; 
+    display: flex;
+    flex-direction: column;
+    padding: 0; 
+    margin: 0 auto; 
+    position: relative;
+    background-color: var(--bg-app);
+}
+
+/* Während des Wischens zwingen wir alle Tabs auf die Position 0,0 im Container.
+   Dadurch liegen sie übereinander (gestapelt).
+   Das JS übernimmt dann das Verschieben (translateX) nach links/rechts. */
+.results-container.is-swiping .viz-content-pane {
+    position: absolute;
+    top: var(--swipe-header-offset, 60px); 
+    left: 0;
+    width: 100%;
+    overflow: hidden; 
+}
+
+/* Der Container selbst muss overflow-x hidden sein, 
+   damit keine horizontale Scrollbar während des Wischens entsteht */
+.results-container.is-swiping {
+	overflow-x: hidden;
+	overflow-y: hidden;
 }
 
 .result-card {
-    background-color: #303134;
-    border: 1px solid #5f6368;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-main);
     border-radius: 12px;
     padding: 20px;
     margin-bottom: 16px;
@@ -16,7 +132,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #444746;
+    border-bottom: 1px solid var(--border-subtle);
     padding-bottom: 10px;
     margin-bottom: 10px;
 }
@@ -24,91 +140,16 @@
 .result-score {
     font-size: 1.1rem;
     font-weight: 500;
-    color: #8ab4f8;
+    color: var(--color-primary);
 }
 
 .result-payload {
-    font-family: monospace;
-    word-break: break-all;
-    color: #bdc1c6;
-}
-
-.result-payload pre {
-    background-color: #202124;
-    padding: 12px;
+    background-color: var(--bg-app); /* #202124 */
     border-radius: 8px;
-    font-size: 13px;
-    white-space: pre-wrap; 
-    word-break: break-word; 
-}
-
-
-h1,
-h2 {
-    font-weight: 500;
-}
-
-.result-summary {
-    margin-top: 15px;
-    margin-bottom: 20px;
-}
-
-.result-summary h3 {
-    font-size: 1.1rem;
-    color: #e8eaed;
-    margin-top: 0;
-    margin-bottom: 10px;
-    font-weight: 500;
-}
-
-.result-summary p {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    font-size: 1rem;
-    line-height: 1.6;
-    color: #bdc1c6;
-    margin-top: 0;
-    overflow-wrap: break-word;
-    word-break: break-word;
-}
-.toggle-json-btn {
-    background: transparent;
-    border: none;
-    border-radius: 65%;
-    cursor: pointer;
-    
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.toggle-json-btn .arrow {
-    color: #8191a5; 
-    font-size: 16px; 
-    transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-.toggle-json-btn:hover {
-    background-color: #434c5e;
-}
-
-.toggle-json-btn:hover .arrow {
-    color: #d8dee9;
-}
-
-.toggle-json-btn.active .arrow {
-    transform: rotate(90deg);
-}
-
-.result-payload {
-    background-color: #202124;
-    border-radius: 8px;
-    border: 1px solid #444746;
+    border: 1px solid var(--border-subtle);
     font-family: monospace;
     font-size: 13px;
-    color: #bdc1c6;
+    color: var(--text-secondary);
     word-break: break-word; 
     overflow: hidden; 
     max-height: 0; 
@@ -121,7 +162,13 @@ h2 {
 .result-payload.active {
     opacity: 1;
     padding: 12px 15px; 
-    max-height: 1000px; 
+    max-height: 1000px;
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.result-payload.active::-webkit-scrollbar {
+    display: none;
 }
 
 .result-payload pre {
@@ -135,44 +182,235 @@ h2 {
     white-space: pre-wrap; 
 }
 
-.source-link {
-    color: #bdc1c6;
-    text-decoration: none;
-    font-size: 1rem;
-    transition: color 0.2s ease;
+h1,
+h2 {
+    font-weight: 500;
+    color: var(--text-primary);
 }
 
-.source-link:hover {
-    color: #8ab4f8;
-    text-decoration: underline;
+.result-summary {
+    margin-bottom: 20px;
+}
+
+.result-summary h3 {
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+.result-summary p {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin-top: 0;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+/* =================================================================== */
+/* ==             HIERARCHY & EXPANDABLE ABSTRACT STYLES            == */
+/* =================================================================== */
+
+.hierarchy-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.hierarchy-container.is-nested {
+    margin-top: 10px;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+}
+
+.hierarchy-list li {
+    position: relative;
+    display: flex;
+    align-items: center; 
+    padding-left: calc(var(--indent-level) * 15px);
+}
+
+.hierarchy-list li.needs-separator {
+    position: relative;
+    margin-top: 8px;
+}
+
+.hierarchy-list li.needs-separator::after {
+    content: '';
+    position: absolute;
+    background-color: var(--border-subtle);
+    height: 1px;
+    top: -8px; 
+    left: 0%;
+    right: 75%;
+}
+
+/* Neue Klasse für GPU-Beschleunigung */
+.gpu-accelerated {
+    will-change: transform;
+    transform-origin: 0 0; /* Wichtig: Skalierung vom Ursprung oben links */
+    backface-visibility: hidden; /* Verhindert Flackern auf manchen Mobiles */
+    perspective: 1000px;
+}
+
+#own-viz-content .hierarchy-container .hierarchy-list li::before,
+#neighbor-viz-content .hierarchy-container .hierarchy-list li::before, 
+#serendipity-viz-content .hierarchy-container .hierarchy-list li::before {
+    content: '>';
+    position: absolute;
+    left: calc(var(--indent-level) * 15px - 12px);
+    top: 50%;
+    transform: translateY(-50%);
+    /* Fallback war #8f9194 -> text-quaternary */
+    color: var(--indicator-color, var(--text-quaternary));
+    font-weight: 500;
+    font-size: 16px;
+}
+
+#own-viz-content .hierarchy-container .hierarchy-list li[style*="--indent-level: 0;"]::before,
+#neighbor-viz-content .hierarchy-container .hierarchy-list li[style*="--indent-level: 0;"]::before, 
+#serendipity-viz-content .hierarchy-container .hierarchy-list li[style*="--indent-level: 0;"]::before {
+    display: none;
+}
+
+    
+.hierarchy-item-box {
+    /* Fallback für Browser, die color-mix nicht können */
+    background-color: var(--bg-element);
+    
+    /* Mische die Cluster-Farbe (falls vorhanden) mit dem Element-Hintergrund */
+    background-color: color-mix(
+        in srgb, 
+        var(--cluster-border-color, var(--bg-element)) var(--cluster-box-bg-opacity), 
+        var(--bg-element)
+    );
+
+    border-width: var(--cluster-box-border-width);
+    border-style: solid;
+    border-color: var(--cluster-border-color, var(--border-main));
+    border-radius: 6px;
+    padding: 6px 12px;
+    width: fit-content;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    transition: border-color 0.2s, background-color 0.2s;
+    cursor: pointer;
+}
+
+  
+
+.hierarchy-item-box:hover {
+    border-color: var(--cluster-border-color, var(--color-primary-hover));
+    
+    background-color: color-mix(
+        in srgb, 
+        var(--cluster-border-color, var(--bg-element)) var(--cluster-box-bg-opacity-hover), 
+        var(--bg-element)
+    );
+}
+
+.hierarchy-item-name {
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.hierarchy-item-confidence {
+    font-size: 13px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+/* --- NEW STYLES FOR COLLAPSIBLE HIERARCHY --- */
+.hierarchy-list-wrapper {
+    position: relative;
+    padding-left: 20px; 
+}
+
+.toggle-hierarchy-btn {
+    position: absolute;
+    left: 0;
+    top: 6px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+}
+
+.toggle-hierarchy-btn .arrow {
+    color: var(--color-viz-arrow);
+    font-size: 14px;
+    transition: transform 0.3s ease-out; 
+}
+
+.hierarchy-list-wrapper:not(.is-collapsed) .toggle-hierarchy-btn .arrow {
+    transform: rotate(90deg);
+}
+
+.hierarchy-list {
+    transition: gap 0.3s ease-out;
+}
+
+.hierarchy-list li {
+    overflow: hidden; 
+    max-height: 500px; 
+    opacity: 1;
+    transition: max-height 0.3s ease-out, opacity 0.2s ease-out, padding-left 0.3s ease-out;
+}
+
+.hierarchy-list-wrapper.is-collapsed .hierarchy-list li {
+    max-height: 0;
+    opacity: 0;
+}
+
+.hierarchy-list-wrapper.is-collapsed .hierarchy-list li:last-child {
+    max-height: 120px; 
+    opacity: 1;
+    padding-left: 0;
+}
+
+.hierarchy-list-wrapper.is-collapsed .hierarchy-list li:last-child::before {
+    display: none;
+}
+
+.hierarchy-list-wrapper.is-collapsed .hierarchy-list li:last-child .hierarchy-item-box {
+    cursor: pointer;
+}
+
+.hierarchy-list-wrapper.is-collapsed .hierarchy-list {
+    gap: 0;
+}
+
+
+.abstract-wrapper {
+    position: relative;
 }
 
 .result-summary p.expandable-abstract {
     position: relative; 
-    max-height: 4.8em; 
+    max-height: 4.8em;
     overflow: hidden;
+    margin-bottom: 0;
     transition: max-height 0.3s ease-in-out;
-}
-
-.result-summary p.expandable-abstract.expanded {
-    max-height: 1000px;
-}
-
-.result-summary p.expandable-abstract.expanded .expand-button {
-    display: none;
 }
 
 .result-summary p.expandable-abstract::after {
     content: '';
+    position: absolute;
     bottom: 0;
     right: 0;
     width: 100%;
-    background: linear-gradient(to top, #303134 20%, rgba(48, 49, 52, 0));
+    height: 1.5em; 
     transition: opacity 0.2s ease-in-out;
-}
-
-.result-summary p.expandable-abstract.expanded::after {
-    opacity: 0;
+    pointer-events: none; 
 }
 
 .expand-button {
@@ -180,14 +418,811 @@ h2 {
     position: absolute;
     bottom: 0;
     right: 0;
-    background-color: #303134;
-    color: #8ab4f8; 
+    background-color: var(--bg-surface);
+    color: var(--color-primary); 
     padding: 1px 4px;
     border-radius: 5px;
     line-height: 1; 
     transition: background-color 0.2s ease;
 }
-
 .expand-button:hover {
-    background-color: #434c5e;
+    background-color: var(--bg-element-hover-light);
+}
+
+.abstract-wrapper.expanded .expandable-abstract {
+    max-height: 20em;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    /* #5f6368 (thumb) #303134 (track) */
+    scrollbar-color: var(--border-main) var(--bg-surface); 
+}
+
+.abstract-wrapper.expanded .expandable-abstract::-webkit-scrollbar {
+    width: 12px;
+}
+
+.abstract-wrapper.expanded .expandable-abstract::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.abstract-wrapper.expanded .expandable-abstract::-webkit-scrollbar-thumb {
+    background-color: var(--border-main);
+    border-radius: 6px;
+    border: 4px solid var(--bg-surface);
+}
+
+.abstract-wrapper.expanded .expandable-abstract::after {
+    display: none;
+}
+
+.abstract-wrapper.expanded .expand-button {
+    display: none;
+}
+
+
+/* =================================================================== */
+/* ==   HIERARCHY CONNECTORS & INDICATORS 			                == */
+/* =================================================================== */
+/* 1. Stellt sicher, dass die Listenelemente eine konsistente Höhe haben */
+.hierarchy-list li {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding-left: calc(var(--indent-level) * 15px);
+}
+
+/* 2. Die Regel für das FARBIGE '>' Symbol (unverändert) */
+#neighbor-viz-content > .hierarchy-container .hierarchy-list li[style*="--indicator-color"]::before,
+#serendipity-viz-content > .hierarchy-container .hierarchy-list li[style*="--indicator-color"]::before {
+    content: '>';
+    transform: translateY(-50%);
+    color: var(--indicator-color);
+    font-weight: 500;
+    font-size: 16px;
+}
+
+/* 3. Die Regel für den FARBLOSEN Strich (unverändert) */
+#neighbor-viz-content > .hierarchy-container .hierarchy-list li:not([style*="--indicator-color"]):not([style*="--indent-level: 0;"])::before,
+#serendipity-viz-content > .hierarchy-container .hierarchy-list li:not([style*="--indicator-color"]):not([style*="--indent-level: 0;"])::before {
+    content: '';
+    width: 8px;
+    height: 0;
+    /* War #8f9194 */
+    border-top: 1.5px solid var(--text-quaternary);
+    transform: none;
+}
+
+/* 4. Die L-förmige Verbindungslinie (PC-perfekte Version) */
+#neighbor-viz-content > .hierarchy-container .hierarchy-list li[style*="--indicator-color"][style*="--parent-indent-level"]::after,
+#serendipity-viz-content > .hierarchy-container .hierarchy-list li[style*="--indicator-color"][style*="--parent-indent-level"]::after {
+    content: '';
+    position: absolute;
+    background-color: transparent;
+    
+    /* Erzeugt die vertikale Linie */
+    top: 0;
+    height: 50%;
+
+    /* Positioniert und zeichnet die Linien */
+    left: calc(var(--parent-indent-level) * 15px - 1.5px);
+    width: calc((var(--indent-level) - var(--parent-indent-level)) * 15px - 4px);
+    border-left: 1.5px solid var(--indicator-color);
+    border-bottom: 1.5px solid var(--indicator-color);
+    border-bottom-left-radius: 5px;
+    
+    /* Die notwendige Korrektur, die auf dem PC funktioniert */
+    transform: translateY(0.75px);
+}
+
+/* =================================================================== */
+/* ==               VISUALIZATION & CONTROLS STYLES                 == */
+/* =================================================================== */
+
+.visualization-container {
+    margin-top: 20px;
+    margin-bottom: 30px;
+    padding: 20px;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-main);
+    border-radius: 12px;
+}
+
+.viz-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: clamp(2px, 1cqi, 10px); /* Lücke schrumpft mit */
+    margin-bottom: 15px;
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: 15px;
+    flex-wrap: nowrap;
+    width: 100%;
+    container-type: inline-size;
+}
+
+.ctrl-btn {
+    background-color: var(--bg-element);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-main);
+    border-radius: 15px;
+    white-space: nowrap;
+    text-overflow: clip; 
+    overflow: visible;
+    font-size: clamp(6px, 2.8cqi, 14px);
+    padding: 6px clamp(2px, 1cqi, 15px);
+    cursor: pointer;
+    transition: 
+        background-color 0.2s ease, 
+        color 0.2s ease, 
+        border-color 0.2s ease, 
+        box-shadow 0.2s ease;
+    flex: 0 1 auto;
+    min-width: 0;
+}
+.ctrl-btn:hover {
+    background-color: var(--bg-element-hover);
+    border-color: var(--text-quaternary);
+}
+.ctrl-btn.active {
+    background-color: var(--color-primary);
+    color: var(--text-on-accent);
+    border-color: var(--color-primary);
+}
+
+.viz-stack-container {
+    position: relative;
+    width: 100%;
+    /* War #0e0e0f -> extra definierte Deep Farbe */
+    background-color: var(--bg-deep); 
+    border-radius: 8px;
+}
+
+.export-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 10;
+    width: 32px;
+    height: 32px;
+    background-color: var(--bg-element);
+    color: var(--text-primary);
+    border: 1px solid var(--border-main);
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+.export-btn:hover {
+	position: absolute;
+	top: 12px;
+    right: 12px;
+    z-index: 10; 
+    background-color: var(--color-primary);
+    color: var(--text-on-accent);
+    border-color: var(--color-primary);
+}
+.export-btn i {
+    font-size: 14px;
+}
+
+.zoom-pan-wrapper .viz-layer {
+    height: 100%;
+}
+
+#viz-layer-own-base, #viz-layer-nc-base {
+    z-index: 1; 
+    pointer-events: auto; 
+}
+
+#viz-layer-own-points, #viz-layer-nc-points { z-index: 2; } 
+
+#viz-layer-own-context-img, #viz-layer-nc-context-img { z-index: 3; }
+
+#viz-layer-own-outlines-svg, #viz-layer-nc-outlines-svg { 
+    z-index: 4; 
+    display: block !important;
+}
+
+#viz-layer-own-crosshair-canvas, #viz-layer-nc-crosshair-canvas { z-index: 6; }
+
+.outline-path {
+    stroke-width: var(--stroke-width-px, 1.5px);
+}
+
+
+#viz-layer-own-labels-svg, #viz-layer-nc-labels-svg {
+    z-index: 7; 
+    display: block !important; 
+}
+
+.toggle-json-btn {
+    background: transparent;
+    border: none;
+    border-radius: 65%;
+    cursor: pointer;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+.toggle-json-btn .arrow {
+    color: var(--color-viz-arrow); 
+    font-size: 16px; 
+    transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.toggle-json-btn:hover {
+    background-color: var(--bg-element-hover-light);
+}
+.toggle-json-btn:hover .arrow {
+    color: var(--color-viz-arrow-hover);
+}
+.toggle-json-btn.active .arrow {
+    transform: rotate(90deg);
+}
+
+.source-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 1rem;
+    transition: color 0.2s ease;
+}
+.source-link:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
+}
+
+/* =================================================================== */
+/* ==                 	OWN IDEA VS NEIGHBORS		                == */
+/* =================================================================== */
+.viz-content-pane {
+    /* Wir nehmen sie wieder in den Fluss */
+    position: relative; 
+    width: 100%;
+    height: auto; /* Höhe passt sich dem Inhalt an */
+    overflow: visible; /* Keine internen Scrollbalken mehr! */
+    
+    /* Standardmäßig ausblenden */
+    display: none;
+    
+    /* Wichtig für deine Swipe-Animation: */
+    transform-origin: top center;
+    padding: 20px 0 20px 0; 
+}
+
+.viz-content-pane.active {
+    display: block;
+    /* transform: translateX(0); <-- Kann raus oder bleiben, stört meist nicht */
+}
+
+.viz-content-pane.is-swiping {
+	display: block;
+	z-index: 3;
+	transition: none !important;
+	pointer-events: none;
+}
+
+.viz-content-pane.is-animating {
+	transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.viz-toggle-header {
+    flex: 0 0 auto; 
+    z-index: 10;
+    background-color: var(--bg-app); 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 0; 
+    border-bottom: 1px solid var(--border-subtle);
+    width: 100%;
+}
+
+.viz-content-stack {
+    flex: 1 1 auto; 
+    position: relative;
+    width: 100%;
+    overflow: hidden; 
+}
+
+
+.viz-toggle-btn {
+    font-size: 1.1rem;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--text-quaternary); 
+    transition: color 0.2s ease-in-out;
+    user-select: none; 
+    text-align: center;
+}
+
+.viz-toggle-btn:hover {
+    color: var(--text-secondary);
+}
+
+.viz-toggle-btn.active {
+    color: var(--text-primary); 
+}
+
+.viz-separator {
+    color: var(--border-main);
+    font-size: 1.2rem;
+    font-weight: 300;
+}
+
+/* =================================================================== */
+/* ==                 	RESULTS FOR CENTROIDS-NN	                == */
+/* =================================================================== */
+
+.topic-tabs-scroller {
+    overflow-x: auto; 
+    -webkit-overflow-scrolling: touch; 
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-main) var(--bg-surface);
+    padding-bottom: 15px; 
+}
+
+.topic-tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 12px;
+    white-space: nowrap; 
+}
+
+.topic-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    border-width: var(--cluster-box-border-width, 1px);
+    border-style: solid;
+    border-color: var(--tab-border-color, var(--border-main));
+    background-color: var(--bg-element);
+    background-color: color-mix(
+        in srgb, 
+        var(--tab-border-color, var(--bg-element)) var(--cluster-box-bg-opacity), 
+        var(--bg-element)
+    );
+    color: var(--text-secondary);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+}
+
+.topic-tab:hover {
+    background-color: color-mix(
+        in srgb, 
+        var(--tab-border-color, var(--bg-element)) var(--cluster-box-bg-opacity-hover), 
+        var(--bg-element)
+    );
+    
+    border-color: var(--tab-border-color, var(--text-quaternary)); 
+}
+
+.topic-tab.active {
+    /* Fallback war #8ab4f8 -> color-primary */
+    background-color: var(--active-cluster-color, var(--color-primary));
+    border-color: var(--active-cluster-color, var(--color-primary));
+    font-weight: 500;
+    /* Fallback war #202124 -> text-on-accent */
+	color: var(--active-cluster-text-color, var(--text-on-accent));
+}
+
+.tab-score {
+    /* War rgba(0, 0, 0, 0.1) -> Black mit 10% */
+    background-color: rgba(var(--bg-black-rgb), 0.1);
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 12px;
+}
+
+.active-cluster-card-container {
+    margin-top: 25px;
+    margin-bottom: 25px;
+}
+.active-cluster-card-container .result-card {
+    /* Fallback war #8ab4f8 -> color-primary */
+    border-color: var(--active-cluster-color, var(--color-primary));
+}
+
+.filtered-results-list {
+    padding-top: 4px;
+    padding-left: 4px;
+    padding-right: 4px;
+    /* Fallback war #444746 -> border-subtle */
+    border: 1px solid var(--active-cluster-color, var(--border-subtle));
+    border-radius: 12px;
+    min-height: 400px;
+}
+
+.filtered-results-list .result-card {
+    margin-bottom: 4px;
+}
+
+
+/* =================================================================== */
+/* ==                 SKELETON LOADER STYLES                        == */
+/* =================================================================== */
+
+@keyframes shimmer {
+    0% { background-position: -468px 0; }
+    100% { background-position: 468px 0; }
+}
+
+.skeleton-card {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 4px;
+    overflow: hidden;
+}
+
+.skeleton-item {
+    background-color: var(--bg-element);
+    /* Gradient von bg-element zu bg-element-hover und zurück */
+    background-image: linear-gradient(to right, 
+        var(--bg-element) 0%, 
+        var(--bg-element-hover) 20%, 
+        var(--bg-element) 40%, 
+        var(--bg-element) 100%);
+    background-repeat: no-repeat;
+    background-size: 800px 104px;
+    border-radius: 6px;
+    animation: shimmer 1.5s infinite linear;
+}
+
+.skeleton-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.skeleton-score { width: 100px; height: 20px; }
+.skeleton-link { width: 60px; height: 20px; }
+.skeleton-title { width: 70%; height: 24px; margin-bottom: 12px; }
+.skeleton-line { width: 100%; height: 16px; margin-bottom: 8px; }
+.skeleton-line.short { width: 85%; }
+
+
+/* =================================================================== */
+/* ==                 		NO RESULTS MESSAGE		                == */
+/* =================================================================== */
+.no-results-message {
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--text-quaternary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+.no-results-message i {
+    font-size: 2.5rem;
+    color: var(--text-disabled);
+}
+
+/* =================================================================== */
+/* ==                 RESPONSIVE STYLES (MEDIA QUERY)               == */
+/* =================================================================== */
+
+@media (max-width: 768px) {
+    .hierarchy-item-name {
+        font-size: 12px;
+    }
+    .hierarchy-item-confidence {
+        font-size: 11px;
+    }
+    .hierarchy-item-box {
+        padding: 5px 10px;
+        gap: 8px;
+    }
+    .results-container {
+        width: 95%;
+    }
+}
+
+/* =================================================================== */
+/* ==             HIGHLIGHTING FOR CLICKED CARDS                    == */
+/* =================================================================== */
+@keyframes flash {
+  0% {
+    box-shadow: 
+      inset 0 0 0px 2000px rgba(var(--color-primary-rgb), 0.2),
+      0 0 0px 0px rgba(var(--color-primary-rgb), 0.7);
+  }
+  40% {
+     box-shadow: 
+      inset 0 0 0px 2000px rgba(var(--color-primary-rgb), 0.25),
+      0 0 10px 15px rgba(var(--color-primary-rgb), 0);
+  }
+  100% {
+    box-shadow: 
+      inset 0 0 0px 2000px rgba(var(--color-primary-rgb), 0),
+      0 0 0px 0px rgba(var(--color-primary-rgb), 0);
+  }
+}
+
+.result-card.highlight {
+    animation: flash 1.5s ease-out;
+}
+
+/* =================================================================== */
+/* ==               PERFORMANCE OPTIMIZATION (CULLING)              == */
+/* =================================================================== */
+
+.result-card {
+    content-visibility: auto;
+    contain-intrinsic-size: 300px; 
+}
+
+.result-card.is-visible {
+    content-visibility: visible;
+}
+
+/* =================================================================== */
+/* ==               TOOLTIP-SPECIFIC INTERACTIVITY                == */
+/* =================================================================== */
+
+.tippy-box .result-summary:hover {
+    cursor: pointer;
+}
+
+.tippy-box .result-summary:hover h3 {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+}
+
+/* =================================================================== */
+/* ==                 		NO RESULTS MESSAGE		                == */
+/* =================================================================== */
+.no-results-message {
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--text-quaternary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+.no-results-message i {
+    font-size: 2.5rem;
+    color: var(--text-disabled);
+}
+
+/* =================================================================== */
+/* ==       TOOLTIP & RESPONSIVE ANPASSUNGEN (KORRIGIERTE VERSION)  == */
+/* =================================================================== */
+
+.tippy-box[data-theme~='custom-card'] .result-card {
+    padding: 15px;
+    box-shadow: none;
+    border: none;
+}
+
+.tippy-box[data-theme~='custom-card'] .result-summary p {
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.tippy-box[data-theme~='custom-card'] .toggle-json-btn,
+.tippy-box[data-theme~='custom-card'] .result-payload {
+    display: none;
+}
+
+
+@media (max-width: 768px) {
+    .tippy-box[data-theme~='custom-card'] .result-card {
+        padding: 12px;
+        max-width: 85vw; 
+    }
+
+    .tippy-box[data-theme~='custom-card'] .result-summary h3 {
+        font-size: 0.95rem;
+        margin-bottom: 6px;
+    }
+    
+    .tippy-box[data-theme~='custom-card'] .result-summary p {
+        font-size: 0.85rem;
+        max-height: 6em;
+    }
+
+    .tippy-box[data-theme~='custom-card'] .result-header {
+        padding-bottom: 8px;
+        margin-bottom: 8px;
+    }
+    .tippy-box[data-theme~='custom-card'] .result-score,
+    .tippy-box[data-theme~='custom-card'] .source-link {
+        font-size: 0.9rem;
+    }
+}
+
+/* =================================================================== */
+/* ==       TOOLTIP-SPEZIFISCHE ÜBERSCHREIBUNGEN                      == */
+/* =================================================================== */
+
+.tippy-box .result-summary p.expandable-abstract {
+    max-height: 14em; 
+}
+
+.tippy-box .expand-button {
+    display: none;
+}
+
+.tippy-box {
+    z-index: 9999 !important; 
+}
+
+/* =================================================================== */
+/* ==             MOBILE SELECTION SCOPING (ISOLATION)              == */
+/* =================================================================== */
+
+/* 1. Isolation: Die Karte als unabhängigen Inhalt definieren */
+.result-card {
+    /* 'contain' hilft dem Browser, Grenzen für Rendering & Selection zu erkennen */
+    contain: content; 
+}
+
+/* 2. UI-Elemente unselektierbar machen (Die Grenzen schaffen) */
+.result-header,
+.result-score,
+.source-link,
+.hierarchy-container,
+.toggle-json-btn,
+.viz-controls,
+.topic-tabs-scroller,
+.download-btn-styled,
+.content-header-flex button {
+    -webkit-user-select: none; /* Safari / Chrome */
+    user-select: none;         /* Standard */
+}
+
+/* 3. Den eigentlichen Inhalt explizit als Text markieren */
+/* Das zwingt den Browser, hier den Fokus für die Auswahl zu setzen */
+.result-summary,
+.expandable-abstract,
+.result-title-link,
+.result-payload {
+    -webkit-user-select: text;
+    user-select: text;
+    cursor: text;
+}
+
+/* Optional: Verhindert, dass Klicks auf den Expand-Button Text markieren */
+.expand-button {
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* =================================================================== */
+/* ==       	   	    SCROLL FIX: UNABHÄNGIGE TABS	            == */
+/* =================================================================== */
+
+/* 1. Globalen Scroll deaktivieren */
+html, body { 
+    overflow: hidden !important; 
+    height: 100% !important; 
+    width: 100% !important; 
+}
+
+/* 2. Container ist die "Bühne", füllt den Screen */
+.results-container {
+    position: relative;
+    width: 100% !important;
+    height: 100% !important;
+    overflow: hidden;
+    padding: 0 !important;
+    max-width: none !important;
+}
+
+/* 3. HEADER: Schwebt oben, swipet NICHT mit */
+.viz-toggle-header {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 90px;
+	z-index: 100;
+	background: var(--bg-app);
+	transition: transform 0.3s ease-in-out;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+    box-sizing: border-box;
+}
+
+@media ( max-width : 768px) {
+	.viz-toggle-header {
+		/* Sicherheitszone links für Hamburger, rechts für Symmetrie (Zentrierung) */
+		padding: 0 0 0 60px; 
+	}
+}
+
+html[data-is-offline="true"] .viz-toggle-header {
+    padding-left: 0 !important;
+}
+
+/* Klasse zum Verstecken beim Scrollen (unverändert) */
+.viz-toggle-header.is-scroll-hidden {
+    transform: translateY(-100%);
+}
+
+/* 4. TABS: Starten jetzt UNTER dem Header */
+/* Wenn wir NICHT swipen und der Header DA ist, hat der Tab sein top: 90px */
+.viz-content-pane {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    display: none;
+    overflow-y: auto !important;
+	padding: 110px 0 40px 0;
+	background: var(--bg-app);
+    transition: padding-top 0.3s ease-in-out; /* Nur das Padding animiert */
+}
+
+/* Neue Regel: Wenn der Header weg ist, füllt der Tab den ganzen Screen */
+.viz-content-pane.is-header-hidden {
+	top: 0;
+	height: 100%;
+}
+
+body.is-header-hidden .viz-toggle-header {
+	transform: translateY(-100%);
+}
+
+body.is-header-hidden .viz-content-pane {
+	padding-top: 0;
+}
+
+.results-container.is-swiping .viz-content-pane {
+	transition: none;
+	top: 0 !important;
+	height: 100% !important;
+}
+
+/* Inhalt im Tab wieder zentrieren */
+.viz-content-pane > * {
+    max-width: 900px;
+    margin-inline: auto;
+    width: 90%;
+}
+
+/* KORREKTUR: Zwingt den HR-Trennstrich zur Zentrierung mit !important */
+.viz-content-pane > hr {
+    margin: 30px auto !important;
+}
+
+.viz-content-pane > *:first-child {
+    margin-top: 0 !important;
+}
+
+/* =================================================================== */
+/* ==       	    Menu Button auf header höhe			            == */
+/* =================================================================== */
+.menu-trigger {
+	position: absolute !important;
+	top: 0 !important;
+	left: 0 !important;
+	width: 80px !important;
+	height: 90px !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	background: transparent !important;
+	border: none !important;
+	z-index: 110 !important;
+	transition: transform 0.3s ease-in-out !important;
+}
+
+@media (max-width: 768px) {
+	/* Der Button verschwindet mit, wenn der Header versteckt wird */
+    body.is-header-hidden .menu-trigger {
+        transform: translateY(-100%) !important;
+    }
 }

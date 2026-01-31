@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+	<!-- ========================================================= -->
+	<!-- TEMPLATE 1: A single search result (with score & details) -->
+	<!-- ========================================================= -->
+	<div th:fragment="resultCard(result, contextPrefix)"
+		class="result-card"
+		th:id="|${contextPrefix}-result-card-${result.id}|">
+		<div class="result-header">
+			<span class="result-score">
+				<span data-i18n="card.score">Score: </span>
+				<span th:text="${#numbers.formatDecimal(result.score, 1, 4)}"></span>
+			</span>
+			<a class="source-link" th:href="${result.contentUrl}"
+				th:text="${result.payload.get('type')}" target="_blank"
+				data-tippy-content="open source"
+				data-i18n="card.open_source_tooltip"></a>
+		</div>
+		<div class="hierarchy-container is-nested"
+			th:if="${result.payload['namedClusterHierarchy']}">
+			<div class="hierarchy-list-wrapper is-collapsed">
+				<button class="toggle-hierarchy-btn"
+					th:if="${#lists.size(result.payload['namedClusterHierarchy']) > 1}"
+					data-tippy-content="Show full hierarchy"
+					data-i18n="card.show_hierarchy_tooltip">
+					<i class="fa-solid fa-caret-right arrow"></i>
+				</button>
+				<ul class="hierarchy-list">
+					<li
+						th:each="entry, iter : ${result.payload['namedClusterHierarchy']}"
+						th:style="|--indent-level: ${iter.index};|">
+						<div class="hierarchy-item-box color-coded-box"
+							th:data-cluster-id="${entry['id']}"
+							th:data-tippy-content="${entry['id']}">
+							<span class="hierarchy-item-name" th:text="${entry['name']}"></span>
+							<span class="hierarchy-item-confidence"> (<span
+								data-i18n="card.confidence_prefix">Confidence</span>: 
+								<span th:text="${entry['score'] != null ? #numbers.formatDecimal(entry['score'], 1, 2) : '0.00'}"></span>)
+							</span>
+						</div>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<div class="result-summary">
+			<h3>
+				<a class="result-title-link" th:href="${result.contentUrl}"
+					th:utext="${result.payload.get('title')}" target="_blank"
+					rel="noopener noreferrer"> </a>
+			</h3>
+			<p class="expandable-abstract"
+				th:utext="${result.payload.get('abstract')}"></p>
+		</div>
+		<button class="toggle-json-btn"
+			data-tippy-content="show/hide raw JSON"
+			data-i18n="card.toggle_json_tooltip">
+			<i class="fa-solid fa-caret-right arrow"></i>
+		</button>
+		<div class="result-payload">
+			<pre th:text="${result.payload.get('prettyJson')}"></pre>
+		</div>
+	</div>
+
+
+	<!-- ========================================================= -->
+	<!-- TEMPLATE 2: A single centroid card 					   -->
+	<!-- ========================================================= -->
+	<div th:fragment="centroidCard(centroidData, isActive)"
+		th:class="|result-card centroid-card ${isActive ? 'active' : ''}|"
+		th:data-cluster-id="${centroidData.payload.id}">
+
+		<div class="result-header">
+			<span class="result-score">
+				<span data-i18n="card.score">Score: </span>
+				<span th:text="${#numbers.formatDecimal(centroidData.score, 1, 4)}"></span>
+			</span>
+			<span class="source-link" th:text="${centroidData.payload.id}"
+				data-tippy-content="Topic Cluster"
+				data-i18n="card.topic_cluster_tooltip"></span>
+		</div>
+		<div class="result-summary">
+			<h3 th:text="${centroidData.payload.get('cluster_name')}"></h3>
+
+			<p th:if="${centroidData.payload.get('cluster_description')}"
+				th:text="${centroidData.payload.get('cluster_description')}"></p>
+
+			<!-- BLOCK A: Liste vorhanden -->
+			<div
+				th:if="${!#lists.isEmpty(centroidData.payload.get('sorted_source_distribution'))}">
+				<p style="margin-top: 8px; margin-bottom: 4px;">
+					<span data-i18n="card.cluster_info.list_intro">The cluster contains </span>
+					<span th:text="${#numbers.formatInteger(centroidData.payload.get('size'), 0, 'COMMA')}"></span>
+					<span data-i18n="card.cluster_info.list_outro"> documents:</span>
+				</p>
+
+				<ul style="margin: 0; padding-left: 20px; list-style: none;">
+					<!-- KORREKTUR: Zurück zur Punkt-Notation für Java-Objekte -->
+					<li th:each="source : ${centroidData.payload.get('sorted_source_distribution')}">
+						<span th:text="|${source.name}: ${source.count}|"></span>
+					</li>
+				</ul>
+			</div>
+
+			<!-- BLOCK B: Keine Liste (Fallback) -->
+			<div
+				th:if="${#lists.isEmpty(centroidData.payload.get('sorted_source_distribution')) and centroidData.payload.get('size') > 0}">
+				<p style="margin-top: 8px; margin-bottom: 4px;">
+					<span data-i18n="card.cluster_info.simple_intro">This topic cluster contains </span>
+					<span th:text="${#numbers.formatInteger(centroidData.payload.get('size'), 0, 'COMMA')}"></span>
+					<span data-i18n="card.cluster_info.simple_outro"> documents.</span>
+				</p>
+			</div>
+		</div>
+	</div>
+
+</body>
+</html>

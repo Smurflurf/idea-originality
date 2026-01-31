@@ -1,0 +1,96 @@
+@import './colours.css';
+
+.download-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(var(--bg-black-rgb), 0.635);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    backdrop-filter: blur(3px);
+}
+
+.download-popup-overlay.is-visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.download-popup-modal {
+    background-color: var(--bg-panel-floating);
+    color: var(--text-primary);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 10px 30px rgba(var(--bg-black-rgb), 0.5);
+    font-family: 'Roboto', sans-serif;
+    border: 1px solid var(--border-main);
+}
+
+.download-popup-header {
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.download-popup-header h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.download-popup-close-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.5rem;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.download-popup-body {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.download-choice-btn {
+    background-color: var(--bg-element);
+    color: var(--text-primary);
+    border: 1px solid var(--border-main);
+    border-radius: 8px;
+    padding: 12px 18px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.download-choice-btn:hover {
+    background-color: var(--bg-element-hover);
+    border-color: var(--color-primary);
+}
+
+.download-choice-btn i {
+    font-size: 1.2rem;
+    color: var(--color-primary);
+    width: 20px;
+}
+
+.download-choice-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: var(--bg-surface);
+}

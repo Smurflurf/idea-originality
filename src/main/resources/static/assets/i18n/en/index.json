@@ -1,0 +1,59 @@
+{
+	"page_title": "Ideenatlas",
+	"search": {
+		"placeholder": "Ask a question, describe your idea, upload a pdf for summarization...",
+		"btn_query": "Query",
+		"tooltip_start": "Start idea analysis",
+		"tooltip_media": "Add additional information",
+		"upload": "Upload File",
+		"record": "Record Audio"
+	},
+	"recorder": {
+		"title": "Record new audio",
+		"footer_text": "Explain your idea.",
+		"btn_start": "Start recording",
+		"btn_stop": "Stop recording",
+		"btn_rerecord": "Re-record",
+		"btn_add": "Add to prompt",
+		"confirm_rerecord": "Are you sure? The current recording will be deleted.",
+		"error_access": "Could not access the microphone. Please check permissions.",
+		"filename_prefix": "Recorded Audio "
+	},
+	"popup": {
+		"title": "What is your goal?",
+		"header_processing": "Processing Request...", 
+		"header_visualizing": "Visualizing...",
+		"btn_question": {
+			"title": "I need answers",
+			"desc": "You gave a question or incomplete information."
+		},
+		"btn_idea": {
+			"title": "Extract my idea",
+			"desc": "Synthesize core idea after brainstorming."
+		},
+		"btn_summarize": {
+			"title": "Summarize documents",
+			"desc": "Summarize given data and extract methodologies."
+		},
+		"btn_none": {
+			"title": "No special treatment",
+			"desc": "I do not have a specific intend."
+		},
+		"status": {
+			"uploading": "Uploading data & starting process...",
+			"processing": "Processing Request",
+			"embedding": "Embedding idea into vectorspace...",
+			"clustering": "Clustering idea...",
+			"visualizing": "Creating visualizations...",
+			"finalizing": "Finalizing and rendering results...",
+			"error": "Error"
+		},
+		"consent": {
+			"title": "Notice on Data Processing",
+			"main_text": "To optimize your query, it is securely forwarded to the Google Gemini AI interface. Your input is not permanently stored on our server.",
+			"privacy_guarantee": "Since our server is located in the EU, your data is not used by Google to train or improve its services.",
+			"privacy_btn": "Privacy Policy",
+			"agree_btn": "Got it"
+		}
+	}
+}

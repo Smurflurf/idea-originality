@@ -1,10 +1,15 @@
+@import './style.css';
+@import './tooltips.css';
+@import './colours.css';
+
 .recorder-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: #000000a2;
+    /* #000000a2 entspricht ca. 63.5% */
+    background-color: rgba(var(--bg-black-rgb), 0.635);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -20,12 +25,12 @@
 }
 
 .recorder-modal {
-    background-color: #1c1d1f;
-    color: #e8eaed;
+    background-color: var(--bg-panel-base);
+    color: var(--text-primary);
     border-radius: 12px;
     width: 90%;
     max-width: 500px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 10px 30px rgba(var(--bg-black-rgb), 0.5);
     font-family: 'Roboto', sans-serif;
     display: flex;
     flex-direction: column;
@@ -57,7 +62,7 @@
 .recorder-close-btn {
     background: none;
     border: none;
-    color: #bdc1c6;
+    color: var(--text-secondary);
     font-size: 1.5rem;
     cursor: pointer;
     line-height: 1;
@@ -75,7 +80,7 @@
     transform: translate(-50%, -50%);
     width: 64px; 
     height: 64px; 
-    background-color: #121920;
+    background-color: var(--bg-deep-blue);
     border-radius: 50%; 
     display: flex; 
     justify-content: center;
@@ -93,7 +98,7 @@
 .record-icon-inner {
     width: 24px;
     height: 24px;
-    background-color: #5e0000;
+    background-color: var(--bg-danger-deep);
     border-radius: 50%;
     transition: background-color 0.3s ease;
     position: absolute;
@@ -110,22 +115,23 @@
 }
 
 .recorder-modal.is-recording .record-icon-inner {
-    background-color: #ca0300;
+    background-color: var(--bg-recording-active);
     animation: pulse 1.5s infinite;
 }
 
 @keyframes pulse {
     0% {
         transform: scale(1);
-        box-shadow: 0 0 0 0 #ca0300a4;
+        /* #ca0300a4 -> ca. 64% Alpha */
+        box-shadow: 0 0 0 0 rgba(var(--bg-recording-active-rgb), 0.64);
     }
     70% {
         transform: scale(1.1);
-        box-shadow: 0 0 10px 20px #ca030000;
+        box-shadow: 0 0 10px 20px rgba(var(--bg-recording-active-rgb), 0);
     }
     100% {
         transform: scale(1);
-        box-shadow: 0 0 0 0 #ca030000;
+        box-shadow: 0 0 0 0 rgba(var(--bg-recording-active-rgb), 0);
     }
 }
 
@@ -145,7 +151,7 @@
 }
 
 .footer-text {
-    color: #bdc1c6;
+    color: var(--text-secondary);
     font-size: 0.9rem;
 }
 
@@ -155,8 +161,8 @@
 }
 
 .recorder-btn {
-    background-color: #8ab4f8;
-    color: #202124;
+    background-color: var(--color-primary);
+    color: var(--text-on-accent);
     border: none;
     border-radius: 18px;
     padding: 10px 24px;
@@ -168,18 +174,18 @@
 }
 
 .recorder-btn:hover {
-    background-color: #a4c7f7;
+    background-color: var(--color-primary-hover);
 }
 
 .recorder-btn.text-only {
     background: none;
     border: none;
-    color: #e8eaed;
+    color: var(--text-primary);
     padding: 10px;
 }
 
 .recorder-btn.text-only:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(var(--text-primary-rgb), 0.1);
 }
 
 
@@ -202,7 +208,8 @@
     left:  0;
     width: 100%;
     height: 100%;
-    background-color: rgba(22, 23, 25, 0.7);
+    /* War: rgba(22, 23, 25, 0.7) -> panel base mit 70% */
+    background-color: rgba(var(--bg-panel-base-rgb), 0.7);
     display: flex;
     justify-content: center;
     align-items : center;
@@ -212,19 +219,19 @@
 }
 
 .confirmation-dialog {
-    background-color: rgb(40, 42, 46);
+    background-color: var(--bg-panel-floating);
     padding: 24px;
     border-radius:  8px;
-    box-shadow: 0 8px 25px rgba(0,0 ,0,0.5);
+    box-shadow: 0 8px 25px rgba(var(--bg-black-rgb), 0.5);
     text-align: center;
     width: 90%;
      max-width: 340px;
-    border: 1px solid #5f63 68;
+    border: 1px solid var(--border-main);
 }
 
 .confirmation-dialog p {
     margin: 0 0 24px  0;
-    color: #e8eaed;
+    color: var(--text-primary);
     font-size: 1rem;
      line-height: 1.5;
 }
@@ -236,9 +243,9 @@
 }
 
 .confirmation-btn-confirm {
-    background-color: #5e0000;
-    color: #ffffff ;
+    background-color: var(--bg-danger-deep);
+    color: var(--text-primary); 
 }
 .confirmation-btn-confirm:hover {
-    background-color: #a03531;
+    background-color: var(--btn-danger-hover);
 }

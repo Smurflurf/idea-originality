@@ -1,0 +1,59 @@
+{
+	"page_title": "Ideenatlas",
+	"search": {
+		"placeholder": "Stelle eine Frage, beschreibe eine Idee oder lade ein PDF hoch...",
+		"btn_query": "Suchen",
+		"tooltip_start": "Analyse starten",
+		"tooltip_media": "Zusätzliche Informationen hinzufügen",
+		"upload": "Datei hochladen",
+		"record": "Audio aufnehmen"
+	},
+	"recorder": {
+		"title": "Neue Audioaufnahme",
+		"footer_text": "Erkläre deine Idee.",
+		"btn_start": "Aufnahme starten",
+		"btn_stop": "Aufnahme stoppen",
+		"btn_rerecord": "Neu aufnehmen",
+		"btn_add": "Audio hinzufügen",
+		"confirm_rerecord": "Bist du sicher? Die aktuelle Aufnahme wird gelöscht.",
+		"error_access": "Kein Zugriff auf das Mikrofon. Bitte Berechtigungen prüfen.",
+		"filename_prefix": "Audioaufnahme "
+	},
+	"popup": {
+		"title": "Was ist dein Ziel?",
+		"header_processing": "Verarbeite Anfrage...",
+		"header_visualizing": "Visualisiere...",
+		"btn_question": {
+			"title": "Ich brauche Antworten",
+			"desc": "Du hast eine Frage oder unvollständige Informationen."
+		},
+		"btn_idea": {
+			"title": "Idee extrahieren",
+			"desc": "Synthetisiere die Kernidee nach einem Brainstorming."
+		},
+		"btn_summarize": {
+			"title": "Dokumente zusammenfassen",
+			"desc": "Fasse Daten wie ein PDF zusammen und extrahiere Methodiken."
+		},
+		"btn_none": {
+			"title": "Keine spezielle Behandlung",
+			"desc": "Ich habe keine spezifische Absicht."
+		},
+		"status": {
+			"uploading": "Lade Daten hoch & starte Prozess...",
+			"processing": "Verarbeite Anfrage...",
+			"embedding": "Bette Idee in den Vektorraum ein...",
+			"clustering": "Themengebiete werden gefunden...",
+			"visualizing": "Erstelle Visualisierungen...",
+			"finalizing": "Finalisiere...",
+			"error": "Fehler"
+		},
+		"consent": {
+			"title": "Hinweis zur Datenverarbeitung",
+			"main_text": "Um Ihre Anfrage zu optimieren, wird sie sicher an die KI-Schnittstelle von Google Gemini weitergeleitet. Ihre Eingabe wird auf unserem Server nicht permanent gespeichert.",
+			"privacy_guarantee": "Da unser Server in der EU steht, werden Ihre Daten von Google nicht zum Training oder zur Verbesserung der Dienste verwendet.",
+			"privacy_btn": "Datenschutzerklärung",
+			"agree_btn": "Verstanden"
+		}
+	}
+}

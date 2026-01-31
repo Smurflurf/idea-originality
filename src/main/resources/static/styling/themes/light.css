@@ -1,0 +1,204 @@
+[data-theme="light"] {
+    /* =========================================
+       CORE BACKGROUNDS
+       ========================================= */
+    
+    /* App: Ein kühles, sehr helles Blau-Grau. 
+       Das wirkt hochwertiger als reines Weiß/Grau ("Paper Look"). */
+    --bg-app: #f6f7f9;
+    --bg-app-rgb: 246, 247, 249;
+
+    /* Sidebar & Panels: Reinweiß für maximale Sauberkeit */
+    --bg-panel-base: #ffffff;
+    --bg-panel-base-rgb: 255, 255, 255;
+
+    /* Floating Panels (Modals): Weiß */
+    --bg-panel-floating: #ffffff;
+    --bg-panel-floating-rgb: 255, 255, 255;
+
+    /* Cards: Weiß */
+    --bg-surface: #ffffff;
+    --bg-surface-rgb: 255, 255, 255;
+
+    /* Overlay bleibt dunkel */
+    --bg-black: #000000;
+    --bg-black-rgb: 0, 0, 0;
+
+    /* Wir lassen den Hintergrund der Grafikkarte DUNKEL.
+       Damit leuchten die Punkte und die weißen Linien der Map sind sichtbar.
+       Es wirkt wie ein "Monitor" in der hellen App. */
+    --bg-deep: #ffffff;
+    --bg-deep-rgb: 255, 255, 255;
+    
+    /* Recorder Auge: Passend dazu */
+    --bg-deep-blue: #1a3259;
+    --bg-deep-blue-rgb: 26, 50, 89;
+
+
+    /* =========================================
+       INTERACTIVE ELEMENTS
+       ========================================= */
+    
+    /* Elemente: Ein klares Grau-Blau, nicht zu hell */
+    --bg-element: #eef2f7;
+    --bg-element-rgb: 238, 242, 247;
+
+    /* Hover: Deutlich dunkleres Grau-Blau */
+    --bg-element-hover: #dfe4eb;
+    --bg-element-hover-rgb: 223, 228, 235;
+
+    /* Light Hover (für Listen etc.) */
+    --bg-element-hover-light: #dbeafe;
+    --bg-element-hover-light-rgb: 219, 234, 254;
+
+
+    /* =========================================
+       TEXT COLORS (High Contrast)
+       ========================================= */
+    
+    /* Primary: Fast Schwarz mit leichtem Blau-Stich (angenehmer als #000) */
+    --text-primary: #0f172a;
+    --text-primary-rgb: 15, 23, 42;
+
+    /* Secondary: Dunkles Grau für gute Lesbarkeit */
+    --text-secondary: #475569;
+    --text-secondary-rgb: 71, 85, 105;
+
+    /* Tertiary: Mittelgrau (Icons) */
+    --text-tertiary: #64748b;
+    --text-tertiary-rgb: 100, 116, 139;
+
+    /* Quaternary: Hellgrau */
+    --text-quaternary: #94a3b8;
+    --text-quaternary-rgb: 148, 163, 184;
+
+    /* Disabled */
+    --text-disabled: #cbd5e1;
+    --text-disabled-rgb: 203, 213, 225;
+
+    /* Text auf farbigen Buttons (Weiß, da wir kräftiges Blau nutzen) */
+    --text-on-accent: #ffffff;
+    --text-on-accent-rgb: 255, 255, 255;
+    
+    /* Input Hover Text */
+    --text-input-hover: #000000;
+    --text-input-hover-rgb: 0, 0, 0;
+
+    /* Kein Textschatten im Light Mode */
+    --shadow-text: none;
+
+
+    /* =========================================
+       BORDERS & DIVIDERS
+       ========================================= */
+    
+    /* Starke Rahmen: Kühles Grau für klare Kanten */
+    --border-main: #cbd5e1;
+    --border-main-rgb: 203, 213, 225;
+
+    /* Feine Linien */
+    --border-subtle: #e2e8f0;
+    --border-subtle-rgb: 226, 232, 240;
+
+	/* Etwas stärkere Färbung für bessere Sichtbarkeit auf Weiß */
+    --cluster-box-bg-opacity: 8%; 
+    --cluster-box-border-width: 1px;
+    --cluster-box-bg-opacity-hover: 30%; 
+
+    /* =========================================
+       ACCENT: BLUE
+       ========================================= */
+    
+    /* Hauptfarbe: Ein sattes, leuchtendes Königsblau (#2563eb) 
+       Das ist viel besser sichtbar auf Weiß als das helle #8ab4f8 */
+    --color-primary: #2563eb;
+    --color-primary-rgb: 37, 99, 235;
+
+    /* Hover */
+    --color-primary-hover: #1d4ed8;
+    --color-primary-hover-rgb: 29, 78, 216;
+
+    /* Viz Arrow Standard */
+    --color-viz-arrow: #64748b;
+    --color-viz-arrow-rgb: 100, 116, 139;
+
+    /* Viz Arrow Hover */
+    --color-viz-arrow-hover: #0f172a;
+    --color-viz-arrow-hover-rgb: 15, 23, 42;
+
+
+    /* =========================================
+       STATUS: RED
+       ========================================= */
+    
+    /* Hintergrund Rot (Fehler Header) - Pastellrot */
+    --bg-danger-deep: #fee2e2;
+    --bg-danger-deep-rgb: 254, 226, 226;
+
+    /* Recording Active - Sattes Rot */
+    --bg-recording-active: #dc2626;
+    --bg-recording-active-rgb: 220, 38, 38;
+
+    /* Hover Button */
+    --btn-danger-hover: #fecaca;
+    --btn-danger-hover-rgb: 254, 202, 202;
+
+    /* Text Rot */
+    --color-danger-light: #dc2626;
+    --color-danger-light-rgb: 220, 38, 38;
+
+    /* Soft Error Text -> Dunkelrot für Lesbarkeit */
+    --text-error-soft: #991b1b;
+    --text-error-soft-rgb: 153, 27, 27;
+
+
+    /* =========================================
+       STATUS: YELLOW
+       ========================================= */
+    
+    /* Star Active: Dunkles Orange-Gold statt Hellgelb */
+    --color-star: #d97706;
+    --color-star-rgb: 217, 119, 6;
+
+    /* Star Hover */
+    --color-star-hover: #b45309;
+    --color-star-hover-rgb: 180, 83, 9;
+    
+    /* =========================================
+       Special elements (Simulation colors/visualization filters)
+       ========================================= */
+
+	/* Visualization Image Filter */
+    --viz-base-filter: opacity(0.6);
+    
+    /* SPINNER (query popup ladespinner) */
+    --color-spinner: #6C90E0; 
+    --color-spinner-bg: rgba(37, 99, 235, 0.15);
+    
+    /* GLASS CONTAINER (query popup textcontainer) */
+    --bg-popup-glass: rgba(255, 255, 255, 0.35);
+    --border-subtle: rgba(0, 0, 0, 0.1); 
+    --blur-strength: 15px;
+
+    /* WOLKEN: Die Dark-Mode Farben, aber ABGEDUNKELT */
+    --cloud-rgb-1: 40, 70, 140; 
+    --cloud-rgb-2: 100, 50, 130;   
+    --cloud-rgb-3: 130, 60, 90; 
+    
+    
+    /* =========================================
+       Visualization elements 
+       ========================================= */
+    
+	/* Visualization Image Filter (Standard: Original) */
+    --viz-base-filter: opacity(0.6);
+    
+    /* FADENKREUZ: Das dunklere Stern-Gold */
+    --color-crosshair: #000000; 
+    
+    
+     /* =========================================
+       MODE: READING (TTS)
+       ========================================= */
+    --bg-progress-track: rgba(0, 0, 0, 0.1);
+}

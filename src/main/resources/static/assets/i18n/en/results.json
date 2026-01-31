@@ -1,0 +1,52 @@
+{
+	"tabs": {
+		"own_idea": "Your Idea",
+		"similar_topics": "Similar Topics",
+		"serendipity": "Serendipity"
+	},
+	"viz_controls": {
+		"crosshair": "Your Idea",
+		"points": "Points",
+		"outlines": "Outlines",
+		"context": "Context",
+		"labels": "Labels",
+		"neighbors": "Neighbors",
+		"tooltip_crosshair": "Toggle your idea's position",
+		"tooltip_points": "Toggle colored points",
+		"tooltip_outlines": "Toggle cluster outlines",
+		"tooltip_context": "Toggle contextual clusters",
+		"tooltip_labels": "Toggle cluster names",
+		"tooltip_neighbors": "Toggle nearest neighbor locations",
+		"tooltip_export": "Download final image as PNG",
+		"tooltip_zoom_in": "Zoom In",
+		"tooltip_zoom_out": "Zoom Out"
+	},
+	"context_menu": {
+		"center_idea": "Center on Idea",
+		"zoom_out": "Zoom out",
+		"zoom_in": "Zoom in",
+		"save_png": "Save Image as PNG",
+		"toggle_debug": "Toggle Debug Info"
+	},
+	"download": {
+		"main_btn": "Download Results",
+		"main_tooltip": "Download a fully interactive, self-contained HTML file of this page.",
+		"json_btn": "Download JSON",
+		"json_tooltip": "Download results as JSON",
+		"popup_title": "Download Options",
+		"popup_html_btn": "Download Interactive HTML",
+		"popup_json_btn": "Download Results as JSON",
+		"offline_banner": "This is a self-contained, archived version of the page.",
+		"error_json": "Could not download JSON data.",
+		"error_generic": "Sorry, the file could not be downloaded due to an error.",
+		"error_download_format": "Sorry, the {format} file could not be downloaded." 
+	},
+	"debug": {
+		"title": "Debug Info",
+		"container": "Container:",
+		"wrapper": "Wrapper:",
+		"image_coords": "Image Coords:",
+		"na": "N/A",
+		"outside": "Outside"
+	}
+}

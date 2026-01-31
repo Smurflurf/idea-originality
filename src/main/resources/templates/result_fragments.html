@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+	<!-- ========================================================= -->
+	<!-- FRAGMENT 1: Own Idea Analysis (visible by default)        -->
+	<!-- ========================================================= -->
+	<div id="own-viz-content" class="viz-content-pane active"
+		th:fragment="ownIdeaView">
+
+		<div class="content-header-flex">
+			<h1 th:text="${jobTitle}">Extracted idea:</h1>
+			<button id="download-results-btn" class="download-btn-styled"
+				data-tippy-content="Download a fully interactive, self-contained HTML file of this page."
+				data-i18n="download.main_tooltip">
+				<i class="fa-solid fa-cloud-arrow-down"></i> <span
+					data-i18n="download.main_btn">Download Results</span>
+			</button>
+		</div>
+
+		<div class="result-summary">
+			<p class="expandable-abstract" th:utext="${query}"></p>
+		</div>
+
+		<div class="hierarchy-container"
+			th:if="${clusterHierarchy != null and not clusterHierarchy.isEmpty()}">
+			<ul class="hierarchy-list">
+				<li th:each="entry, iter : ${clusterHierarchy}"
+					th:style="|--indent-level: ${iter.index};|">
+					<div class="hierarchy-item-box color-coded-box"
+						th:data-cluster-id="${entry.id}"
+						th:data-tippy-content="${entry.id}">
+						<span class="hierarchy-item-name" th:text="${entry.name}"></span>
+						<span class="hierarchy-item-confidence"
+							th:text="'(Confidence: ' + ${#numbers.formatDecimal(entry.confidence, 1, 2)} + ')'"></span>
+					</div>
+				</li>
+			</ul>
+		</div>
+
+		<div class="visualization-container" th:if="${viz_own_available}">
+			<div class="viz-controls">
+				<button id="viz-toggle-own-crosshair" class="ctrl-btn active"
+					data-tippy-content="Toggle your idea's position"
+					data-i18n="viz_controls.tooltip_crosshair">
+					<span data-i18n="viz_controls.crosshair">Your Idea</span>
+				</button>
+				<button id="viz-toggle-own-points" class="ctrl-btn active"
+					data-tippy-content="Toggle colored points"
+					data-i18n="viz_controls.tooltip_points">
+					<span data-i18n="viz_controls.points">Points</span>
+				</button>
+				<button id="viz-toggle-own-outlines" class="ctrl-btn active"
+					data-tippy-content="Toggle cluster outlines"
+					data-i18n="viz_controls.tooltip_outlines">
+					<span data-i18n="viz_controls.outlines">Outlines</span>
+				</button>
+				<button id="viz-toggle-own-context" class="ctrl-btn"
+					data-tippy-content="Toggle contextual clusters"
+					data-i18n="viz_controls.tooltip_context">
+					<span data-i18n="viz_controls.context">Context</span>
+				</button>
+				<button id="viz-toggle-own-labels" class="ctrl-btn"
+					data-tippy-content="Toggle cluster names"
+					data-i18n="viz_controls.tooltip_labels">
+					<span data-i18n="viz_controls.labels">Labels</span>
+				</button>
+				<button id="viz-toggle-own-neighbors" class="ctrl-btn"
+					data-tippy-content="Toggle nearest neighbor locations"
+					data-i18n="viz_controls.tooltip_neighbors">
+					<span data-i18n="viz_controls.neighbors">Neighbors</span>
+				</button>
+			</div>
+
+			<div class="viz-stack-container" id="viz-stack-container-own"
+				th:styleappend="|aspect-ratio: 1 / ${viz_own_aspect_ratio};|">
+
+				<div id="debug-overlay-own"
+					style="position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.8); color: white; padding: 8px; border-radius: 5px; z-index: 9999; font-family: monospace; font-size: 12px; pointer-events: none; display: none;">
+					<strong data-i18n="debug.title">Debug Info</strong><br> <span
+						data-i18n="debug.container">Container:</span> <span
+						id="debug-container-coords-own" data-i18n="debug.na">N/A</span><br>
+					<span data-i18n="debug.wrapper">Wrapper:</span> <span
+						id="debug-wrapper-coords-own" data-i18n="debug.na">N/A</span><br>
+					<b data-i18n="debug.image_coords">Image Coords:</b> <b><span
+						id="debug-image-coords-own" style="color: #66ff66;"
+						data-i18n="debug.na">N/A</span></b>
+				</div>
+
+				<div class="zoom-pan-wrapper" id="zoom-pan-wrapper-own">
+					<!-- FIX: crossorigin entfernt, da es bei geschützten Bildern ohne CORS-Header zu Problemen führt -->
+					<img class="viz-layer" id="viz-layer-own-base"
+						th:src="@{/results/{jobId}/image/own_base(jobId=${jobId})}"
+						alt="Base visualization map" loading="eager" /> <img
+						class="viz-layer viz-layer-overlay" id="viz-layer-own-points"
+						th:src="@{/results/{jobId}/image/own_points(jobId=${jobId})}"
+						alt="Colored cluster points" />
+
+					<svg class="viz-layer viz-layer-overlay"
+						id="viz-layer-own-outlines-svg" preserveAspectRatio="none">
+					    <g id="g-outlines-own-main"></g> 
+					    <g id="g-outlines-own-context" style="display: none;"></g> 
+					</svg>
+					<svg class="viz-layer viz-layer-overlay"
+						id="viz-layer-own-labels-svg" preserveAspectRatio="none">
+					    <g id="g-labels-own-main"></g>
+					    <g id="g-labels-own-context" style="display: none;"></g>
+				</svg>
+				</div>
+
+				<div class="dynamic-points-container"
+					id="dynamic-points-own-neighbors" style="display: none;"></div>
+				<canvas class="viz-layer viz-layer-overlay"
+					id="viz-layer-own-crosshair-canvas"></canvas>
+
+				<button id="export-viz-btn-own" class="export-btn"
+					data-tippy-content="Download final image as PNG"
+					data-i18n="viz_controls.tooltip_export">
+					<i class="fa-solid fa-cloud-arrow-down"></i>
+				</button>
+				<div class="zoom-controls">
+					<button id="zoom-in-btn-own" data-tippy-content="Zoom In"
+						data-i18n="viz_controls.tooltip_zoom_in">
+						<i class="fa-solid fa-plus"></i>
+					</button>
+					<button id="zoom-out-btn-own" data-tippy-content="Zoom Out"
+						data-i18n="viz_controls.tooltip_zoom_out">
+						<i class="fa-solid fa-minus"></i>
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<hr style="border-color: #5f6368; margin: 30px 0;">
+		<h2 data-i18n="headers.similar_results">Similar results:</h2>
+
+		<div th:each="result : ${ownResults}">
+			<div
+				th:replace="~{reusable_fragments :: resultCard(result=${result}, contextPrefix='own')}"></div>
+		</div>
+	</div>
+
+
+	<!-- ============================================================== -->
+	<!-- FRAGMENT 2: Similar Topic Fields (hidden by default)           -->
+	<!-- ============================================================== -->
+	<div id="neighbor-viz-content" class="viz-content-pane"
+		th:fragment="neighborClusterView">
+		<h2 data-i18n="headers.explore_topics">Explore Similar Topic
+			Fields</h2>
+		<p data-i18n="headers.explore_desc">Those are the semantically
+			most similar topic fields, select one below and explore its most
+			relevant content.</p>
+
+		<div class="hierarchy-container is-nested">
+			<ul class="hierarchy-list"
+				th:if="${neighborClusters != null and not #lists.isEmpty(neighborClusters)}">
+				<li th:each="result, iter : ${neighborClusters}"
+					th:with="clusterId=${result.payload.id}, clusterName=${result.payload.get('cluster_name')}"
+					th:style="|--indent-level: ${(clusterId.split('-').length - 1)};|">
+					<div class="hierarchy-item-box color-coded-box"
+						th:data-cluster-id="${clusterId}"
+						th:data-tippy-content="${clusterId}">
+						<span class="hierarchy-item-name" th:text="${clusterName}"></span>
+						<span class="hierarchy-item-confidence"> (<span
+							data-i18n="card.relevance_prefix">Relevance</span>: <span
+							th:text="${#numbers.formatDecimal(result.score, 1, 2)}"></span>)
+						</span>
+
+					</div>
+				</li>
+			</ul>
+		</div>
+
+		<div class="visualization-container" th:if="${viz_own_available}">
+			<div class="viz-controls">
+				<button id="viz-toggle-nc-crosshair" class="ctrl-btn active"
+					data-tippy-content="Toggle your idea's position"
+					data-i18n="viz_controls.tooltip_crosshair">
+					<span data-i18n="viz_controls.crosshair">Your Idea</span>
+				</button>
+				<button id="viz-toggle-nc-points" class="ctrl-btn active"
+					data-tippy-content="Toggle colored points"
+					data-i18n="viz_controls.tooltip_points">
+					<span data-i18n="viz_controls.points">Points</span>
+				</button>
+				<button id="viz-toggle-nc-outlines" class="ctrl-btn active"
+					data-tippy-content="Toggle cluster outlines"
+					data-i18n="viz_controls.tooltip_outlines">
+					<span data-i18n="viz_controls.outlines">Outlines</span>
+				</button>
+				<button id="viz-toggle-nc-context" class="ctrl-btn"
+					data-tippy-content="Toggle contextual clusters"
+					data-i18n="viz_controls.tooltip_context">
+					<span data-i18n="viz_controls.context">Context</span>
+				</button>
+				<button id="viz-toggle-nc-labels" class="ctrl-btn"
+					data-tippy-content="Toggle cluster names"
+					data-i18n="viz_controls.tooltip_labels">
+					<span data-i18n="viz_controls.labels">Labels</span>
+				</button>
+				<button id="viz-toggle-nc-neighbors" class="ctrl-btn"
+					data-tippy-content="Toggle nearest neighbor clusters"
+					data-i18n="viz_controls.tooltip_neighbors">
+					<span data-i18n="viz_controls.neighbors">Neighbors</span>
+				</button>
+			</div>
+			<div class="viz-stack-container" id="viz-stack-container-nc"
+				th:styleappend="|aspect-ratio: 1 / ${viz_own_aspect_ratio};|">
+
+				<div id="debug-overlay-nc"
+					style="position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.8); color: white; padding: 8px; border-radius: 5px; z-index: 9999; font-family: monospace; font-size: 12px; pointer-events: none; display: none;">
+					<strong data-i18n="debug.title">Debug Info</strong><br> <span
+						data-i18n="debug.container">Container:</span> <span
+						id="debug-container-coords-nc" data-i18n="debug.na">N/A</span><br>
+					<span data-i18n="debug.wrapper">Wrapper:</span> <span
+						id="debug-wrapper-coords-nc" data-i18n="debug.na">N/A</span><br>
+					<b data-i18n="debug.image_coords">Image Coords:</b> <b><span
+						id="debug-image-coords-nc" style="color: #66ff66;"
+						data-i18n="debug.na">N/A</span></b>
+				</div>
+
+				<div class="zoom-pan-wrapper" id="zoom-pan-wrapper-nc">
+					<!-- FIX: crossorigin entfernt -->
+					<img class="viz-layer" id="viz-layer-nc-base"
+						th:src="@{/results/{jobId}/image/own_base(jobId=${jobId})}"
+						alt="Base visualization map" loading="eager" /> <img
+						class="viz-layer viz-layer-overlay" id="viz-layer-nc-points"
+						th:src="@{/results/{jobId}/image/neighborscluster_points(jobId=${jobId})}"
+						alt="Cluster centroid locations" />
+
+					<svg class="viz-layer viz-layer-overlay"
+						id="viz-layer-nc-outlines-svg" preserveAspectRatio="none">
+					    <g id="g-outlines-nc-main"></g> 
+					    <g id="g-outlines-nc-context" style="display: none;"></g> 
+					</svg>
+					<svg class="viz-layer viz-layer-overlay"
+						id="viz-layer-nc-labels-svg" preserveAspectRatio="none">
+					    <g id="g-labels-nc-main"></g>
+					    <g id="g-labels-nc-context" style="display: none;"></g>
+				</svg>
+				</div>
+
+				<div class="dynamic-points-container"
+					id="dynamic-points-nc-neighbors" style="display: none;"></div>
+				<canvas class="viz-layer viz-layer-overlay"
+					id="viz-layer-nc-crosshair-canvas"></canvas>
+
+				<button id="export-viz-btn-nc" class="export-btn"
+					data-tippy-content="Download final image as PNG"
+					data-i18n="viz_controls.tooltip_export">
+					<i class="fa-solid fa-cloud-arrow-down"></i>
+				</button>
+				<div class="zoom-controls">
+					<button id="zoom-in-btn-nc" data-tippy-content="Zoom In"
+						data-i18n="viz_controls.tooltip_zoom_in">
+						<i class="fa-solid fa-plus"></i>
+					</button>
+					<button id="zoom-out-btn-nc" data-tippy-content="Zoom Out"
+						data-i18n="viz_controls.tooltip_zoom_out">
+						<i class="fa-solid fa-minus"></i>
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<hr style="border-color: #5f6368; margin: 30px 0;">
+
+		<div id="topic-tabs-container" class="topic-tabs-scroller">
+			<div class="topic-tabs">
+				<button th:each="result, iter : ${neighborClusters}"
+					th:class="|topic-tab ${iter.index == 0 ? 'active' : ''}|"
+					th:data-cluster-id="${result.payload.id}"
+					th:data-target-id="'context-card-' + ${result.payload.id}">
+					<span class="tab-title"
+						th:text="${result.payload.get('cluster_name')}"></span> <span
+						class="tab-score"
+						th:text="${#numbers.formatDecimal(result.score, 1, 2)}"></span>
+				</button>
+			</div>
+		</div>
+
+		<div id="active-cluster-context" class="active-cluster-card-container">
+		</div>
+
+		<div id="context-card-data" style="display: none;">
+			<div th:each="result : ${neighborClusters}"
+				th:id="'context-card-' + ${result.payload.id}">
+				<div
+					th:replace="~{reusable_fragments :: centroidCard(centroidData=${result}, isActive=false)}"></div>
+			</div>
+		</div>
+
+		<div id="filtered-results-container" class="filtered-results-list">
+			<div class="skeleton-card">
+				<div class="skeleton-header">
+					<div class="skeleton-item skeleton-score"></div>
+					<div class="skeleton-item skeleton-link"></div>
+				</div>
+				<div class="skeleton-item skeleton-title"></div>
+				<div class="skeleton-item skeleton-line"></div>
+				<div class="skeleton-item skeleton-line"></div>
+				<div class="skeleton-item skeleton-line short"></div>
+			</div>
+			<div class="skeleton-card">
+				<div class="skeleton-header">
+					<div class="skeleton-item skeleton-score"></div>
+					<div class="skeleton-item skeleton-link"></div>
+				</div>
+				<div class="skeleton-item skeleton-title"></div>
+				<div class="skeleton-item skeleton-line"></div>
+				<div class="skeleton-item skeleton-line"></div>
+				<div class="skeleton-item skeleton-line short"></div>
+			</div>
+		</div>
+	</div>
+
+	<!-- ========================================================= -->
+	<!-- FRAGMENT 3: Serendipitous Connections				       -->
+	<!-- ========================================================= -->
+	<div id="serendipity-viz-content" class="viz-content-pane"
+		th:fragment="serendipityView">
+		<h2 data-i18n="headers.discover_serendipity">Discover
+			Serendipitous Connections</h2>
+		<p data-i18n="headers.discover_desc">These clusters are by design
+			thematically diverse to cover a broad knowledge spectrum. The
+			relevance represents that of their highest rated entry.</p>
+
+		<div class="hierarchy-container is-nested">
+			<ul class="hierarchy-list"
+				th:if="${serendipityClusterResults != null and not #lists.isEmpty(serendipityClusterResults)}">
+				<li th:each="result, iter : ${serendipityClusterResults}"
+					th:with="clusterId=${result.payload.id}, clusterName=${result.payload.get('cluster_name')}"
+					th:style="|--indent-level: ${(clusterId.split('-').length - 1)};|">
+					<div class="hierarchy-item-box color-coded-box"
+						th:data-cluster-id="${clusterId}"
+						th:data-tippy-content="${clusterId}">
+						<span class="hierarchy-item-name" th:text="${clusterName}"></span> 
+						<span class="hierarchy-item-confidence"> (<span
+							data-i18n="card.relevance_prefix">Relevance</span>: <span
+							th:text="${#numbers.formatDecimal(result.score, 1, 2)}"></span>)
+						</span> 
+					</div>
+				</li>
+			</ul>
+		</div>
+
+		<div class="visualization-container" th:if="${viz_own_available}">
+			<div class="viz-controls">
+				<button id="viz-toggle-serendipity-crosshair"
+					class="ctrl-btn active"
+					data-tippy-content="Toggle your idea's position"
+					data-i18n="viz_controls.tooltip_crosshair">
+					<span data-i18n="viz_controls.crosshair">Your Idea</span>
+				</button>
+				<button id="viz-toggle-serendipity-points" class="ctrl-btn active"
+					data-tippy-content="Toggle colored points"
+					data-i18n="viz_controls.tooltip_points">
+					<span data-i18n="viz_controls.points">Points</span>
+				</button>
+				<button id="viz-toggle-serendipity-outlines" class="ctrl-btn active"
+					data-tippy-content="Toggle cluster outlines"
+					data-i18n="viz_controls.tooltip_outlines">
+					<span data-i18n="viz_controls.outlines">Outlines</span>
+				</button>
+				<button id="viz-toggle-serendipity-context" class="ctrl-btn"
+					data-tippy-content="Toggle contextual clusters"
+					data-i18n="viz_controls.tooltip_context">
+					<span data-i18n="viz_controls.context">Context</span>
+				</button>
+				<button id="viz-toggle-serendipity-labels" class="ctrl-btn"
+					data-tippy-content="Toggle cluster names"
+					data-i18n="viz_controls.tooltip_labels">
+					<span data-i18n="viz_controls.labels">Labels</span>
+				</button>
+				<button id="viz-toggle-serendipity-neighbors" class="ctrl-btn"
+					data-tippy-content="Toggle nearest neighbor locations"
+					data-i18n="viz_controls.tooltip_neighbors">
+					<span data-i18n="viz_controls.neighbors">Neighbors</span>
+				</button>
+			</div>
+			<div class="viz-stack-container" id="viz-stack-container-serendipity"
+				th:styleappend="|aspect-ratio: 1 / ${viz_own_aspect_ratio};|">
+				<div id="debug-overlay-serendipity"
+					style="position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.8); color: white; padding: 8px; border-radius: 5px; z-index: 9999; font-family: monospace; font-size: 12px; pointer-events: none; display: none;">
+					<strong data-i18n="debug.title">Debug Info</strong><br> <span
+						data-i18n="debug.container">Container:</span> <span
+						id="debug-container-coords-serendipity" data-i18n="debug.na">N/A</span><br>
+					<span data-i18n="debug.wrapper">Wrapper:</span> <span
+						id="debug-wrapper-coords-serendipity" data-i18n="debug.na">N/A</span><br>
+					<b data-i18n="debug.image_coords">Image Coords:</b> <b><span
+						id="debug-image-coords-serendipity" style="color: #66ff66;"
+						data-i18n="debug.na">N/A</span></b>
+				</div>
+				<div class="zoom-pan-wrapper" id="zoom-pan-wrapper-serendipity">
+					<!-- FIX: crossorigin entfernt -->
+					<img class="viz-layer" id="viz-layer-serendipity-base"
+						th:src="@{/results/{jobId}/image/own_base(jobId=${jobId})}"
+						alt="Base visualization map" loading="eager" /> <img
+						class="viz-layer viz-layer-overlay"
+						id="viz-layer-serendipity-points"
+						th:src="@{/results/{jobId}/image/serendipity_points(jobId=${jobId})}"
+						alt="Serendipity cluster points" />
+					<svg class="viz-layer viz-layer-overlay"
+						id="viz-layer-serendipity-outlines-svg" preserveAspectRatio="none">
+					<g id="g-outlines-serendipity-main"></g>
+					<g id="g-outlines-serendipity-context" style="display: none;"></g>
+				</svg>
+					<svg class="viz-layer viz-layer-overlay"
+						id="viz-layer-serendipity-labels-svg" preserveAspectRatio="none">
+					<g id="g-labels-serendipity-main"></g>
+					<g id="g-labels-serendipity-context" style="display: none;"></g>
+				</svg>
+				</div>
+				<div class="dynamic-points-container"
+					id="dynamic-points-serendipity-neighbors" style="display: none;"></div>
+				<canvas class="viz-layer viz-layer-overlay"
+					id="viz-layer-serendipity-crosshair-canvas"></canvas>
+				<button id="export-viz-btn-serendipity" class="export-btn"
+					data-tippy-content="Download final image as PNG"
+					data-i18n="viz_controls.tooltip_export">
+					<i class="fa-solid fa-cloud-arrow-down"></i>
+				</button>
+				<div class="zoom-controls">
+					<button id="zoom-in-btn-serendipity" data-tippy-content="Zoom In"
+						data-i18n="viz_controls.tooltip_zoom_in">
+						<i class="fa-solid fa-plus"></i>
+					</button>
+					<button id="zoom-out-btn-serendipity" data-tippy-content="Zoom Out"
+						data-i18n="viz_controls.tooltip_zoom_out">
+						<i class="fa-solid fa-minus"></i>
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<hr style="border-color: #5f6368; margin: 30px 0;">
+
+		<div id="topic-tabs-container-serendipity" class="topic-tabs-scroller">
+			<div class="topic-tabs">
+				<button th:each="result, iter : ${serendipityClusterResults}"
+					th:class="|topic-tab ${iter.index == 0 ? 'active' : ''}|"
+					th:data-cluster-id="${result.payload.id}"
+					th:data-target-id="'context-card-serendipity-' + ${result.payload.id}">
+					<span class="tab-title"
+						th:text="${result.payload.get('cluster_name')}"></span> <span
+						class="tab-score"
+						th:text="${#numbers.formatDecimal(result.score, 1, 2)}"></span>
+				</button>
+			</div>
+		</div>
+
+		<div id="active-cluster-context-serendipity"
+			class="active-cluster-card-container"></div>
+
+		<div id="context-card-data-serendipity" style="display: none;">
+			<div th:each="result : ${serendipityClusterResults}"
+				th:id="'context-card-serendipity-' + ${result.payload.id}">
+				<div
+					th:replace="~{reusable_fragments :: centroidCard(centroidData=${result}, isActive=false)}"></div>
+			</div>
+		</div>
+
+		<div id="filtered-results-container-serendipity"
+			class="filtered-results-list">
+			<div class="skeleton-card">
+				<div class="skeleton-header">
+					<div class="skeleton-item skeleton-score"></div>
+					<div class="skeleton-item skeleton-link"></div>
+				</div>
+				<div class="skeleton-item skeleton-title"></div>
+				<div class="skeleton-item skeleton-line"></div>
+				<div class="skeleton-item skeleton-line"></div>
+				<div class="skeleton-item skeleton-line short"></div>
+			</div>
+			<div class="skeleton-card">
+				<div class="skeleton-header">
+					<div class="skeleton-item skeleton-score"></div>
+					<div class="skeleton-item skeleton-link"></div>
+				</div>
+				<div class="skeleton-item skeleton-title"></div>
+				<div class="skeleton-item skeleton-line"></div>
+				<div class="skeleton-item skeleton-line"></div>
+				<div class="skeleton-item skeleton-line short"></div>
+			</div>
+		</div>
+	</div>
+
+	<!-- ========================================================= -->
+	<!-- FRAGMENT FOR AJAX: List of filtered search results		   -->
+	<!-- ========================================================= -->
+	<div th:fragment="filteredResultCards(filteredResults, contextPrefix)">
+		<div th:if="${#lists.isEmpty(filteredResults)}"></div>
+		<div th:each="result : ${filteredResults}">
+			<div
+				th:replace="~{reusable_fragments :: resultCard(result=${result}, contextPrefix=${contextPrefix})}"></div>
+		</div>
+	</div>
+
+</body>
+</html>

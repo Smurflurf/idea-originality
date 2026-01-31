@@ -1,16 +1,79 @@
+@import './colours.css';
+
 * {
     box-sizing: border-box;
 }
 
+html, body {
+    width: 100%;
+    min-height: 100%; 
+    margin: 0;
+    padding: 0;
+    overflow-y: auto; 
+    overflow-x: hidden;
+    overscroll-behavior-y: auto; 
+    background-color: var(--bg-app);
+}
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    background-color: #202124;
-    color: #e8eaed;
+    background-color: var(--bg-app);
+    color: var(--text-primary);
     margin: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
+    overscroll-behavior-x: none;
+}
+
+body.is-swiping-active {
+    overflow: hidden !important;
+    touch-action: none !important; 
+    overscroll-behavior: none !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+}
+
+.results-container, 
+.viz-stack-container,
+.viz-content-pane {
+    /* WICHTIG: Sagt dem Browser explizit: "Hier darf man vertikal pannen (scrollen)". 
+       Das impliziert: Horizontale Bewegungen gehören dem JavaScript! */
+    touch-action: pan-y; 
+}
+
+body.is-centered-content  {
+	display: grid;
+	place-items: center;
+	min-height: 100dvh;
+}
+
+/* Versteckt den Body, solange das System noch nicht bereit ist */
+html[data-i18n-ready="false"] body {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Sobald bereit, blenden wir es ein */
+html[data-i18n-ready="true"] body {
+    opacity: 1;
+    transition: opacity 0.05s ease-out;
+}
+
+body.is-scrolling-content {
+    padding-bottom: 40px; 
+}
+
+html:not([data-i18n-ready]) [data-i18n] {
+    color: transparent !important;
+}
+
+/* Spezialfall für Input/Textarea Placeholder */
+html:not([data-i18n-ready]) input[data-i18n]::placeholder,
+html:not([data-i18n-ready]) textarea[data-i18n]::placeholder {
+    color: transparent !important;
+    opacity: 0 !important;
+}
+
+[data-i18n], input[data-i18n]::placeholder, textarea[data-i18n]::placeholder {
+    transition: color 0s ease-in, opacity 0s ease-in;
 }
 
 .idea-form {
@@ -24,27 +87,28 @@ body {
 }
 
 .textarea-wrapper.drag-over {
-    outline: 2px dashed #8ab4f8;
+    outline: 2px dashed var(--color-primary);
     outline-offset: -10px;
-    background-color: #3c4043;
+    background-color: var(--bg-element);
     border-radius: 24px;
 }
 
 .textarea-wrapper.drag-over textarea {
-    background-color: #3c4043;
+    background-color: var(--bg-element);
     border-radius: 24px;
 }
 
 textarea {
     width: 100%;
     min-height: 250px;
-    background-color: #303134;
-    border: 1px solid #5f6368;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-main);
     border-radius: 24px;
-    padding: 20px;
-    padding-right: 70px;
+    padding: 12px;
+    padding-right: 74px; 
     padding-bottom: 70px;
-    color: #b7b8bb;
+    /* War: #b7b8bb -> text-secondary (merged) */
+    color: var(--text-secondary);
     font-size: 16px;
     line-height: 1.5;
     outline: none;
@@ -53,13 +117,15 @@ textarea {
 }
 
 textarea:hover {
-    border-color: #8f9194;
-    color: #d3d4d8;
+    /* War: #8f9194 -> text-quaternary */
+    border-color: var(--text-quaternary);
+    /* War: #d3d4d8 -> text-input-hover */
+    color: var(--text-input-hover);
 }
 
 textarea:focus {
-    border-color: #8ab4f8;
-    color: #e8eaed;
+    border-color: var(--color-primary);
+    color: var(--text-primary);
 }
 
 .media-toggle-checkbox {
@@ -72,7 +138,7 @@ textarea:focus {
     top: 18px;
     width: 36px;
     height: 36px;
-    background-color: #3c4043;
+    background-color: var(--bg-element);
     border-radius: 50%;
     display: flex;
     justify-content: center;
@@ -82,23 +148,23 @@ textarea:focus {
 }
 
 .media-toggle-checkbox:checked + .media-button-label {
-    /*box-shadow: 0 0 0 1px #f55c5c88;*/ 
-    border: 1px solid #f55c5c; 
+    /* War: #f55c5c -> color-danger-light */
+    border: 1px solid var(--color-danger-light); 
 }
 
 .media-button-label:hover {
-    background-color: #4a4e52;
+    background-color: var(--bg-element-hover);
 }
 
 .media-button-label i {
     font-size: 16px;
-    color: #bdc1c6;
+    color: var(--text-secondary);
     transition: transform 0.3s ease, color 0.3s ease;
 }
 
 .media-toggle-checkbox:checked + .media-button-label i {
     transform: rotate(135deg);
-    color: #f55c5c; 
+    color: var(--color-danger-light); 
 }
 
 .media-menu {
@@ -106,9 +172,10 @@ textarea:focus {
     position: absolute;
     top: 65px;
     right: 18px;
-    background-color: #3c4043ea;
+    /* War: #3c4043ea -> bg-element mit ca. 92% Alpha */
+    background-color: rgba(var(--bg-element-rgb), 0.92);
     border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 4px 12px rgba(var(--bg-black-rgb), 0.4);
     overflow: hidden;
     z-index: 10;
     width: 200px;
@@ -134,14 +201,15 @@ textarea:focus {
 }
 
 .media-menu li:hover {
-    background-color: #4a4e52aa;
+    /* War: #4a4e52aa -> bg-element-hover mit ca. 66% Alpha */
+    background-color: rgba(var(--bg-element-hover-rgb), 0.66);
 }
 
 .media-menu li i {
     margin-right: 15px;
     width: 20px;
     text-align: center;
-    color: #bdc1c6;
+    color: var(--text-secondary);
 }
 
 .run-button {
@@ -149,8 +217,8 @@ textarea:focus {
     bottom: 20px;
     right: 20px;
     padding: 10px 24px;
-    background-color: #8ab4f8;
-    color: #202124;
+    background-color: var(--color-primary);
+    color: var(--text-on-accent);
     border: none;
     border-radius: 18px;
     font-size: 15px;
@@ -163,12 +231,12 @@ textarea:focus {
 }
 
 .run-button:hover {
-    background-color: #a4c7f7;
+    background-color: var(--color-primary-hover);
 }
 
 .run-button:disabled {
-    background-color: #3c4043; 
-    color: #8f9194; 
+    background-color: var(--bg-element); 
+    color: var(--text-quaternary); 
     cursor: not-allowed; 
     opacity: 0.6;
 }
@@ -183,7 +251,6 @@ textarea:focus {
     overflow-x: auto;
     overflow-y: hidden;
     gap: 12px;
-
     border: 1px solid transparent;
     border-radius: 12px;
     padding: 0;
@@ -193,7 +260,7 @@ textarea:focus {
 }
 
 .attachments-container.has-attachments {
-    border-color: #444746; 
+    border-color: var(--border-subtle); 
     padding: 12px;
     min-height: 168px;
 }
@@ -203,8 +270,8 @@ textarea:focus {
     flex-shrink: 0;
     width: 160px;
     height: 140px;
-    background-color: #303134;
-    border: 1px solid #5f6368;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-main);
     border-radius: 8px;
     display: flex;
     flex-direction: column;
@@ -217,7 +284,7 @@ textarea:focus {
     justify-content: center;
     align-items: center;
     padding: 8px;
-    background-color: #202124;
+    background-color: var(--bg-app);
 }
 
 .attachment-preview img,
@@ -229,7 +296,7 @@ textarea:focus {
 
 .attachment-preview i {
     font-size: 3rem;
-    color: #bdc1c6;
+    color: var(--text-secondary);
 }
 
 .attachment-caption {
@@ -238,7 +305,7 @@ textarea:focus {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    background-color: #303134;
+    background-color: var(--bg-surface);
 }
 
 .remove-btn {
@@ -247,8 +314,8 @@ textarea:focus {
     right: 6px;
     width: 20px;
     height: 20px;
-    background-color: rgba(0, 0, 0, 0.5);
-    color: #fff;
+    background-color: rgba(var(--bg-black-rgb), 0.5);
+    color: var(--text-primary);
     border: none;
     border-radius: 50%;
     display: flex;
@@ -273,17 +340,142 @@ textarea:focus {
     opacity: 1;
 }
 
+
+/* Globale Swipe-Schatten (Links & Rechts) */
+.swipe-shadow-overlay {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    width: 60px; /* Breite des Schattens */
+    z-index: 2050; /* Über dem Menü (2020) und Content */
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.1s linear;
+    will-change: opacity;
+}
+
+.swipe-shadow-left {
+    left: 0;
+    /* Schatten verläuft von Links (Dunkel) nach Rechts (Transparent) */
+    background: linear-gradient(to right, rgba(0,0,0, 0.6), transparent);
+}
+
+.swipe-shadow-right {
+    right: 0;
+    /* Schatten verläuft von Rechts (Dunkel) nach Links (Transparent) */
+    background: linear-gradient(to left, rgba(0,0,0, 0.6), transparent);
+}
+
+
+/* =================================================================== */
+/* ==             GLOBALE SCROLLBAR STYLES (NEU)                    == */
+/* =================================================================== */
+html {
+    /* Für Firefox: Daumenfarbe und transparente Schiene */
+    scrollbar-color: var(--border-main) transparent;
+    scrollbar-width: thin;
+}
+
+/* Für Chrome, Safari, Edge */
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: var(--border-main);
+    border-radius: 6px;
+    border: 4px solid transparent;
+    background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: var(--text-quaternary);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+/* --- Browser-übergreifendes Styling für spezifische Scrollbars --- */
+
+/* Textarea */
+textarea {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-main) transparent; 
+}
+textarea::-webkit-scrollbar {
+    width: 12px;
+}
+textarea::-webkit-scrollbar-track {
+    background: transparent; 
+}
+textarea::-webkit-scrollbar-thumb {
+    background-color: var(--border-main);
+    border-radius: 6px;
+    border: 4px solid var(--bg-surface); 
+}
+textarea::-webkit-scrollbar-thumb:hover {
+    background-color: var(--text-quaternary);
+}
+
+/* Attachments Container */
+.attachments-container {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-main) transparent; 
+}
 .attachments-container::-webkit-scrollbar {
-    height: 6px;
+    height: 8px;
 }
 .attachments-container::-webkit-scrollbar-track {
-    background: #202124;
-    border-radius: 3px;
+    background: transparent; /* KORREKTUR: Track ist transparent */
+    border-radius: 4px;
 }
 .attachments-container::-webkit-scrollbar-thumb {
-    background: #5f6368;
-    border-radius: 3px;
+    background: var(--border-main);
+    border-radius: 4px;
+    /* KORREKTUR: Border an den App-Hintergrund anpassen */
+    border: 2px solid var(--bg-app);
 }
 .attachments-container::-webkit-scrollbar-thumb:hover {
-    background: #8ab4f8;
+    background: var(--color-primary);
+}
+
+.custom-context-menu {
+    position: fixed;
+    z-index: 10000;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-main);
+    border-radius: 6px;
+    padding: 5px;
+    box-shadow: 0 4px 12px rgba(var(--bg-black-rgb), 0.5);
+    min-width: 180px;
+}
+
+.context-menu-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-size: 14px;
+    transition: background-color 0.15s ease-in-out;
+    user-select: none;
+}
+
+.context-menu-item:hover {
+    background-color: var(--bg-element-hover);
+}
+
+.context-menu-separator {
+    height: 1px;
+    background-color: var(--border-subtle);
+    margin: 5px 0;
+}
+
+.debug-overlay {
+    display: none;
 }
