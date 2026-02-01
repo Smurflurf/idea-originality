@@ -12,8 +12,8 @@
 <!-- STYLESHEETS -->
 <link rel="stylesheet" th:href="@{/vendor/fontawesome/css/all.min.css(v=${appVersion})}">
 <link rel="stylesheet" th:href="@{/dist/main.css(v=${appVersion})}">
-<link rel="stylesheet" th:href="@{/vendor/fonts/roboto.css(v=${appVersion})}">
 <link rel="stylesheet" th:href="@{/dist/menu.css(v=${appVersion})}">
+<link rel="stylesheet" th:href="@{/vendor/fonts/roboto.css(v=${appVersion})}">
     
 <!-- 2. Tippy & Popper -->
 <link rel="stylesheet" th:href="@{/vendor/tippy/tippy.css(v=${appVersion})}">
@@ -28,7 +28,7 @@
 
 </head>
 
-<body class="is-scrolling-content is-loading">
+<body class="is-scrolling-content is-loading" data-features="visualization, results-meta">
  	<div th:replace="~{shared_fragments :: sideMenu}"></div>
 
 	<div class="results-container" th:if="${isDataAvailable}">

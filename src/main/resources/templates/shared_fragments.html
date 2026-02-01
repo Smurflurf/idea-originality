@@ -117,80 +117,24 @@
         -->
 		<script>
 			(function() {
-				try {
-					var storageKey = 'ideenatlas-theme';
-					var theme = localStorage.getItem(storageKey) || 'system';
+				if (document.documentElement.hasAttribute('data-is-offline')) return;
 
-					if (theme === 'system') {
-						var systemDark = window
-								.matchMedia('(prefers-color-scheme: dark)').matches;
-						theme = systemDark ? 'dark' : 'light';
-					}
+		        try {
+		            var storageKey = 'ideenatlas-theme';
+		            var theme = localStorage.getItem(storageKey) || 'system';
 
-					// Setzt das Attribut sofort auf das <html> Element (documentElement)
-					document.documentElement.setAttribute('data-theme', theme);
-				} catch (e) {
-				}
-			})();
+		            if (theme === 'system') {
+		                var systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+		                theme = systemDark ? 'dark' : 'light';
+		            }
+		            document.documentElement.setAttribute('data-theme', theme);
+		        } catch (e) {}
+		    })();
 		</script>
 
 		<script type="importmap" th:inline="javascript">
     	{
         "imports": {
-        "/dist/main.js": [[@{/dist/boot/main.js(v=${appVersion})}]],
-        "/dist/index.js": [[@{/dist/boot/index.js(v=${appVersion})}]],
-
-        "/dist/localization.js": [[@{/dist/core/localization.js(v=${appVersion})}]],
-        "/dist/security.js": [[@{/dist/core/security.js(v=${appVersion})}]],
-        "/dist/fps.js": [[@{/dist/core/fps.js(v=${appVersion})}]],
-        "/dist/context.js": [[@{/dist/core/context.js(v=${appVersion})}]],
-
-        "/dist/idb-helper.js": [[@{/dist/data/idb-helper.js(v=${appVersion})}]],
-        "/dist/pageCache.js": [[@{/dist/data/pageCache.js(v=${appVersion})}]],
-
-        "/dist/themeSwitch.js": [[@{/dist/ui/base/themeSwitch.js(v=${appVersion})}]],
-        "/dist/tooltips.js": [[@{/dist/ui/base/tooltips.js(v=${appVersion})}]],
-        "/dist/cardOptimizer.js": [[@{/dist/ui/base/cardOptimizer.js(v=${appVersion})}]],
-        "/dist/colorCoder.js": [[@{/dist/ui/base/colorCoder.js(v=${appVersion})}]],
-
-        "/dist/menu.js": [[@{/dist/ui/navigation/menu.js(v=${appVersion})}]],
-        "/dist/navigation.js": [[@{/dist/ui/navigation/navigation.js(v=${appVersion})}]],
-        "/dist/swipeNavigation.js": [[@{/dist/ui/navigation/swipeNavigation.js(v=${appVersion})}]],
-
-        "/dist/toggleButton.js": [[@{/dist/ui/interaction/toggleButton.js(v=${appVersion})}]],
-        "/dist/toggleAbstractButton.js": [[@{/dist/ui/interaction/toggleAbstractButton.js(v=${appVersion})}]],
-        "/dist/hierarchyToggle.js": [[@{/dist/ui/interaction/hierarchyToggle.js(v=${appVersion})}]],
-
-        "/dist/zoomAndPan.js": [[@{/dist/viz/core/zoomAndPan.js(v=${appVersion})}]],
-        "/dist/visualizationToggle.js": [[@{/dist/viz/core/visualizationToggle.js(v=${appVersion})}]],
-        "/dist/exportVisualization.js": [[@{/dist/viz/core/exportVisualization.js(v=${appVersion})}]],
-
-        "/dist/clickablePoints.js": [[@{/dist/viz/render/clickablePoints.js(v=${appVersion})}]],
-        "/dist/outlineRenderer.js": [[@{/dist/viz/render/outlineRenderer.js(v=${appVersion})}]],
-        "/dist/labelRenderer.js": [[@{/dist/viz/render/labelRenderer.js(v=${appVersion})}]],
-        "/dist/crosshairRenderer.js": [[@{/dist/viz/render/crosshairRenderer.js(v=${appVersion})}]],
-
-        "/dist/animationConfig.js": [[@{/dist/animation/config.js(v=${appVersion})}]],
-        "/dist/gravitySpinner.js": [[@{/dist/animation/gravitySpinner.js(v=${appVersion})}]],
-        "/dist/cloudSimulator.js": [[@{/dist/animation/cloudSimulator.js(v=${appVersion})}]],
-        "/dist/textAnimator.js": [[@{/dist/animation/textAnimator.js(v=${appVersion})}]],
-        "/dist/preRenderer.js": [[@{/dist/animation/preRenderer.js(v=${appVersion})}]],
-
-        "/dist/handleQuery.js": [[@{/dist/features/query/handleQuery.js(v=${appVersion})}]],
-        "/dist/queryPopup.js": [[@{/dist/features/query/queryPopup.js(v=${appVersion})}]],
-        "/dist/queryButtonManager.js": [[@{/dist/features/query/queryButtonManager.js(v=${appVersion})}]],
-        "/dist/filteredResultsLoader.js": [[@{/dist/features/query/filteredResultsLoader.js(v=${appVersion})}]],
-
-        "/dist/mediaActions.js": [[@{/dist/features/media/mediaActions.js(v=${appVersion})}]],
-        "/dist/handleUpload.js": [[@{/dist/features/media/handleUpload.js(v=${appVersion})}]],
-        "/dist/handleRecord.js": [[@{/dist/features/media/handleRecord.js(v=${appVersion})}]],
-        "/dist/attachmentManager.js": [[@{/dist/features/media/attachmentManager.js(v=${appVersion})}]],
-        "/dist/dragAndDrop.js": [[@{/dist/features/media/dragAndDrop.js(v=${appVersion})}]],
-
-        "/dist/translate.js": [[@{/dist/features/accessibility/translate.js(v=${appVersion})}]],
-        "/dist/tts.js": [[@{/dist/features/accessibility/tts.js(v=${appVersion})}]],
-
-        "/dist/downloadManager.js": [[@{/dist/features/export/downloadManager.js(v=${appVersion})}]]
     	}
     	}
     	</script>
@@ -244,18 +188,6 @@
         });
     }
 		</script>
-
-		<script type="module">
-            // Wir importieren die Datei nur, um sicherzustellen, dass sie geladen wird.
-            // Durch die ImportMap wird daraus '/dist/localization.js?v=...'
-            import '/dist/localization.js';
-            
-            // Jetzt rufen wir die Funktion sicher über das Window-Objekt auf.
-            // Das funktioniert auch, wenn Vite die interne Funktion in 'a()' umbenannt hat.
-            if (typeof window.loadFromCacheInstant === 'function') {
-                window.loadFromCacheInstant();
-            }
-        </script>
 	</th:block>
 </body>
 </html>

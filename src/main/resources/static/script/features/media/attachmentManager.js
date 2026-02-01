@@ -1,8 +1,11 @@
+import { emit, EVENTS } from '/script/core/eventBus.js';
+
+
 const attachedFiles = new Map();
 export { attachedFiles };
 
 function dispatchAttachmentsChangedEvent() {
-    document.dispatchEvent(new CustomEvent('attachmentsChanged'));
+    emit(EVENTS.ATTACHMENTS_CHANGED);
 }
 
 export function addAttachment(file, fileType) {

@@ -80,14 +80,21 @@ async function createSelfContainedHTML() {
 	const clonedDocument = document.cloneNode(true);
 	clonedDocument.documentElement.setAttribute('data-is-offline', 'true');
 	
+	// 2. Theme explizit übertragen
 	const currentTheme = document.documentElement.getAttribute('data-theme');
 	if (currentTheme) {
-		clonedDocument.documentElement.setAttribute('data-theme', currentTheme);
+	    clonedDocument.documentElement.setAttribute('data-theme', currentTheme);
+	}
+
+	// 3. Sprache explizit übertragen
+	const currentLang = document.documentElement.lang;
+	if (currentLang) {
+	    clonedDocument.documentElement.setAttribute('lang', currentLang);
 	}
 
 	
-	const menuWrapper = clonedDocument.querySelector('.menu-wrapper');
-	if (menuWrapper) menuWrapper.remove();
+	/*const menuWrapper = clonedDocument.querySelector('.menu-wrapper');
+	if (menuWrapper) menuWrapper.remove();*/
 
 	// 1. Die originale Import-Map entfernen (wir bauen gleich eine neue)
 	clonedDocument.querySelectorAll('script[type="importmap"]').forEach(el => el.remove());
@@ -176,12 +183,20 @@ async function createSelfContainedHTML() {
 	const oldScript = clonedDocument.getElementById('initial-data-script');
 	if (oldScript) oldScript.remove();
 
-	const context = getContext(); 
+	const context = getContext();
 
-	// Wir erstellen ein neues Script.
+	// Neues Script erstellen
 	const newDataScript = clonedDocument.createElement('script');
 	newDataScript.id = 'initial-data-script';
-	newDataScript.textContent = `window.INITIAL_DATA = ${JSON.stringify(context)};`;
+
+	// WICHTIG: Daten auch auf window kopieren!
+	newDataScript.textContent = `
+	        window.INITIAL_DATA = ${JSON.stringify(context)};
+	        // Globale Verfügbarkeit für Legacy-Skripte sicherstellen
+	        for (const key in window.INITIAL_DATA) {
+	            window[key] = window.INITIAL_DATA[key];
+	        }
+	    `;
 
 	clonedDocument.head.prepend(newDataScript);
 

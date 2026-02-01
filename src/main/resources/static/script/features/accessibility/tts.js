@@ -1,5 +1,6 @@
 import { getCsrfToken } from '/script/core/security.js';
 import { t } from '/script/core/localization.js';
+import { emit, EVENTS } from '/script/core/eventBus.js';
 
 // --- STATE ---
 let audioContext = null;
@@ -222,9 +223,7 @@ function handlePanicClick() {
 
 		// 2. WARTEN: Exakt so lange warten, wie das CSS vorgibt
 		setTimeout(() => {
-			window.dispatchEvent(new CustomEvent('tts-navigate-request', {
-				detail: { url: currentContext.originUrl }
-			}));
+			emit(EVENTS.TTS_NAVIGATE, { url: currentContext.originUrl });
 		}, waitTime);
 
 	} else {

@@ -29,12 +29,52 @@ let appState = {
 };
 
 /**
+ * Sammelt alte globale Variablen ein und baut daraus ein Objekt,
+ * das aussieht wie das neue INITIAL_DATA.
+ */
+function harvestLegacyGlobals() {
+    // Wir prüfen, ob zumindest eine der Haupt-Variablen existiert, 
+    // um nicht unnötig leere Objekte zu erzeugen.
+    if (!window.JOB_ID && !window.OWN_RESULTS_DATA) return null;
+
+    console.log("[Context] Legacy Mode detected. Harvesting global variables...");
+
+    return {
+        // Core
+        JOB_ID: window.JOB_ID,
+        JOB_TITLE: window.JOB_TITLE,
+        IS_DATA_AVAILABLE: window.IS_DATA_AVAILABLE,
+        QUERY_VECTOR: window.QUERY_VECTOR,
+        CROSSHAIR_COORDS: window.CROSSHAIR_COORDS,
+        EMBEDDING_BOUNDS: window.EMBEDDING_BOUNDS,
+        OUTLINE_DATA: window.OUTLINE_DATA,
+
+        // Own
+        OWN_RESULTS_DATA: window.OWN_RESULTS_DATA,
+        OWN_IDEA_COLOR_MAP: window.OWN_IDEA_COLOR_MAP,
+        OWN_LABELS_DATA: window.OWN_LABELS_DATA,
+
+        // Neighbors
+        NEIGHBOR_CLUSTER_COLOR_MAP: window.NEIGHBOR_CLUSTER_COLOR_MAP,
+        NEIGHBOR_LABELS_DATA: window.NEIGHBOR_LABELS_DATA,
+
+        // Serendipity
+        SERENDIPITY_RESULTS: window.SERENDIPITY_RESULTS,
+        SERENDIPITY_COLOR_MAP: window.SERENDIPITY_COLOR_MAP,
+        SERENDIPITY_LABELS_DATA: window.SERENDIPITY_LABELS_DATA,
+
+        // Context
+        CONTEXT_LABELS_DATA: window.CONTEXT_LABELS_DATA
+    };
+}
+
+/**
  * Initialisiert den Context.
  * Akzeptiert ENTWEDER das Thymeleaf-Format (Screaming Snake) ODER das interne Format (CamelCase).
  */
 export function initializeContext(data = {}) {
 	// Falls data null ist, fangen wir das ab
-	const d = data || {};
+	const d = data || harvestLegacyGlobals() || {};
 
 	// Helper: Versucht erst Key A (Server), dann Key B (Intern), dann Default
 	const val = (keyServer, keyInternal, defaultVal) => {
@@ -42,6 +82,7 @@ export function initializeContext(data = {}) {
 		if (d[keyInternal] !== undefined && d[keyInternal] !== null) return d[keyInternal];
 		return defaultVal;
 	};
+
 
 	appState = {
 		...appState,

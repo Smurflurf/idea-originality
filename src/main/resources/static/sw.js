@@ -14,10 +14,7 @@ const JOB_CACHE_PREFIX = 'idea-atlas-job-';
 const PRECACHE_URLS = [
     '/',
     '/dist/main.css',
-    '/dist/menu.css',
     '/dist/main.js',
-    '/dist/menu.js',
-    '/dist/localization.js',
     '/vendor/fontawesome/css/all.min.css',
     '/vendor/fontawesome/webfonts/fa-solid-900.woff2',
     '/vendor/fontawesome/webfonts/fa-regular-400.woff2',

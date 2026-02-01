@@ -6,6 +6,8 @@
     <title data-i18n="page_title">Licenses & Credits</title>
     <th:block th:replace="~{shared_fragments :: importMapScript}"></th:block>
     
+    <link rel="stylesheet" th:href="@{/dist/menu.css(v=${appVersion})}">
+    
     <!-- 1. Fonts & Icons -->
     <link rel="stylesheet" th:href="@{/vendor/fonts/roboto.css(v=${appVersion})}">
     <link rel="stylesheet" th:href="@{/vendor/fontawesome/css/all.min.css(v=${appVersion})}">
@@ -17,12 +19,11 @@
 
     <!-- 3. Base Styles (Hintergrundfarbe, Reset) -->
     <link rel="stylesheet" th:href="@{/dist/style.css(v=${appVersion})}">
-    <link rel="stylesheet" th:href="@{/dist/menu.css(v=${appVersion})}">
     
     <!-- 4. Page Specific Styles -->
     <link rel="stylesheet" th:href="@{/dist/legal.css(v=${appVersion})}">
 </head>
-<body>
+<body data-features="legal-content">
     <div th:replace="~{shared_fragments :: sideMenu}"></div>
 
     <div id="licenses-content" class="legal-content-wrapper">

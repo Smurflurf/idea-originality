@@ -818,3 +818,12 @@
 		
 	}
 }
+
+
+/* Im Offline-Modus (Download) das Menü und den Trigger ausblenden */
+html[data-is-offline="true"] .menu-trigger,
+html[data-is-offline="true"] .menu-wrapper,
+html[data-is-offline="true"] #sidebar-menu {
+    display: none !important;
+    pointer-events: none !important;
+}

@@ -197,30 +197,33 @@ function handleMove(e) {
         }
     }
 
-    // 2. Ausführung (Nur wenn wir sicher im Horizontal-Modus sind)
-    if (state.direction === 'horizontal') {
-        // Doppelte Sicherheit
-        if (e.cancelable) e.preventDefault();
-        
-        // Safety check
-        if (!state.stylesPrepared) prepareStylesForSwipe();
+	// 2. Ausführung (Nur wenn wir sicher im Horizontal-Modus sind)
+	if (state.direction === 'horizontal') {
+		if (e.cancelable) e.preventDefault();
+		if (!state.stylesPrepared) prepareStylesForSwipe();
 
-        if (!state.mode) {
-             const isMenuOpen = state.menuEl && state.menuEl.classList.contains('is-open');
-             const isEdgeSwipe = state.startX < CONFIG.edgeZone;
+		if (!state.mode) {
+			const isMenuOpen = state.menuEl && state.menuEl.classList.contains('is-open');
+			const isEdgeSwipe = state.startX < CONFIG.edgeZone;
 
-             if (isMenuOpen) {
-                 state.mode = 'MENU_CLOSING';
-             } else if (totalDeltaX > 0 && (state.activeTabIndex <= 0 || isEdgeSwipe)) {
-                 state.mode = 'MENU_OPENING';
-             } else if (availableTabs.length > 0) {
-                 state.mode = 'TABS';
-                 prepareAllTabs();
-             }
-        }
+			// NEU: Offline-Check hinzufügen
+			const isOffline = document.documentElement.hasAttribute('data-is-offline');
 
-        executeSwipe(totalDeltaX);
-    }
+			if (isMenuOpen) {
+				state.mode = 'MENU_CLOSING';
+			}
+			// FIX: Nur in den Menü-Modus gehen, wenn wir NICHT offline sind
+			else if (!isOffline && totalDeltaX > 0 && (state.activeTabIndex <= 0 || isEdgeSwipe)) {
+				state.mode = 'MENU_OPENING';
+			}
+			else if (availableTabs.length > 0) {
+				state.mode = 'TABS';
+				prepareAllTabs();
+			}
+		}
+
+		executeSwipe(totalDeltaX);
+	}
 }
 
 function prepareStylesForSwipe() {

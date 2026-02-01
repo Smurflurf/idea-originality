@@ -10,12 +10,11 @@ export default defineConfig({
     rollupOptions: {
       input: {
 		main: 'src/main/resources/static/script/boot/main.js', 
-		menu: 'src/main/resources/static/script/ui/navigation/menu.js', 
-		localization: 'src/main/resources/static/script/core/localization.js', 
 		
 		style: 'src/main/resources/static/styling/style.css',
 		tooltips: 'src/main/resources/static/styling/tooltips.css',
 		legal: 'src/main/resources/static/styling/legal.css',
+		menu: 'src/main/resources/static/styling/menu.css',
       },
       output: {
         entryFileNames: `[name].js`,

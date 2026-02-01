@@ -4,6 +4,7 @@ import { initializeTranslator, isTranslateModeActive } from '/script/features/ac
 import { initializeLocalization, renderPage, setLanguage, t, applyGeneralTranslations } from '/script/core/localization.js';
 import { initializeSoftNavigation } from '/script/ui/navigation/navigation.js';
 import { initializeSwipeNavigation } from '/script/ui/navigation/swipeNavigation.js';
+import { on, EVENTS } from '/script/core/eventBus.js';
 
 import "/styling/menu.css";
 
@@ -11,8 +12,10 @@ import "/styling/menu.css";
 export function initGlobalMenuListeners() {
 	if (window.menuLogicActive) return;
 	window.menuLogicActive = true;
-	window.addEventListener('languageChanged', (e) => {
+
+	on(EVENTS.LANG_CHANGED, (data) => {
 		console.log("[Menu] Language changed event received.");
+
 		renderHistoryList();
 
 		let path = window.location.pathname;

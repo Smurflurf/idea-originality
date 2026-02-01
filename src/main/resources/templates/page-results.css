@@ -1,0 +1,9 @@
+/* 
+  Diese Datei dient als Bündelpunkt für alle Styles,
+  die nur auf der Ergebnisseite geladen werden sollen.
+*/
+
+@import './results.css';
+@import './visualize.css';
+@import './downloadPopup.css';
+@import './queryPopup.css'; /* Das Query-Popup ist Teil der Results-Seite, wenn auch versteckt */

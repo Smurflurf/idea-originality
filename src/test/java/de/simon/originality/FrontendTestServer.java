@@ -5,10 +5,13 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,6 +26,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import javax.imageio.ImageIO;
+import javax.sound.sampled.AudioFileFormat;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
@@ -79,14 +86,82 @@ public class FrontendTestServer {
             exchange.sendResponseHeaders(200, bytes.length);
             try (OutputStream os = exchange.getResponseBody()) { os.write(bytes); }
             exchange.close();
-        });
-        
-        // Mock API: TTS
+		});
+
+		// Mock API: TTS
         server.createContext("/api/tts", exchange -> {
-            try { exchange.getRequestBody().readAllBytes(); } catch (IOException ignore) {}
-            exchange.getResponseHeaders().set("Content-Type", "audio/wav");
-            exchange.sendResponseHeaders(200, 0); 
-            exchange.close();
+            try {
+                exchange.getRequestBody().readAllBytes();
+
+                Path mp3Path = Paths.get("src/test/resources/testaudio.mp3");
+                if (!Files.exists(mp3Path)) {
+                    System.err.println("testaudio.mp3 nicht gefunden!");
+                    exchange.sendResponseHeaders(404, 0);
+                    exchange.close();
+                    return;
+                }
+
+                // --- SCHRITT 1: MP3 zu PCM dekodieren (ohne Kanaländerung) ---
+                AudioInputStream mp3Stream = AudioSystem.getAudioInputStream(mp3Path.toFile());
+                AudioFormat sourceFormat = mp3Stream.getFormat();
+                
+                // Zielformat für die reine Dekodierung (behält Kanalanzahl bei)
+                AudioFormat pcmFormat = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED,
+                        sourceFormat.getSampleRate(), 16, sourceFormat.getChannels(),
+                        sourceFormat.getChannels() * 2, sourceFormat.getSampleRate(), false);
+                        
+                AudioInputStream pcmStream = AudioSystem.getAudioInputStream(pcmFormat, mp3Stream);
+                byte[] pcmBytes = pcmStream.readAllBytes();
+
+                // --- SCHRITT 2: Manuelles Downmixing von Stereo zu Mono (falls nötig) ---
+                byte[] monoPcmBytes;
+                if (pcmFormat.getChannels() > 1) {
+                    // ByteBuffer hilft uns, Bytes sicher in 16-bit Shorts umzuwandeln
+                    ByteBuffer stereoBuffer = ByteBuffer.wrap(pcmBytes).order(ByteOrder.LITTLE_ENDIAN);
+                    ByteBuffer monoBuffer = ByteBuffer.allocate(pcmBytes.length / 2).order(ByteOrder.LITTLE_ENDIAN);
+
+                    while (stereoBuffer.hasRemaining()) {
+                        short left = stereoBuffer.getShort();
+                        short right = stereoBuffer.getShort();
+                        // Einfacher Durchschnitt für den Mono-Wert
+                        short mono = (short) ((left + right) / 2);
+                        monoBuffer.putShort(mono);
+                    }
+                    monoPcmBytes = monoBuffer.array();
+                } else {
+                    // War bereits Mono, keine Änderung nötig
+                    monoPcmBytes = pcmBytes;
+                }
+                
+                // --- SCHRITT 3: Finalen Mono-WAV-Stream erstellen und senden ---
+                AudioFormat finalMonoFormat = new AudioFormat(
+                    AudioFormat.Encoding.PCM_SIGNED, 22050, 16, 1, 2, 22050, false
+                );
+
+                long frameCount = monoPcmBytes.length / finalMonoFormat.getFrameSize();
+                AudioInputStream finalStream = new AudioInputStream(
+                    new ByteArrayInputStream(monoPcmBytes), finalMonoFormat, frameCount
+                );
+
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                AudioSystem.write(finalStream, AudioFileFormat.Type.WAVE, out);
+                byte[] wavData = out.toByteArray();
+
+                // Senden
+                exchange.getResponseHeaders().set("Content-Type", "testaudio/wav");
+                exchange.sendResponseHeaders(200, wavData.length);
+                try (OutputStream os = exchange.getResponseBody()) {
+                    os.write(wavData);
+                }
+
+                System.out.println("TTS Mock: audio.mp3 erfolgreich zu WAV konvertiert und gesendet.");
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                try { exchange.sendResponseHeaders(500, 0); } catch (Exception ignored) {}
+            } finally {
+                exchange.close();
+            }
         });
         
         server.setExecutor(executor);
@@ -386,33 +461,45 @@ public class FrontendTestServer {
         }
     }
 
+    private static Path findFileRecursively(Path root, String fileName) {
+        try (var stream = Files.walk(root)) {
+            return stream
+                    .filter(Files::isRegularFile)
+                    .filter(path -> path.getFileName().toString().equals(fileName))
+                    .findFirst()
+                    .orElse(null);
+        } catch (IOException e) {
+            return null;
+        }
+    }
+    
     private static void handleStaticAsset(HttpExchange exchange, String reqPath) throws IOException {
-        String mime = getMimeType(reqPath);
-        Path resourceBase = Paths.get(STATIC_ROOT);
-        String lookupPath = reqPath.startsWith("/") ? reqPath.substring(1) : reqPath;
+    	String mime = getMimeType(reqPath);
+        Path resourceBase;
+        String fileName = Paths.get(reqPath).getFileName().toString();
+        Path file = null;
         boolean isServiceWorker = false;
 
         if (reqPath.equals("/sw.js")) {
-            resourceBase = Paths.get(STATIC_ROOT);
-            lookupPath = "sw.js";
+            file = Paths.get(STATIC_ROOT).resolve("sw.js");
             isServiceWorker = true;
         } 
         else if (reqPath.startsWith("/assets/")) {
-            resourceBase = Paths.get(STATIC_ROOT);
+            file = Paths.get(STATIC_ROOT).resolve(reqPath.substring(1));
         }
         else if (reqPath.contains("vendor/")) {
              // Vendor bleibt wie es ist
         } 
         else if (reqPath.endsWith(".css")) {
-            resourceBase = Paths.get(STYLING_ROOT);
-            lookupPath = lookupPath.replace("dist/", "").replace("styling/", "");
+            file = findFileRecursively(Paths.get(STYLING_ROOT), fileName);
         } 
         else if (reqPath.endsWith(".js")) {
-            resourceBase = Paths.get(SCRIPT_ROOT);
-            lookupPath = lookupPath.replace("dist/", "").replace("script/", "");
+            file = findFileRecursively(Paths.get(SCRIPT_ROOT), fileName);
         }
 
-        Path file = resourceBase.resolve(lookupPath);
+        if (file == null) {
+            file = Paths.get(STATIC_ROOT).resolve(reqPath.startsWith("/") ? reqPath.substring(1) : reqPath);
+        }
         
         if (!Files.exists(file) && reqPath.startsWith("/assets/")) {
             sendJson(exchange, "{}");

@@ -4,6 +4,7 @@ import { initializeDynamicPoints } from '/script/viz/render/clickablePoints.js';
 import { triggerPositionUpdateForViz } from '/script/viz/core/zoomAndPan.js';
 import { getCsrfToken } from '/script/core/security.js';
 import { applyGeneralTranslations } from '/script/core/localization.js';
+import { emit, EVENTS } from '/script/core/eventBus.js';
 
 function createSkeletonCardHTML() {
     const cardHTML = `
@@ -131,15 +132,11 @@ function initializeTopicTabs(paneId, colorMap, queryVector) {
                 }
             }, 50);
 
-            // WICHTIG: Hier feuern wir das Event so, dass main.js erkennt:
-            // "Aha, 'container' ist nur die Liste, nicht die ganze Seite!"
-            document.dispatchEvent(new CustomEvent('dynamicContentLoaded', { 
-                detail: { container: container } 
-            }));
-
-            document.dispatchEvent(new CustomEvent('filtered-results-rendered', {
-                detail: { containerId: container.id, clusterId: clusterId }
-            }));
+			
+			emit(EVENTS.FILTERED_RESULTS_RENDERED, { 
+			    containerId: container.id, 
+			    clusterId: clusterId 
+			});
         }
         
         // 1. Check Cache (Memory)

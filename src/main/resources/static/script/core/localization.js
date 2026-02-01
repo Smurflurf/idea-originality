@@ -1,3 +1,5 @@
+import { emit, EVENTS } from '/script/core/eventBus.js';
+
 const STORAGE_KEY = 'idea-atlas-translate-lang';
 const CACHE_PREFIX = 'idea-atlas-i18n-cache-'; // Neuer Cache Key Prefix
 const DEFAULT_LANG = 'en';
@@ -93,7 +95,7 @@ export async function setLanguage(newLang, files = ['common', 'index', 'results'
 	} catch (e) {}
 
 	applyGeneralTranslations();
-	window.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang: effectiveLang } }));
+	emit(EVENTS.LANG_CHANGED, { lang: effectiveLang });
 	document.documentElement.setAttribute('data-i18n-ready', 'true');
 }
 

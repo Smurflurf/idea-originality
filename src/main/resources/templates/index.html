@@ -7,10 +7,10 @@
 	<title data-i18n="page_title">Ideenatlas</title>
     <th:block th:replace="~{shared_fragments :: importMapScript}"></th:block>
 
+    <link rel="stylesheet" th:href="@{/dist/menu.css(v=${appVersion})}">
 	<link rel="stylesheet" th:href="@{/dist/main.css(v=${appVersion})}">
 	<link rel="stylesheet" th:href="@{/vendor/fontawesome/css/all.min.css(v=${appVersion})}">
 	<link rel="stylesheet" th:href="@{/vendor/fonts/roboto.css(v=${appVersion})}">
-	<link rel="stylesheet" th:href="@{/dist/menu.css(v=${appVersion})}">
     <link rel="stylesheet"
 		th:href="@{/vendor/tippy/tippy.css(v=${appVersion})}">
 	
@@ -20,7 +20,7 @@
 </head>
 
     
-<body class="is-centered-content">
+<body class="is-centered-content" data-features="search">
 	<div th:replace="~{shared_fragments :: sideMenu}"></div>
 
 	<form class="idea-form" th:action="@{/query}" method="post">

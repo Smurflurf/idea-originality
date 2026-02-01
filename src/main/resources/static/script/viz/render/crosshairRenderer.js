@@ -1,3 +1,5 @@
+import { getContext } from '/script/core/context.js';
+
 /**
  * Zeichnet eine einzelne Fadenkreuz-Instanz.
  */
@@ -116,20 +118,21 @@ function setupSingleCrosshair(prefix, crosshairCoords) {
 
 
 export function initializeAllCrosshairs() {
-    const crosshairCoords = typeof CROSSHAIR_COORDS !== 'undefined' ? CROSSHAIR_COORDS : null;
-    
-    if (crosshairCoords) {
-        setupSingleCrosshair('own', crosshairCoords);
-        setupSingleCrosshair('nc', crosshairCoords);
-        setupSingleCrosshair('serendipity', crosshairCoords);
-    } else {
-        const btnOwn = document.getElementById('viz-toggle-own-crosshair');
-        if (btnOwn) btnOwn.style.display = 'none';
-        
-        const btnNc = document.getElementById('viz-toggle-nc-crosshair');
-        if (btnNc) btnNc.style.display = 'none';
+	const ctx = getContext();
+	const crosshairCoords = ctx.crosshairCoords;
 
-        const btnSerendipity = document.getElementById('viz-toggle-serendipity-crosshair');
-        if (btnSerendipity) btnSerendipity.style.display = 'none';
-    }
+	if (crosshairCoords) {
+		setupSingleCrosshair('own', crosshairCoords);
+		setupSingleCrosshair('nc', crosshairCoords);
+		setupSingleCrosshair('serendipity', crosshairCoords);
+	} else {
+		const btnOwn = document.getElementById('viz-toggle-own-crosshair');
+		if (btnOwn) btnOwn.style.display = 'none';
+
+		const btnNc = document.getElementById('viz-toggle-nc-crosshair');
+		if (btnNc) btnNc.style.display = 'none';
+
+		const btnSerendipity = document.getElementById('viz-toggle-serendipity-crosshair');
+		if (btnSerendipity) btnSerendipity.style.display = 'none';
+	}
 }
