@@ -1,6 +1,6 @@
+import { getContext } from '/script/core/context.js';
+
 /**
- * /script/colorCoder.js
- * 
  * Dieses Skript ist für das kontextsensitive Einfärben von UI-Elementen verantwortlich.
  * Es passt die vom Backend kommenden Farben an, stellt sicher, dass Elemente in den richtigen
  * Abschnitten korrekt gefärbt werden, und wendet erweiterte Stile für Hierarchie-Verbinder an.
@@ -196,42 +196,43 @@ export function applyAdvancedHierarchyStyling(listElement, colorMap) {
  * Die zentrale Funktion, die alle Färbe- und Styling-Operationen auf der Seite steuert.
  */
 export function applyColorCoding() {
+	const ctx = getContext();
     const ownVizContainer = document.getElementById('own-viz-content');
     const neighborVizContainer = document.getElementById('neighbor-viz-content');
     const serendipityVizContainer = document.getElementById('serendipity-viz-content');
 
     // FIX: Prüfen auf window.VAR (das fängt null und undefined ab)
     
-    if (ownVizContainer && window.OWN_IDEA_COLOR_MAP) {
-        colorizeElementsInContainer(ownVizContainer, window.OWN_IDEA_COLOR_MAP);
+    if (ownVizContainer && ctx.ownColorMap) {
+        colorizeElementsInContainer(ownVizContainer, ctx.ownColorMap);
     }
     
-    if (neighborVizContainer && window.NEIGHBOR_CLUSTER_COLOR_MAP) {
-        colorizeElementsInContainer(neighborVizContainer, window.NEIGHBOR_CLUSTER_COLOR_MAP);
+    if (neighborVizContainer && ctx.neighborColorMap) {
+        colorizeElementsInContainer(neighborVizContainer, ctx.neighborColorMap);
     }
     
-    if (serendipityVizContainer && window.SERENDIPITY_COLOR_MAP) {
-        colorizeElementsInContainer(serendipityVizContainer, window.SERENDIPITY_COLOR_MAP);
+    if (serendipityVizContainer && ctx.serendipityColorMap) {
+        colorizeElementsInContainer(serendipityVizContainer, ctx.serendipityColorMap);
     }
 
     // Erweiterte Hierarchie-Stile (Gleicher Fix: window.VAR prüfen)
     const neighborMainHierarchyList = document.querySelector('#neighbor-viz-content > .hierarchy-container > .hierarchy-list');
-    if (neighborMainHierarchyList && window.NEIGHBOR_CLUSTER_COLOR_MAP) {
-        applyAdvancedHierarchyStyling(neighborMainHierarchyList, window.NEIGHBOR_CLUSTER_COLOR_MAP);
+    if (neighborMainHierarchyList && ctx.neighborColorMap) {
+        applyAdvancedHierarchyStyling(neighborMainHierarchyList, ctx.neighborColorMap);
     }
     
     const serendipityMainHierarchyList = document.querySelector('#serendipity-viz-content > .hierarchy-container > .hierarchy-list');
-    if (serendipityMainHierarchyList && window.SERENDIPITY_COLOR_MAP) {
-        applyAdvancedHierarchyStyling(serendipityMainHierarchyList, window.SERENDIPITY_COLOR_MAP);
+    if (serendipityMainHierarchyList && ctx.serendipityColorMap) {
+        applyAdvancedHierarchyStyling(serendipityMainHierarchyList, ctx.serendipityColorMap);
     }
 
     // Topic Tabs
     const neighborTopicTabs = document.querySelectorAll('#neighbor-viz-content .topic-tab');
-    if (neighborTopicTabs.length > 0 && window.NEIGHBOR_CLUSTER_COLOR_MAP) {
+    if (neighborTopicTabs.length > 0 && ctx.neighborColorMap) {
         neighborTopicTabs.forEach(tab => {
             const clusterId = tab.dataset.clusterId;
-            if (clusterId && window.NEIGHBOR_CLUSTER_COLOR_MAP[clusterId]) {
-                const baseColor = window.NEIGHBOR_CLUSTER_COLOR_MAP[clusterId];
+            if (clusterId && ctx.neighborColorMap[clusterId]) {
+                const baseColor = ctx.neighborColorMap[clusterId];
                 const uiColor = getUiColor(baseColor);
                 tab.style.setProperty('--tab-border-color', uiColor);
             }
@@ -239,11 +240,11 @@ export function applyColorCoding() {
     }
 
     const serendipityTopicTabs = document.querySelectorAll('#serendipity-viz-content .topic-tab');
-    if (serendipityTopicTabs.length > 0 && window.SERENDIPITY_COLOR_MAP) {
+    if (serendipityTopicTabs.length > 0 && ctx.serendipityColorMap) {
         serendipityTopicTabs.forEach(tab => {
             const clusterId = tab.dataset.clusterId;
-            if (clusterId && window.SERENDIPITY_COLOR_MAP[clusterId]) {
-                const baseColor = window.SERENDIPITY_COLOR_MAP[clusterId];
+            if (clusterId && ctx.serendipityColorMap[clusterId]) {
+                const baseColor = ctx.serendipityColorMap[clusterId];
                 const uiColor = getUiColor(baseColor);
                 tab.style.setProperty('--tab-border-color', uiColor);
             }

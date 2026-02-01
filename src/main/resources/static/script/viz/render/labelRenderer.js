@@ -1,7 +1,9 @@
+import { getContext } from '/script/core/context.js';
+
 function drawLabels(gContainer, labelData, baseScale) {
     if (!gContainer || !labelData) return;
     gContainer.innerHTML = '';
-
+	
     labelData.forEach(label => {
         const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         group.classList.add('label-bundle');
@@ -47,15 +49,16 @@ function drawLabels(gContainer, labelData, baseScale) {
 }
 
 export function initializeLabelRenderer(prefix) {
+	const ctx = getContext();
     const svg = document.getElementById(`viz-layer-${prefix}-labels-svg`);
     const wrapper = document.getElementById(`zoom-pan-wrapper-${prefix}`);
-
-    if (!svg || !wrapper || !window.EMBEDDING_BOUNDS) {
+	
+    if (!svg || !wrapper || !ctx.embeddingBounds) {
         console.warn(`LabelRenderer für '${prefix}': Kritische Elemente oder Daten fehlen.`);
         return;
     }
 
-    const bounds = window.EMBEDDING_BOUNDS;
+    const bounds = ctx.embeddingBounds;
     const dataWidth = bounds.xmax - bounds.xmin;
     const dataHeight = bounds.ymax - bounds.ymin;
     
@@ -81,25 +84,19 @@ export function initializeLabelRenderer(prefix) {
     
     // KORREKTUR: Robuste Auswahl der Label-Daten basierend auf dem Präfix
     let mainLabels = [];
-    switch(prefix) {
-        case 'own':
-            mainLabels = window.OWN_LABELS_DATA || [];
-            break;
-        case 'nc':
-            mainLabels = window.NEIGHBOR_LABELS_DATA || [];
-            break;
-        case 'serendipity':
-            mainLabels = window.SERENDIPITY_LABELS_DATA || [];
-            break;
+	switch (prefix) {
+		case 'own': mainLabels = ctx.ownLabels; break;
+		case 'nc': mainLabels = ctx.neighborLabels; break;
+		case 'serendipity': mainLabels = ctx.serendipityLabels; break;
     }
-    const contextLabels = window.CONTEXT_LABELS_DATA || [];
-
+	const contextLabels = ctx.contextLabels;
+	
     drawLabels(gMain, mainLabels, baseScale);
     drawLabels(gContext, contextLabels, baseScale);
 
     const updateLabelSizes = () => {
         const container = wrapper.parentElement;
-        if (!container || container.clientWidth === 0 || !window.EMBEDDING_BOUNDS) {
+        if (!container || container.clientWidth === 0 || !ctx.embeddingBounds) {
             return;
         }
 

@@ -1,3 +1,5 @@
+import { getContext, getJobTitle } from '/script/core/context.js';
+import { getI18nData } from '/script/core/localization.js'; 
 import { getCsrfToken } from '/script/core/security.js';
 
 function sanitizeForFilename(title) {
@@ -162,34 +164,37 @@ async function createSelfContainedHTML() {
 
 	restoreVisibility();
 
-	if (window.I18N_DATA) {
+	// 1. I18N Dump
+	if (getI18nData()) {
 		const i18nScript = clonedDocument.createElement('script');
-		i18nScript.id = 'offline-i18n-data';
-		i18nScript.textContent = `window.OFFLINE_I18N_DATA = ${JSON.stringify(window.I18N_DATA)};`;
+		i18nScript.textContent = `window.OFFLINE_I18N_DATA = ${JSON.stringify(getI18nData())};`;
 		clonedDocument.head.prepend(i18nScript);
 	}
-	
-	const initialDataScript = clonedDocument.getElementById('initial-data-script');
-	if (initialDataScript) {
-		const match = initialDataScript.textContent.match(/const\s+INITIAL_DATA\s*=\s*(\{[\s\S]*?\});/);
-		if (match && match[1]) {
-			const newDataScript = clonedDocument.createElement('script');
-			newDataScript.textContent = `try { const d = ${match[1]}; for (const k in d) window[k] = d[k]; } catch(e) {}`;
-			clonedDocument.head.prepend(newDataScript);
-		}
-		initialDataScript.remove();
-	}
+
+	// 2. DATA DUMP 
+	// Wir löschen das alte Script vom Server
+	const oldScript = clonedDocument.getElementById('initial-data-script');
+	if (oldScript) oldScript.remove();
+
+	const context = getContext(); 
+
+	// Wir erstellen ein neues Script.
+	const newDataScript = clonedDocument.createElement('script');
+	newDataScript.id = 'initial-data-script';
+	newDataScript.textContent = `window.INITIAL_DATA = ${JSON.stringify(context)};`;
+
+	clonedDocument.head.prepend(newDataScript);
 
 	const prefetchedDataCache = {};
 	const clusterIds = [...document.querySelectorAll('.topic-tab')].map(tab => tab.dataset.clusterId);
-	if (clusterIds.length > 0 && typeof QUERY_VECTOR !== 'undefined') {
+	if (clusterIds.length > 0 && context.queryVector) { 
 		await Promise.all(
 			clusterIds.map(async (clusterId) => {
 				try {
 					const response = await fetch('/query/filtered-results', {
 						method: 'POST',
 						headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': getCsrfToken() },
-						body: JSON.stringify({ queryVector: JSON.parse(QUERY_VECTOR), clusterId: clusterId })
+						body: JSON.stringify({ queryVector: JSON.parse(context.queryVector), clusterId: clusterId })
 					});
 					if (response.ok) prefetchedDataCache[clusterId] = await response.json();
 				} catch (e) {}
@@ -334,6 +339,7 @@ function mapResultToJson(result) {
 }
 
 async function generateResultsJSON() {
+	const context = getContext();
 	const jsonData = {
 		summary: { inputTitle: "", inputIdea: "", mainTopics: [], similarTopicFields: [], serendipitousConnections: [] },
 		ownIdeaAnalysis: { clusterHierarchy: [] },
@@ -355,14 +361,14 @@ async function generateResultsJSON() {
 			});
 		});
 
-		if (clustersFromDOM.length > 0 && typeof QUERY_VECTOR !== 'undefined') {
+		if (clustersFromDOM.length > 0 && context.queryVector) {
 			const topicFieldPromises = clustersFromDOM.map(async (topic) => {
 				let detailedResults = [];
 				try {
 					const response = await fetch('/query/filtered-results', {
 						method: 'POST',
 						headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': getCsrfToken() },
-						body: JSON.stringify({ queryVector: JSON.parse(QUERY_VECTOR), clusterId: topic.clusterId })
+						body: JSON.stringify({ queryVector: JSON.parse(context.queryVector), clusterId: topic.clusterId })
 					});
 					if (response.ok) {
 						const filteredData = await response.json();
@@ -380,7 +386,7 @@ async function generateResultsJSON() {
 
 	const ideaElement = document.querySelector('#own-viz-content .expandable-abstract');
 	if (ideaElement) jsonData.summary.inputIdea = ideaElement.textContent.trim();
-	if (window.JOB_TITLE) jsonData.summary.inputTitle = window.JOB_TITLE;
+	if (context.jobTitle) jsonData.summary.inputTitle = context.jobTitle;
 
 	document.querySelectorAll('#own-viz-content > .hierarchy-container .hierarchy-item-box').forEach(el => {
 		const nameEl = el.querySelector('.hierarchy-item-name');
@@ -399,8 +405,8 @@ async function generateResultsJSON() {
 	jsonData.summary.similarTopicFields = jsonData.similarTopicFields.map(c => ({ name: c.clusterName, description: c.summary, relevance: c.relevanceScore }));
 	jsonData.summary.serendipitousConnections = jsonData.serendipitousConnections.map(c => ({ name: c.clusterName, description: c.summary, relevance: c.relevanceScore }));
 
-	if (typeof OWN_RESULTS_DATA !== 'undefined' && Array.isArray(OWN_RESULTS_DATA)) {
-		jsonData.detailedSimilarResults = OWN_RESULTS_DATA.map(mapResultToJson);
+	if (context.ownResults && Array.isArray(context.ownResults)) {
+		jsonData.detailedSimilarResults = context.ownResults.map(mapResultToJson);
 	}
 	return jsonData;
 }
@@ -420,7 +426,7 @@ const offlineClickListener = async (event) => {
 	try {
 		const dataText = document.getElementById('results-data-island').textContent;
 		const blob = new Blob([dataText], { type: 'application/json' });
-		const sanitizedTitle = sanitizeForFilename(window.JOB_TITLE);
+		const sanitizedTitle = sanitizeForFilename(getJobTitle());
 		triggerDownload(blob, `${sanitizedTitle}-ideenatlas.eu.json`);
 	} catch (e) {
 		alert('Could not download JSON data.');
@@ -484,7 +490,7 @@ async function handleDownloadChoice(format) {
 	button.disabled = true;
 	icon.className = 'fa-solid fa-spinner fa-spin';
 	try {
-		const sanitizedTitle = sanitizeForFilename(window.JOB_TITLE);
+		const sanitizedTitle = sanitizeForFilename(getJobTitle());
 		const fileName = `${sanitizedTitle}-ideenatlas.eu.${format}`;
 		if (format === 'html') {
 			const pageHtml = await createSelfContainedHTML();
@@ -496,6 +502,7 @@ async function handleDownloadChoice(format) {
 			triggerDownload(jsonBlob, fileName);
 		}
 	} catch (error) {
+		console.log(error)
 		const errorMsg = t('results.download.error_download_format').replace('{format}', format);
 		alert(errorMsg);
 	} finally {

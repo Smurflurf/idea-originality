@@ -3,7 +3,7 @@ const CACHE_PREFIX = 'idea-atlas-i18n-cache-'; // Neuer Cache Key Prefix
 const DEFAULT_LANG = 'en';
 const SUPPORTED_LANGS = ['de', 'en'];
 
-window.I18N_DATA = {};
+let i18nState = {}; 
 
 function getCurrentLang() {
 	let lang = localStorage.getItem(STORAGE_KEY) || 'system';
@@ -20,7 +20,7 @@ function getCurrentLang() {
  */
 export function loadFromCacheInstant() {
 	const lang = getCurrentLang();
-	if (window.I18N_DATA && Object.keys(window.I18N_DATA).length > 0 && document.documentElement.lang === lang) {
+	if (i18nState && Object.keys(i18nState).length > 0 && document.documentElement.lang === lang) {
 		return true;
 	}
 
@@ -30,7 +30,7 @@ export function loadFromCacheInstant() {
 
     if (cachedData) {
         try {
-            window.I18N_DATA = JSON.parse(cachedData);
+            i18nState = JSON.parse(cachedData);
             document.documentElement.lang = lang;
             // WICHTIG: Setzt den Status sofort auf "ready", wenn Cache da ist.
             // Das verhindert das Ausblenden durch CSS beim Initial-Load.
@@ -69,7 +69,7 @@ export async function initializeLocalization(files = ['common']) {
 
 	// Cache für das nächste Mal aktualisieren
 	try {
-		localStorage.setItem(CACHE_PREFIX + lang, JSON.stringify(window.I18N_DATA));
+		localStorage.setItem(CACHE_PREFIX + lang, JSON.stringify(i18nState));
 	} catch (e) { }
 }
 
@@ -89,12 +89,16 @@ export async function setLanguage(newLang, files = ['common', 'index', 'results'
 	
 	// Aber wir speichern den neuen Stand sofort in den Cache
 	try {
-		localStorage.setItem(CACHE_PREFIX + effectiveLang, JSON.stringify(window.I18N_DATA));
+		localStorage.setItem(CACHE_PREFIX + effectiveLang, JSON.stringify(i18nState));
 	} catch (e) {}
 
 	applyGeneralTranslations();
 	window.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang: effectiveLang } }));
 	document.documentElement.setAttribute('data-i18n-ready', 'true');
+}
+
+export function getI18nData() {
+    return i18nState;
 }
 
 /**
@@ -103,14 +107,12 @@ export async function setLanguage(newLang, files = ['common', 'index', 'results'
  */
 export async function loadLanguageData(targetLang, files) {
     // 1. OFFLINE CHECK: Wurden Daten "gebacken"?
-    if (window.OFFLINE_I18N_DATA) {
-        console.log("[I18N] Offline mode: Using embedded translation data.");
-        // Wir nehmen einfach die gebackenen Daten. 
-        // Ein Sprachwechsel ist offline nicht möglich (außer wir backen alle, aber das bläht auf),
-        // daher ignorieren wir 'targetLang' hier effektiv.
-        window.I18N_DATA = window.OFFLINE_I18N_DATA;
-        return;
-    }
+	if (window.OFFLINE_I18N_DATA) {
+	    // Hier lassen wir window.OFFLINE_I18N_DATA kurz stehen, 
+	    // da das vom Download-Skript hart in die HTML geschrieben wird.
+	    i18nState = window.OFFLINE_I18N_DATA;
+	    return;
+	}
 
     // 2. ONLINE LOGIK (Normaler Fetch)
     const fetchForLang = async (langCode) => {
@@ -134,13 +136,13 @@ export async function loadLanguageData(targetLang, files) {
         targetData = await fetchForLang(targetLang);
     }
 
-	window.I18N_DATA = { ...baseData, ...targetData };
+	i18nState = { ...baseData, ...targetData };
 }
 
 export function applyGeneralTranslations(container = document) {
 	// Sicherheitscheck: Wenn keine Daten da sind, gar nicht erst versuchen,
 	// sonst überschreiben wir alles mit Keys.
-	if (!window.I18N_DATA || Object.keys(window.I18N_DATA).length === 0) return;
+	if (!i18nState || Object.keys(i18nState).length === 0) return;
 
 	const pageTitle = t('page_title');
 	if (pageTitle && pageTitle !== 'page_title') {
@@ -185,7 +187,7 @@ export function applyGeneralTranslations(container = document) {
 
 export function t(key) {
 	if (!key) return null;
-	return key.split('.').reduce((prev, curr) => (prev ? prev[curr] : null), window.I18N_DATA) || key;
+	return key.split('.').reduce((prev, curr) => (prev ? prev[curr] : null), i18nState) || key;
 }
 
 /* ==========================================================================
@@ -194,7 +196,7 @@ export function t(key) {
 
 export function renderPage(containerId) {
 	const container = document.getElementById(containerId);
-	const data = window.I18N_DATA;
+	const data = i18nState;
 
 	if (!container || !data) return;
 

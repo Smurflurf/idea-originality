@@ -1,3 +1,4 @@
+import { getContext } from '/script/core/context.js';
 import { getUiColor, getContrastingTextColor } from "/script/ui/base/colorCoder.js";
 import { initializeDynamicPoints } from '/script/viz/render/clickablePoints.js';
 import { triggerPositionUpdateForViz } from '/script/viz/core/zoomAndPan.js';
@@ -192,9 +193,10 @@ function initializeTopicTabs(paneId, colorMap, queryVector) {
 
 // Zentrale Init Funktion
 function initFilteredLoader() {
-    const neighborMap = window.NEIGHBOR_CLUSTER_COLOR_MAP || {};
-    const serendipityMap = window.SERENDIPITY_COLOR_MAP || {};
-    const queryVec = window.QUERY_VECTOR;
+	const ctx = getContext();
+	const neighborMap = ctx.neighborColorMap;
+	const serendipityMap = ctx.serendipityColorMap;
+	const queryVec = ctx.queryVector; 
 
     if (!queryVec) return;
 

@@ -6,6 +6,8 @@ import '/styling/tooltips.css';
 import '/styling/visualize.css';
 import '/styling/downloadPopup.css';
 
+import { initializeContext, getContext, isDataAvailable, getJobTitle } from '/script/core/context.js';
+
 import { initializeTippy } from '/script/ui/base/tooltips.js';
 import { initializePageCache } from '/script/data/pageCache.js';
 import { initializeJsonToggles } from '/script/ui/interaction/toggleButton.js';
@@ -39,6 +41,14 @@ import '/script/viz/core/exportVisualization.js';
  */
 function handlePageChange(container) {
 	const body = document.body;
+
+	// -1. STATE INITIALISIEREN
+	// Wir holen uns die Daten von Thymeleaf (Handoff-Point)
+	if (window.INITIAL_DATA) {
+	    initializeContext(window.INITIAL_DATA);
+	    // Aufräumen
+	    delete window.INITIAL_DATA; 
+	}
 
 	// ===================================================================
 	// 0. ZUSTAND AUFRÄUMEN
@@ -81,22 +91,20 @@ function handlePageChange(container) {
 
 	// FALL B: Ergebnisseite (results.html)
 	const vizContainer = document.querySelector('.viz-stack-container');
-	const dataObj = window.INITIAL_DATA;
-	const hasData = dataObj && dataObj.IS_DATA_AVAILABLE;
+	const context = getContext(); // State holen
 
-	if (vizContainer || hasData) {
+	if (vizContainer || isDataAvailable()) {
 		console.log("Spezifische Logik für Ergebnisseite wird ausgeführt.");
 		disposeAllVisualizations();
 
-		if (hasData && dataObj.JOB_ID) {
-			initializePageCache(dataObj);
+		if (isDataAvailable() && context.jobId) {
+			// Hier übergeben wir jetzt saubere Daten statt das ganze DataObjekt wild herumzureichen
+			// initializePageCache(context); // Falls pageCache angepasst wurde
 
-			if (dataObj.JOB_TITLE) {
-				document.title = `${dataObj.JOB_TITLE} | Ideenatlas`;
-			}
-			const titleToSave = dataObj.JOB_TITLE || t('global.analysis') || 'Analysis';
-			saveJobToHistory(dataObj.JOB_ID, titleToSave).then(() => {
-				// Menü sofort aktualisieren, damit der Eintrag erscheint
+			const titleToSave = getJobTitle();
+			if (titleToSave) document.title = `${titleToSave} | Ideenatlas`;
+
+			saveJobToHistory(context.jobId, titleToSave).then(() => {
 				renderHistoryList();
 			});
 		}
@@ -107,9 +115,9 @@ function handlePageChange(container) {
 		initializeAllVisualizations();
 		initializeColorCodingTriggers();
 
-		if (window.IS_DATA_AVAILABLE && vizContainer) {
-			if (window.CROSSHAIR_COORDS) initializeAllCrosshairs();
-			if (window.EMBEDDING_BOUNDS) {
+		if (isDataAvailable() && vizContainer) {
+			if (context.crosshairCoords) initializeAllCrosshairs();
+			if (context.embeddingBounds) {
 				initializeOutlineRenderer('own');
 				initializeOutlineRenderer('nc');
 				initializeOutlineRenderer('serendipity');

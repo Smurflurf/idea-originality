@@ -1,3 +1,7 @@
+// DIESE KLASSE IST NUR EIN TEMPLATE, EIN GEDANKENEXPERIMENT.
+// CODE REFACTORING ARBEITET DARAUF HIN SIE UNNÖTIG ZU MACHEN; CONSIDER THIS A TODO
+
+
 /**
  * Abstrakte Basisklasse für alle Module.
  * Kümmert sich um Lifecycle-Management, AbortController und Error-Handling.
