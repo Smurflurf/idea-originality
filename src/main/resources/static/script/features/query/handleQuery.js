@@ -137,6 +137,3 @@ export function attachQueryListener() {
 	// Markieren, dass wir fertig sind
 	ideaForm.dataset.listenerAttached = 'true';
 }
-
-// Initialer Aufruf
-document.addEventListener('DOMContentLoaded', attachQueryListener);

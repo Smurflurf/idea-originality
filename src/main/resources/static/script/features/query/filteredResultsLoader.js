@@ -192,7 +192,7 @@ function initializeTopicTabs(paneId, colorMap, queryVector) {
 }
 
 // Zentrale Init Funktion
-function initFilteredLoader() {
+export function initFilteredLoader() {
 	const ctx = getContext();
 	const neighborMap = ctx.neighborColorMap;
 	const serendipityMap = ctx.serendipityColorMap;
@@ -208,20 +208,3 @@ function initFilteredLoader() {
         initializeTopicTabs('serendipity-viz-content', serendipityMap, queryVec);
     }
 }
-
-// Event Listeners
-document.addEventListener('DOMContentLoaded', initFilteredLoader);
-
-document.addEventListener('dynamicContentLoaded', (e) => {
-    // Nur neu initialisieren, wenn eine komplett neue View (z.B. Ergebnisseite) geladen wurde.
-    // Wenn das Event von UNS selbst kommt (Detail: container = filteredResultsContainer), ignorieren wir es.
-    const container = e.detail?.container;
-    
-    // Wenn der Container die ganze Page oder der Viz-Pane ist -> Init.
-    // Wenn es nur die Liste ist -> Ignorieren.
-    if (!container || container === document.body || container.classList.contains('viz-content-pane')) {
-        if (document.querySelector('.viz-content-pane')) {
-            initFilteredLoader();
-        }
-    }
-});

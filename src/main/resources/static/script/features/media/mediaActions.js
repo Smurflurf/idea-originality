@@ -1,12 +1,10 @@
 import { initFileUpload } from '/script/features/media/handleUpload.js';
 import { openAudioRecorder } from '/script/features/media/handleRecord.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+export function initializeMediaButtons() {
     const uploadButton = document.getElementById('upload-button');
     const recordButton = document.getElementById('record-button');
     const mediaToggleCheckbox = document.getElementById('media-toggle');
-    
-    // Wir nutzen hier die Klasse statt der ID, das ist sicherer gegen Tippfehler
     const mediaToggleLabel = document.querySelector('.media-button-label');
     const mediaMenu = document.querySelector('.media-menu');
 
@@ -32,6 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+	// Globaler Klick-Handler für das Menü-Schließen (document.addEventListener)
+	// Das ist okay hier drin, solange initializeMediaButtons nur EINMAL aufgerufen wird.
     document.addEventListener('click', (event) => {
         if (!mediaToggleCheckbox || !mediaToggleCheckbox.checked) {
             return;
@@ -44,4 +44,4 @@ document.addEventListener('DOMContentLoaded', () => {
             mediaToggleCheckbox.checked = false;
         }
     });
-});
+}

@@ -29,5 +29,3 @@ export function initializeCardOptimizer() {
         observer.observe(card);
     });
 }
-
-document.addEventListener('DOMContentLoaded', initializeCardOptimizer);

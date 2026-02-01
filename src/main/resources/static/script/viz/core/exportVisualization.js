@@ -170,8 +170,7 @@ function sanitizeForFilename(title) {
         .substring(0, 50);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    
+export function initializeExportButtons() {
     function setupExportButton(buttonId, layerIdPrefix, pointsContainerId, pointsData, colorMap) {
         const exportBtn = document.getElementById(buttonId);
         if (!exportBtn) return;
@@ -217,4 +216,4 @@ document.addEventListener('DOMContentLoaded', () => {
 	    [],
 	    typeof SERENDIPITY_COLOR_MAP !== 'undefined' ? SERENDIPITY_COLOR_MAP : {}
 	);
-});
+}

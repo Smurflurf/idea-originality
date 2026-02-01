@@ -7,6 +7,4 @@ function initializeTippy() {
     });
 }
 
-document.addEventListener('DOMContentLoaded', initializeTippy);
-
 export { initializeTippy };

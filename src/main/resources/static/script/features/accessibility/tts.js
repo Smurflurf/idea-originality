@@ -35,17 +35,27 @@ let uiPlayBtn = null;
 let uiProgressBar = null;
 
 
-window.addEventListener('tts-navigation-finished', () => {
-	// 1. Versuch: Sofort (falls es eine statische Seite ist oder DOM schon da ist)
-	restoreStateAndScroll();
-	// 2. Versuch: Warten auf das explizite 'page-rendered' Event (für Impressum/Legal Pages)
-	// Wir nutzen { once: true }, damit der Listener sich selbst aufräumt.
-	document.addEventListener('page-rendered', () => {
-		// Wir prüfen in restoreStateAndScroll ohnehin, ob wir auf der richtigen URL sind.
-		restoreStateAndScroll();
-	}, { once: true });
-});
+// Initialisierung
+let isTtsInitialized = false;
 
+
+export function initTTS() {
+	if (isTtsInitialized) return;
+
+	window.addEventListener('tts-navigation-finished', () => {
+		// 1. Versuch: Sofort (falls es eine statische Seite ist oder DOM schon da ist)
+		restoreStateAndScroll();
+		// 2. Versuch: Warten auf das explizite 'page-rendered' Event (für Impressum/Legal Pages)
+		// Wir nutzen { once: true }, damit der Listener sich selbst aufräumt.
+		document.addEventListener('page-rendered', () => {
+			// Wir prüfen in restoreStateAndScroll ohnehin, ob wir auf der richtigen URL sind.
+			restoreStateAndScroll();
+		}, { once: true });
+    });
+    
+    // Falls noch andere globale Listener da sind, hier rein.
+    isTtsInitialized = true;
+}
 
 // --- DOM HELPER ---
 function ensurePlayerUI() {

@@ -11,20 +11,27 @@ function getSystemTheme() {
     return systemMediaQuery.matches ? DARK : LIGHT;
 }
 
-systemMediaQuery.addEventListener('change', () => {
-    const currentSetting = localStorage.getItem(STORAGE_KEY) || SYSTEM;
-    if (currentSetting === SYSTEM) {
-        applyTheme(SYSTEM);
-        updateActiveStateInUI(SYSTEM); 
-    }
-});
-
 function applyTheme(themeSetting) {
     let effectiveTheme = themeSetting;
     if (themeSetting === SYSTEM) {
         effectiveTheme = getSystemTheme();
     }
     document.documentElement.setAttribute('data-theme', effectiveTheme);
+}
+
+
+export function initThemeListener() {
+    // Listener nur hinzufügen, wenn wir das Theme-System starten
+    systemMediaQuery.addEventListener('change', () => {
+        const currentSetting = localStorage.getItem(STORAGE_KEY) || SYSTEM;
+        if (currentSetting === SYSTEM) {
+            applyTheme(SYSTEM);
+            updateActiveStateInUI(SYSTEM); 
+        }
+    });
+    
+    // Initial einmal ausführen
+    initializeTheme();
 }
 
 export function initializeTheme() {

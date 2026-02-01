@@ -1,50 +1,47 @@
 import { attachedFiles } from '/script/features/media/attachmentManager.js';
 
-// 1. Export hinzufügen
-export function initializeQueryButtonLogic() {
+// Variable im Modul-Scope statt globaler window-Variable.
+// Sie merkt sich, ob der document-Listener schon gesetzt wurde.
+let globalsInitialized = false;
+
+/**
+ * Zentralisierte Funktion zum Prüfen des Button-Status.
+ * Holt sich die Elemente jedes Mal frisch aus dem DOM, 
+ * da sie durch SPA-Navigation ausgetauscht worden sein könnten.
+ */
+function updateQueryButtonState() {
     const queryButton = document.querySelector('.run-button');
     const ideaTextarea = document.querySelector('textarea[name="idea-text"]');
 
-    // Feature Detection: Wenn die Elemente nicht da sind, brich ab.
+    // Wenn Elemente nicht da sind (z.B. falsche Seite), nichts tun
     if (!queryButton || !ideaTextarea) return;
 
-    // Alte Listener entfernen ist schwer, da anonyme Funktionen.
-    // Aber da wir bei SPA den Body tauschen, sind die alten Elemente eh weg (Garbage Collection).
-    // Wir müssen uns nur um die neuen kümmern.
+    const hasText = ideaTextarea.value.trim().length > 0;
+    const hasAttachments = attachedFiles.size > 0;
+    
+    // Button aktivieren, wenn Text ODER Anhänge da sind
+    queryButton.disabled = !(hasText || hasAttachments);
+}
 
-    function updateQueryButtonState() {
-        const hasText = ideaTextarea.value.trim().length > 0;
-        const hasAttachments = attachedFiles.size > 0;
-        queryButton.disabled = !(hasText || hasAttachments);
-    }
+export function initializeQueryButtonLogic() {
+    const ideaTextarea = document.querySelector('textarea[name="idea-text"]');
+    
+    // Feature Detection: Wenn wir nicht auf der Suchseite sind, abbrechen.
+    if (!ideaTextarea) return;
 
-    // Input Listener neu binden
+    // 1. Lokaler Listener: Input Event auf dem Textfeld
+    // Dieser muss bei jedem Seitenaufruf (handlePageChange) neu an das 
+    // NEUE Textarea-Element gebunden werden.
     ideaTextarea.addEventListener('input', updateQueryButtonState);
 
-    // Initialer Check für den aktuellen State
+    // 2. Globaler Listener: Attachments Changed
+    // Dieser hängt am 'document'. Er darf nur EINMAL pro App-Lebenszyklus 
+    // hinzugefügt werden, sonst feuert er mehrfach.
+    if (!globalsInitialized) {
+        document.addEventListener('attachmentsChanged', updateQueryButtonState);
+        globalsInitialized = true;
+    }
+
+    // 3. Initialen Status sofort prüfen (z.B. nach Back-Navigation)
     updateQueryButtonState();
-}
-
-// Globaler Event Listener für Attachments (bleibt global, da idempotent)
-if (!window.queryButtonManagerInitialized) {
-    document.addEventListener('attachmentsChanged', () => {
-        // Hier holen wir die Elemente JEDES MAL frisch aus dem DOM
-        const queryButton = document.querySelector('.run-button');
-        const ideaTextarea = document.querySelector('textarea[name="idea-text"]');
-
-        if (queryButton && ideaTextarea) {
-             const hasText = ideaTextarea.value.trim().length > 0;
-             const hasAttachments = attachedFiles.size > 0;
-             queryButton.disabled = !(hasText || hasAttachments);
-        }
-    });
-    window.queryButtonManagerInitialized = true;
-}
-
-// 2. Selbst-Start beim ersten Laden (Hard Refresh)
-// Wir prüfen, ob wir schon im Modul-Kontext sind oder warten müssen
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeQueryButtonLogic);
-} else {
-    initializeQueryButtonLogic();
 }

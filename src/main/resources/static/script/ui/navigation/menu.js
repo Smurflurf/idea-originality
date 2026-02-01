@@ -7,24 +7,25 @@ import { initializeSwipeNavigation } from '/script/ui/navigation/swipeNavigation
 
 import "/styling/menu.css";
 
-// Singleton Check für globale Listener
-if (!window.menuLogicActive) {
-    window.menuLogicActive = true;
-    window.addEventListener('languageChanged', (e) => {
-        console.log("[Menu] Language changed event received.");
-        renderHistoryList();
 
-        let path = window.location.pathname;
-        if (path.startsWith('/')) path = path.substring(1);
-        let pageName = path.split('/')[0] || 'index';
-        pageName = pageName.replace('.html', '');
+export function initGlobalMenuListeners() {
+	if (window.menuLogicActive) return;
+	window.menuLogicActive = true;
+	window.addEventListener('languageChanged', (e) => {
+		console.log("[Menu] Language changed event received.");
+		renderHistoryList();
 
-        const dynamicContainerId = `${pageName}-content`;
-        if (document.getElementById(dynamicContainerId)) {
-            // console.log(`[Menu] Re-rendering content...`); // Optional: Log reduzieren
-            renderPage(dynamicContainerId);
-        }
-    });
+		let path = window.location.pathname;
+		if (path.startsWith('/')) path = path.substring(1);
+		let pageName = path.split('/')[0] || 'index';
+		pageName = pageName.replace('.html', '');
+
+		const dynamicContainerId = `${pageName}-content`;
+		if (document.getElementById(dynamicContainerId)) {
+			// console.log(`[Menu] Re-rendering content...`); // Optional: Log reduzieren
+			renderPage(dynamicContainerId);
+		}
+	});
 }
 
 let globalMenuElement = null;
@@ -151,9 +152,6 @@ export function setupMenuInteractions() {
     highlightActiveLink();
     renderHistoryList();
     
-    // HINWEIS: Hier NICHT mehr initializeTranslator() aufrufen!
-    // Das machen wir unten im One-Time Setup.
-
     // --- TEIL B: Einmaliges Setup (Listener) ---
     if (window.menuListenersInitialized) {
         // Nur den Status aktualisieren (Haken setzen), aber KEINE Listener neu hinzufügen
@@ -161,10 +159,6 @@ export function setupMenuInteractions() {
         return;
     }
     window.menuListenersInitialized = true;
-
-    // HIERHIN VERSCHOBEN:
-    initializeTheme();       
-    initializeTranslator();  
 
     const trigger = document.getElementById('menu-trigger');
     const sidebar = document.getElementById('sidebar-menu');
@@ -538,25 +532,3 @@ function setupAutoHideMenu() {
         lastScrollY = currentScrollY;
     });
 }
-
-// Initialer Aufruf beim Hard-Load
-document.addEventListener('DOMContentLoaded', async () => {
-    let path = window.location.pathname;
-    if (path.startsWith('/')) path = path.substring(1);
-    let pageName = path.split('/')[0];
-    if (!pageName || pageName === '') pageName = 'index';
-    pageName = pageName.replace('.html', '');
-
-    const namespaces = ['common', pageName];
-    await initializeLocalization(namespaces);
-    
-    setupMenuInteractions();
-
-    const dynamicContainerId = `${pageName}-content`;
-    const container = document.getElementById(dynamicContainerId);
-
-    if (container) {
-        renderPage(dynamicContainerId);
-    }
-    console.log(`App initialized on page: ${pageName}`);
-});
