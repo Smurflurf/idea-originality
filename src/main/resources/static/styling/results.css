@@ -93,7 +93,7 @@
 .results-container {
     width: 80%;
     max-width: 900px; 
-    min-height: 100vh; 
+    min-height: 100dvh; 
     display: flex;
     flex-direction: column;
     padding: 0; 
@@ -462,57 +462,61 @@ h2 {
 
 
 /* =================================================================== */
-/* ==   HIERARCHY CONNECTORS & INDICATORS 			                == */
+/* ==   HIERARCHY CONNECTORS & INDICATORS (GEOMETRIC FIX)           == */
 /* =================================================================== */
-/* 1. Stellt sicher, dass die Listenelemente eine konsistente Höhe haben */
+
+/* 1. Konsistente Höhe für Listenelemente */
 .hierarchy-list li {
     position: relative;
     display: flex;
     align-items: center;
+    min-height: 24px; 
     padding-left: calc(var(--indent-level) * 15px);
 }
 
-/* 2. Die Regel für das FARBIGE '>' Symbol (unverändert) */
+/* 2. Der PFEIL (>) */
 #neighbor-viz-content > .hierarchy-container .hierarchy-list li[style*="--indicator-color"]::before,
 #serendipity-viz-content > .hierarchy-container .hierarchy-list li[style*="--indicator-color"]::before {
-    content: '>';
-    transform: translateY(-50%);
-    color: var(--indicator-color);
-    font-weight: 500;
-    font-size: 16px;
+    content: ''; /* Kein Textzeichen mehr! */
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-top: 2.5px solid var(--indicator-color);
+    border-right: 2.5px solid var(--indicator-color);
+    top: 51%;
+    transform: translateY(-50%) rotate(45deg) skew(-15deg, -15deg);
+    left: calc(var(--indent-level) * 15px - 14px);
+    font-size: 0; 
+    line-height: 0;
 }
 
-/* 3. Die Regel für den FARBLOSEN Strich (unverändert) */
+/* 3. Der FARBLOSE Strich */
 #neighbor-viz-content > .hierarchy-container .hierarchy-list li:not([style*="--indicator-color"]):not([style*="--indent-level: 0;"])::before,
 #serendipity-viz-content > .hierarchy-container .hierarchy-list li:not([style*="--indicator-color"]):not([style*="--indent-level: 0;"])::before {
     content: '';
+    position: absolute;
+    top: 50%;
+    left: calc(var(--indent-level) * 15px - 12px);
     width: 8px;
     height: 0;
-    /* War #8f9194 */
-    border-top: 1.5px solid var(--text-quaternary);
-    transform: none;
+    border-top: 1.75px solid var(--text-quaternary);
+    transform: translateY(-50%); /* Exakte geometrische Mitte */
 }
 
-/* 4. Die L-förmige Verbindungslinie (PC-perfekte Version) */
+/* 4. Die L-förmige Verbindungslinie (Der Connector) */
 #neighbor-viz-content > .hierarchy-container .hierarchy-list li[style*="--indicator-color"][style*="--parent-indent-level"]::after,
 #serendipity-viz-content > .hierarchy-container .hierarchy-list li[style*="--indicator-color"][style*="--parent-indent-level"]::after {
     content: '';
     position: absolute;
     background-color: transparent;
-    
-    /* Erzeugt die vertikale Linie */
-    top: 0;
-    height: 50%;
-
-    /* Positioniert und zeichnet die Linien */
-    left: calc(var(--parent-indent-level) * 15px - 1.5px);
-    width: calc((var(--indent-level) - var(--parent-indent-level)) * 15px - 4px);
-    border-left: 1.5px solid var(--indicator-color);
-    border-bottom: 1.5px solid var(--indicator-color);
+    top: -50%; 
+    height: 100%; 
+    border-left: 1.75px solid var(--indicator-color);
+    border-bottom: 1.75px solid var(--indicator-color);
     border-bottom-left-radius: 5px;
-    
-    /* Die notwendige Korrektur, die auf dem PC funktioniert */
-    transform: translateY(0.75px);
+    left: calc(var(--parent-indent-level) * 15px - 1.5px); 
+    width: calc((var(--indent-level) - var(--parent-indent-level)) * 15px - 6px);
+    transform: none;
 }
 
 /* =================================================================== */
@@ -718,7 +722,6 @@ h2 {
     justify-content: center;
     align-items: center;
     gap: 15px;
-    padding: 15px 0; 
     border-bottom: 1px solid var(--border-subtle);
     width: 100%;
 }
@@ -1108,7 +1111,7 @@ h2 {
 /* 1. Globalen Scroll deaktivieren */
 html, body { 
     overflow: hidden !important; 
-    height: 100% !important; 
+    height: 100dvh !important; 
     width: 100% !important; 
 }
 
@@ -1145,8 +1148,10 @@ html, body {
 	}
 }
 
-html[data-is-offline="true"] .viz-toggle-header {
-    padding-left: 0 !important;
+html[data-is-offline="true"] .viz-toggle-header  {
+	padding: 0 15px !important;
+	box-sizing: border-box; 
+    width: 100%;
 }
 
 /* Klasse zum Verstecken beim Scrollen (unverändert) */
@@ -1161,9 +1166,10 @@ html[data-is-offline="true"] .viz-toggle-header {
     top: 0; left: 0; width: 100%; height: 100%;
     display: none;
     overflow-y: auto !important;
-	padding: 110px 0 40px 0;
+	padding: 110px 0 calc(30px + env(safe-area-inset-bottom)) 0;
 	background: var(--bg-app);
     transition: padding-top 0.3s ease-in-out; /* Nur das Padding animiert */
+    overflow-anchor: none;
 }
 
 /* Neue Regel: Wenn der Header weg ist, füllt der Tab den ganzen Screen */
@@ -1176,8 +1182,15 @@ body.is-header-hidden .viz-toggle-header {
 	transform: translateY(-100%);
 }
 
-body.is-header-hidden .viz-content-pane {
-	padding-top: 0;
+body.is-header-hidden .viz-content-pane.active,
+body.is-header-hidden .results-container.is-swiping .viz-content-pane {
+    padding-top: 15px;
+}
+html[data-is-offline="true"] body.is-header-hidden .viz-content-pane.active {
+    padding-top: 15px !important;
+}
+html[data-is-offline="true"] .viz-content-pane {
+    padding-top: 110px !important;
 }
 
 .results-container.is-swiping .viz-content-pane {
@@ -1207,14 +1220,14 @@ body.is-header-hidden .viz-content-pane {
 /* =================================================================== */
 .menu-trigger {
 	position: absolute !important;
-	top: 0 !important;
-	left: 0 !important;
-	width: 80px !important;
-	height: 90px !important;
+	top: 12px !important;
+	left: 12px !important;
+	width: 65px !important;
+	height: 65px !important;
 	display: flex !important;
 	align-items: center !important;
 	justify-content: center !important;
-	background: transparent !important;
+	background: transparent;
 	border: none !important;
 	z-index: 110 !important;
 	transition: transform 0.3s ease-in-out !important;
@@ -1224,5 +1237,16 @@ body.is-header-hidden .viz-content-pane {
 	/* Der Button verschwindet mit, wenn der Header versteckt wird */
     body.is-header-hidden .menu-trigger {
         transform: translateY(-100%) !important;
+    }
+}
+
+
+
+@media (max-width: 768px) {
+    
+    /* Offline: Container auf volle Breite ziehen, damit keine gelben Ränder (Margins) entstehen */
+    html[data-is-offline="true"] .results-container {
+        width: 100% !important;
+        margin: 0 !important;
     }
 }

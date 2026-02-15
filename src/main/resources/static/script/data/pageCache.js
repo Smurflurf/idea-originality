@@ -9,6 +9,18 @@ const MAX_CACHED_JOBS = 25;
 
 const getCacheName = (jobId) => `${CACHE_PREFIX}-${jobId}`;
 
+// Hilfsfunktion: URL normalisieren (Slash am Ende weg, Query Params weg)
+function getCanonicalUrl() {
+    const u = new URL(window.location.href);
+    u.search = '';
+    u.hash = '';
+    // Entferne Trailing Slash, falls vorhanden
+    if (u.pathname.endsWith('/') && u.pathname.length > 1) {
+        u.pathname = u.pathname.slice(0, -1);
+    }
+    return u.href;
+}
+
 function getImageResponseFromElement(imgElement) {
     return new Promise((resolve) => {
         if (!imgElement || !imgElement.complete || imgElement.naturalWidth === 0) {
@@ -37,75 +49,95 @@ function getImageResponseFromElement(imgElement) {
         } catch (error) {
             console.warn("Image caching via Canvas failed (probably tainted):", error);
             resolve(null);
-        }
-    });
+		}
+	});
 }
 
 async function cacheSuccessfulJob(jobId) {
-    if (!('caches' in window)) {
-        console.warn("Cache API nicht unterstützt.");
-        return;
-    }
+	if (!('caches' in window)) return;
 
-    console.log(`[PageCache] Starte Caching für Job ${jobId} (in Cache: ${getCacheName(jobId)})...`);
-    const cacheName = getCacheName(jobId);
-    const cache = await caches.open(cacheName);
+	// 1. SICHERHEITS-CHECK: Ist das eine Fehlerseite?
+	// Wenn ja: SOFORT ABBRECHEN. Auf keinen Fall speichern!
+	if (document.querySelector('.no-results-message') || document.body.innerText.includes('Error: Job data not found')) {
+		console.warn(`[PageCache] Fehlerseite erkannt für Job ${jobId}. Snapshot wird NICHT gespeichert.`);
+		return;
+	}
 
+	console.log(`[PageCache] Sicherung für Job ${jobId} gestartet...`);
+	const cacheName = getCacheName(jobId);
+	const cache = await caches.open(cacheName);
+
+	// 2. HTML SNAPSHOT (Der Fix für Fire-and-Forget!)
+	try {
+		const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+		const htmlBlob = new Blob([htmlContent], { type: 'text/html; charset=utf-8' });
+
+		const htmlResponse = new Response(htmlBlob, {
+			status: 200,
+			statusText: 'OK',
+			headers: { 'Content-Type': 'text/html; charset=utf-8' }
+		});
+
+		// WICHTIG: Wir nutzen die kanonische URL als Key!
+		const cleanUrl = getCanonicalUrl();
+		console.log(`[PageCache] Speichere HTML unter Key: ${cleanUrl}`);
+
+		await cache.put(cleanUrl, htmlResponse);
+
+	} catch (e) {
+		console.error("[PageCache] Fehler beim HTML Snapshot:", e);
+	}
+
+    // 2. Assets sammeln (CSS, JS, Bilder)
+    // HTML (location.href) fügen wir HIER NICHT MEHR hinzu, das haben wir oben erledigt.
     const assetsToCache = new Set();
-    assetsToCache.add(location.href);
 
-    // CSS und Skripte
+    // CSS und Skripte (nur die wichtigen, SW kümmert sich um den Rest, aber sicher ist sicher)
     document.querySelectorAll('link[rel="stylesheet"], script[src]').forEach(el => {
         const url = el.href || el.src;
-        if (url) assetsToCache.add(new URL(url, location.href).href);
+        if (url && !url.startsWith('data:')) {
+            assetsToCache.add(new URL(url, location.href).href);
+        }
     });
 
     // Bilder
     const imageElements = Array.from(document.querySelectorAll('img[src]'));
     imageElements.forEach(img => {
-        if (img.src) assetsToCache.add(new URL(img.src, location.href).href);
+        if (img.src && !img.src.startsWith('data:')) {
+            assetsToCache.add(new URL(img.src, location.href).href);
+        }
     });
 
-    let successCount = 0;
+    // 3. Assets cachen
     for (const url of assetsToCache) {
         try {
+            // Prüfen ob schon da (vom SW)
             const cachedResponse = await cache.match(url);
-            if (cachedResponse) {
-                successCount++;
-                continue;
-            }
+            if (cachedResponse) continue;
 
-            // 1. Versuch: Aus RAM (Canvas) lesen
+            // Canvas Trick für Bilder (falls tainted/cors Probleme)
             const correspondingImgElement = imageElements.find(img => new URL(img.src, location.href).href === url);
             if (correspondingImgElement) {
                 const response = await getImageResponseFromElement(correspondingImgElement);
                 if (response) {
                     await cache.put(url, response);
-                    successCount++;
                     continue;
                 }
             }
 
-            // 2. Versuch: Netzwerk Fetch
-            // WICHTIG: credentials: 'include' sorgt dafür, dass Cookies gesendet werden.
-            // Das verhindert, dass bei geschützten Bildern die Login-Seite statt des Bildes gecacht wird.
-            const request = new Request(url, { 
-                cache: 'reload',
-                credentials: 'include' 
-            });
-            
+            // Normaler Fetch für Assets
+            // Hier ist cache: 'default' okay, oder 'force-cache'
+            const request = new Request(url, { mode: 'no-cors' }); 
             const response = await fetch(request);
-            if (response.ok) {
+            if (response.type === 'opaque' || response.ok) {
 				await cache.put(url, response.clone());
-				successCount++;
 			}
 		} catch (error) {
-			console.warn(`[PageCache] Fehler bei ${url}:`, error);
+			console.warn(`[PageCache] Asset ${url} konnte nicht gesichert werden.`);
 		}
 	}
-	console.log(`[PageCache] ${successCount} Assets für ${jobId} gesichert.`);
 
-	// --- AUFRÄUM-LOGIK ---
+	// --- AUFRÄUM-LOGIK (Unverändert) ---
 	let cacheIndex = JSON.parse(window.localStorage.getItem(CACHE_INDEX_KEY) || '[]');
 	cacheIndex = cacheIndex.filter(id => id !== jobId);
 	cacheIndex.push(jobId);
@@ -114,32 +146,25 @@ async function cacheSuccessfulJob(jobId) {
 	const starredJobIds = new Set(allJobs.filter(j => j.starred).map(j => j.jobId));
 	const deletionCandidates = cacheIndex.filter(id => !starredJobIds.has(id));
 
-	let itemsDeleted = false;
 	while (deletionCandidates.length > MAX_CACHED_JOBS) {
 		const idToDelete = deletionCandidates.shift();
 		cacheIndex = cacheIndex.filter(id => id !== idToDelete);
 		try {
 			await caches.delete(getCacheName(idToDelete));
 			await deleteJobFromHistory(idToDelete);
-			itemsDeleted = true;
-		} catch (e) {
-			console.error(`[PageCache] Fehler beim Löschen von ${idToDelete}:`, e);
-		}
+		} catch (e) {}
 	}
-
 	window.localStorage.setItem(CACHE_INDEX_KEY, JSON.stringify(cacheIndex));
-
-	if (itemsDeleted && typeof renderHistoryList === 'function') {
-		renderHistoryList();
-	}
+    if (typeof renderHistoryList === 'function') renderHistoryList();
 }
 
 export function initializePageCache(initialData) {
     if (initialData.IS_DATA_AVAILABLE) {
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                cacheSuccessfulJob(initialData.JOB_ID).catch(console.error);
-            }, 1000);
-        });
+        // Warten bis alles idle ist, dann cachen
+        if ('requestIdleCallback' in window) {
+            requestIdleCallback(() => cacheSuccessfulJob(initialData.JOB_ID));
+        } else {
+            setTimeout(() => cacheSuccessfulJob(initialData.JOB_ID), 2000);
+        }
     }
 }

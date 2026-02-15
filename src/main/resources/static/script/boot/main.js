@@ -12,7 +12,7 @@ import '/styling/downloadPopup.css';
 // ===================================================================
 // 1. CORE IMPORTS & STATE
 // ===================================================================
-import { initializeContext, getContext, isDataAvailable, getJobTitle } from '/script/core/context.js';
+import { initializeContext, getContext, isDataAvailable, isOfflineMode, getJobTitle } from '/script/core/context.js';
 import { t, initializeLocalization, renderPage } from '/script/core/localization.js'; 
 import { initFPSMonitor } from '/script/core/fps.js';
 
@@ -29,6 +29,7 @@ import { initializeColorCodingTriggers, applyColorCoding } from '/script/ui/base
 import { setupMenuInteractions, renderHistoryList, initGlobalMenuListeners } from '/script/ui/navigation/menu.js';
 import { initializeTranslator } from '/script/features/accessibility/translate.js';
 import { initTTS } from '/script/features/accessibility/tts.js';
+import { initializeSelectionMode } from '/script/ui/interaction/selectionMode.js';
 
 // ===================================================================
 // 3. FEATURE IMPORTS (Queries, Media, Viz, Export)
@@ -93,8 +94,7 @@ const FEATURE_REGISTRY = {
             }
         }
         
-        // Nachladen der Listen (Tabs)
-        initFilteredLoader();
+		initFilteredLoader();
     },
 
     // Ergebnisseite: Metadaten (History, Caching, Download)
@@ -159,77 +159,107 @@ function initMath(container) {
 // 6. MAIN ROUTING LOGIC
 // ===================================================================
 async function handlePageChange(container) {
-    
-    // A. GLOBAL CLEANUP
-    clearAvailableTabs();
-    disposeAllVisualizations(); // Zoom/Pan Listener entfernen
+	// 0. DATEN UPDATE (WICHTIGSTE ÄNDERUNG)
+	// Bei Soft-Navigation hat navigation.js das neue HTML mit dem Inline-Script ausgeführt.
+	// Das hat window.INITIAL_DATA aktualisiert.
+	// Aber unser Context-Modul hat noch den alten Stand. Wir müssen es zwingen, neu zu lesen.
+	if (window.INITIAL_DATA) {
+		initializeContext(window.INITIAL_DATA);
+	}
 
-    // B. GLOBAL INIT (Läuft auf JEDER Seite)
-    initializeTippy();
-    initGlobalMenuListeners(); // EventBus Listener für Menü
-    setupMenuInteractions();   // UI Logik (Click Handler)
-    initializeTranslator();    // Übersetzer Button
-    initThemeListener();       // Theme Logik
-    initTTS();                 // TTS Logik
+	// A. GLOBAL CLEANUP
+	clearAvailableTabs();
+	disposeAllVisualizations();
 
-    initializeJsonToggles(container || document.body);
-    initializeHierarchyToggles();
-    if (container) initializeAbstractButtonsFor(container);
-    
-    initMath(container);
+	// B. GLOBAL INIT
+	initializeTippy();
 
-    // C. FEATURE LOADING (Data-Driven)
-    // Wir lesen, welche Features die aktuelle Seite im HTML angefordert hat
-    const featureString = document.body.getAttribute('data-features') || '';
-    const features = featureString.split(',').map(s => s.trim()).filter(Boolean);
+	initGlobalMenuListeners(); // Singleton: Startet SoftNav & Swipe einmalig
+	setupMenuInteractions();   // DOM: Bindet #menu-trigger auf der neuen Seite
 
-    if (features.length > 0) {
-        for (const featureName of features) {
-            if (FEATURE_REGISTRY[featureName]) {
-                try {
-                    await FEATURE_REGISTRY[featureName](container);
-                } catch (e) {
-                    console.error(`[Main] Error initializing feature '${featureName}':`, e);
-                }
-            } else {
-                console.warn(`[Main] Unknown feature requested: ${featureName}`);
-            }
-        }
-    } else {
-        // Fallback für Seiten ohne Feature-Flags (z.B. statische Seiten)
-        // Einfach nur Farben anwenden, damit es hübsch aussieht.
-        if (!document.querySelector('.viz-stack-container')) {
-            applyColorCoding();
-        }
-    }
+	initializeTranslator();
+	initializeSelectionMode();
+	initThemeListener();
+	initTTS();
 
-    document.body.classList.remove('is-loading');
-    window.appInitialized = true;
+	initializeJsonToggles(container || document.body);
+	initializeHierarchyToggles();
+	if (container) initializeAbstractButtonsFor(container);
+
+	initMath(container);
+
+	// C. FEATURE LOADING
+	const featureString = document.body.getAttribute('data-features') || '';
+	const features = featureString.split(',').map(s => s.trim()).filter(Boolean);
+
+	if (features.length > 0) {
+		for (const featureName of features) {
+			if (FEATURE_REGISTRY[featureName]) {
+				try {
+					await FEATURE_REGISTRY[featureName](container);
+				} catch (e) {
+					console.error(`[Main] Error initializing feature '${featureName}':`, e);
+				}
+			} else {
+				console.warn(`[Main] Unknown feature requested: ${featureName}`);
+			}
+		}
+	} else {
+		if (!document.querySelector('.viz-stack-container')) {
+			applyColorCoding();
+		}
+	}
+
+	document.body.classList.remove('is-loading');
+	window.appInitialized = true;
 }
 
 
 // ===================================================================
-// 7. BOOTSTRAP
+// 7. BOOTSTRAP (Enhanced Safety)
 // ===================================================================
 
-// Hard Reload
-document.addEventListener('DOMContentLoaded', async () => {
-	// 1. Context aus window.INITIAL_DATA laden (Schnittstelle zu Thymeleaf)
-	// Wir übergeben INITIAL_DATA (falls vorhanden) oder undefined.
-	// Wenn es undefined ist, springt die harvestLegacyGlobals() Logik in context.js an.
-	initializeContext(window.INITIAL_DATA);
-    
-    // 2. Sprache laden
-    let path = window.location.pathname;
-    if (path.startsWith('/')) path = path.substring(1);
-    let pageName = path.split('/')[0] || 'index';
-    pageName = pageName.replace('.html', '');
-    
-    await initializeLocalization(['common', pageName]);
+async function bootstrapApp() {
+	try {
+		console.log("[Main] Bootstrapping Application...");
 
-    // 3. App starten
-    handlePageChange(document.body);
-});
+		// 1. Context Safety Check
+		if (!window.INITIAL_DATA) {
+			console.warn("[Main] No INITIAL_DATA found. Legacy harvest or waiting...");
+		}
+		initializeContext(window.INITIAL_DATA);
+
+		// 2. Localization
+		let path = window.location.pathname;
+		if (path.startsWith('/')) path = path.substring(1);
+		let pageName = path.split('/')[0] || 'index';
+		pageName = pageName.replace('.html', '');
+		
+		await initializeLocalization(['common', pageName]);
+				
+		// 3. App starten
+		await handlePageChange(document.body);
+		
+		console.log("[Main] Application started successfully.");
+
+	} catch (e) {
+		// Dieser Catch-Block ist lebenswichtig für Offline-Files!
+		// Wenn ein Rest-Skript von Cloudflare hier reingrätscht, fangen wir es ab.
+		console.error("[Main] CRITICAL BOOTSTRAP ERROR:", e);
+
+		// Notfall-Maßnahme: Versuchen, UI trotzdem freizuschalten
+		document.body.classList.remove('is-loading');
+		alert("Ein Fehler ist beim Starten der Offline-Version aufgetreten. Einige Funktionen sind eventuell eingeschränkt.\n\nFehler: " + e.message);
+	}
+}
+
+// Start-Logik
+if (document.readyState === 'loading') {
+	document.addEventListener('DOMContentLoaded', bootstrapApp);
+} else {
+	// Kurze Verzögerung, um sicherzugehen, dass alle Module geparst sind
+	setTimeout(bootstrapApp, 0);
+}
 
 // SPA Navigation (Dynamic Content)
 document.addEventListener('dynamicContentLoaded', (e) => {

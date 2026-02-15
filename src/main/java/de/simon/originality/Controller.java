@@ -134,7 +134,7 @@ public class Controller {
 	    return "licenses"; 
 	}
 	
-	@RequestMapping("/version")
+	@RequestMapping("/api/version")
     @ResponseBody
 	public String version() {
 		return appVersion;
@@ -471,26 +471,24 @@ public class Controller {
 		// 5. Template manuell zu einem String rendern.
 		final String htmlContent = templateEngine.process("results", context);
 
-		// 6. Cleanup nur planen, wenn Daten vorhanden waren.
-		if (resultsData != null) {
-			new java.util.Timer().schedule( 
-					new java.util.TimerTask() {
-						@Override
-						public void run() {
-							if(QueryProcessingService.finalResults.containsKey(jobId)) {
-								System.out.println("Scheduled cleanup for job " + jobId + " is running.");
-								sseService.cleanupJobData(jobId);
-							}
-						}
-					}, 
-					MagicNumbers.REMOVE_RESULTS_MS.asInteger()
-					);
-		}
-
-		// 7. Antwort senden.
-		return ResponseEntity.ok().body(htmlContent);
+		// 6. Antwort senden.
+		return ResponseEntity
+				.ok()
+			    .contentType(MediaType.TEXT_HTML) 
+				.body(htmlContent);
 	}
 
+	/**
+     * Neuer Endpunkt, der vom Client aufgerufen wird, nachdem alle
+     * Ergebnis-Ressourcen geladen wurden, um ein sofortiges Cleanup anzustoßen.
+     */
+    @PostMapping("/results/{jobId}/cleanup")
+    @ResponseBody
+    public ResponseEntity<Void> cleanupJob(@PathVariable String jobId) {
+        queryProcessingService.triggerImmediateCleanup(jobId);
+        return ResponseEntity.ok().build();
+    }
+	
 	@GetMapping(value = "/results/{jobId}/image/{imageName}", produces = MediaType.IMAGE_PNG_VALUE)
 	@ResponseBody
 	public ResponseEntity<byte[]> getVisualizationImage(@PathVariable String jobId, @PathVariable String imageName) {

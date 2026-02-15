@@ -107,13 +107,20 @@ export function getI18nData() {
  * Fallback-Strategie: Lädt Englisch als Basis und merged Zielsprache.
  * NEU: Unterstützt jetzt eingebettete Offline-Daten!
  */
+
 export async function loadLanguageData(targetLang, files) {
-    // 1. OFFLINE CHECK: Wurden Daten "gebacken"?
+	// Harter Check für Offline-Modus, um Netzwerk-Calls zu verhindern.
+	if (document.documentElement.getAttribute('data-is-offline') === 'true') {
+		if (window.OFFLINE_I18N_DATA) {
+			i18nState = window.OFFLINE_I18N_DATA;
+		}
+		return; // SOFORT beenden, kein fetch!
+	}
+
+	// 1. OFFLINE CHECK: Wurden Daten "gebacken"? (Bestehende Logik)
 	if (window.OFFLINE_I18N_DATA) {
-	    // Hier lassen wir window.OFFLINE_I18N_DATA kurz stehen, 
-	    // da das vom Download-Skript hart in die HTML geschrieben wird.
-	    i18nState = window.OFFLINE_I18N_DATA;
-	    return;
+		i18nState = window.OFFLINE_I18N_DATA;
+		return;
 	}
 
     // 2. ONLINE LOGIK (Normaler Fetch)

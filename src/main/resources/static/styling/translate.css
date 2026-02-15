@@ -15,9 +15,12 @@ body.translate-mode-active, body.translate-mode-active * {
 	z-index: 2147483647;
 	color: var(--color-primary);
 	font-size: 24px;
-	transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%); /* Zentrierung */
 	text-shadow: 0 0 10px rgba(var(--color-primary-rgb), 0.6);
 	display: none;
+	transform: translate(-50%, -50%) translateZ(0);
+	will-change: left, top;
+	contain: layout style;
 }
 
 /* Cursor auf Touch-Geräten verstecken, dort gibt es keinen Hover */

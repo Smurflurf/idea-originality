@@ -1,4 +1,6 @@
 import { triggerPositionUpdateForViz } from '/script/viz/core/zoomAndPan.js';
+import { applyColorCoding } from '/script/ui/base/colorCoder.js'; 
+
 
 // Globale Liste der Tabs, damit swipeNavigation darauf zugreifen kann
 // Struktur: [ { btn: HTMLElement, content: HTMLElement }, ... ]
@@ -53,9 +55,25 @@ function activateView(btnToActivate, contentToActivate, fromSwipe) {
     // Bei einem Klick auf den Header erwarten User, dass sie oben landen.
     // Bei einem Swipe soll die Position dort bleiben, wo sie war.
     //if (!fromSwipe) {
-    //    contentToActivate.scrollTop = 0; 
-    //}
+	//    contentToActivate.scrollTop = 0; 
+	//}
 
+	// 3. Farben neu berechnen, da Elemente jetzt sichtbar sind (wichtig für CSS-Variablen Scope)
+	// und ggf. neu geladene Inhalte
+	requestAnimationFrame(() => {
+		applyColorCoding();
+
+		// Canvas Update wie gehabt
+		const contentId = contentToActivate.id;
+		let vizContainerId = null;
+		if (contentId.includes('neighbor')) vizContainerId = 'viz-stack-container-nc';
+		else if (contentId.includes('serendipity')) vizContainerId = 'viz-stack-container-serendipity';
+		else if (contentId.includes('own')) vizContainerId = 'viz-stack-container-own';
+
+		if (vizContainerId) triggerPositionUpdateForViz(vizContainerId);
+	});
+
+	
     // 4. Canvas/Map Update anstoßen (Größe prüfen)
     const contentId = contentToActivate.id;
     let vizContainerId = null;
@@ -104,47 +122,86 @@ const setupGroupToggle = (buttonId, layerIds) => {
 // --- Initialisierung ---
 
 function initializeScrollHiding() {
-	const root = document.body;
+    const root = document.body;
 
     document.querySelectorAll('.viz-content-pane').forEach(pane => {
-        let lastScrollY = 0;
+        pane._lastScrollY = pane.scrollTop;
+        let touchStartY = 0;
+
+        // Falls der Tab aktiv wird (durch Klick oder Swipe-Ende), 
+        // sofort den aktuellen Scroll-Wert als Basis nehmen.
+        const observer = new MutationObserver(() => {
+            if (pane.classList.contains('active')) {
+                pane._lastScrollY = pane.scrollTop;
+            }
+        });
+        observer.observe(pane, { attributes: true, attributeFilter: ['class'] });
+
+        // 1. TOUCH (Pull-to-reveal oben)
+        pane.addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+
+        pane.addEventListener('touchmove', (e) => {
+            if (!pane.classList.contains('active')) return;
+            const deltaY = e.touches[0].clientY - touchStartY;
+            // Wenn oben und nach unten gezogen wird -> Header zeigen
+            if (pane.scrollTop <= 0 && deltaY > 10) {
+                root.classList.remove('is-header-hidden');
+            }
+        }, { passive: true });
+
+        // 2. WHEEL (Zwei-Finger oben)
+        pane.addEventListener('wheel', (e) => {
+            if (!pane.classList.contains('active')) return;
+            if (pane.scrollTop <= 0 && e.deltaY < 0) {
+                root.classList.remove('is-header-hidden');
+            }
+        }, { passive: true });
+
+        // 3. SCROLL LOGIK (Isoliert für diesen Tab)
         pane.addEventListener('scroll', function() {
-            if (this.style.display === 'none') return;
+            // NUR der aktive Tab darf den Header kontrollieren
+            if (!this.classList.contains('active')) return;
             
             const currentY = this.scrollTop;
-            
-            // --- FIX 1: Ganz oben (oder beim "Pull Down" im negativen Bereich) ---
-            // Wir prüfen das ALLES ERSTES. Wenn wir <= 0 sind, muss der Header da sein.
-            if (currentY <= 0) {
-                root.classList.remove('is-header-hidden');
-                // Wichtig: Wir aktualisieren lastScrollY, damit der Übergang 
-                // von "Bounce" (-10px) zu "Oben" (0px) glatt läuft.
-                lastScrollY = currentY;
-                return;
-            }
-
-            // --- FIX 2: Ganz unten (Rubber-Banding ignorieren) ---
-            // Verhindert das Teleport-Problem.
             const maxScroll = this.scrollHeight - this.clientHeight;
-            if (currentY >= maxScroll - 10) {
-                lastScrollY = currentY;
+            
+            // Hard-Check oben
+            if (currentY <= 2) {
+                root.classList.remove('is-header-hidden');
+                this._lastScrollY = currentY;
                 return;
             }
 
-            // --- Normale Scroll-Logik ---
-			const puffer = 5;
-			if (currentY > lastScrollY + puffer) {
-                // Runterscrollen -> Header verstecken
-				root.classList.add('is-header-hidden');
-			} else if (currentY < lastScrollY - puffer) {
-                // Hochscrollen -> Header zeigen
-				root.classList.remove('is-header-hidden');
-			}
-            lastScrollY = currentY;
+            // Puffer-Logik
+            const diff = currentY - this._lastScrollY;
+            const puffer = 10;
+
+            // Verhindert Sprünge beim Tab-Wechsel
+            if (Math.abs(diff) > 300) {
+                this._lastScrollY = currentY;
+                return;
+            }
+
+            if (currentY >= maxScroll - 5) return;
+
+            if (diff > puffer) {
+                // Runter -> Verstecken
+                if (!root.classList.contains('is-header-hidden')) {
+                    root.classList.add('is-header-hidden');
+                }
+                this._lastScrollY = currentY;
+            } else if (diff < -puffer) {
+                // Hoch -> Zeigen
+                if (root.classList.contains('is-header-hidden')) {
+                    root.classList.remove('is-header-hidden');
+                }
+                this._lastScrollY = currentY;
+            }
         }, { passive: true });
     });
 }
-
 
 export function initializeVisualizationToggles() {
     // 1. Referenzen holen

@@ -27,16 +27,31 @@ export function initThemeListener() {
         if (currentSetting === SYSTEM) {
             applyTheme(SYSTEM);
             updateActiveStateInUI(SYSTEM); 
-        }
-    });
-    
-    // Initial einmal ausführen
-    initializeTheme();
+		}
+	});
+
+	// Initial einmal ausführen
+	initializeTheme();
 }
 
 export function initializeTheme() {
-    const storedTheme = localStorage.getItem(STORAGE_KEY) || SYSTEM;
-    applyTheme(storedTheme);
+	let storedTheme = null;
+
+	// 1. Versuch: Storage
+	try {
+		storedTheme = localStorage.getItem(STORAGE_KEY);
+	} catch (e) {
+		// Falls Cookies/Storage deaktiviert sind oder file:// Zugriff blockiert ist
+		console.warn("Theme storage access failed:", e);
+	}
+
+	// 2. Versuch: HTML Attribut (Wichtig für Offline-Snapshots!)
+	if (!storedTheme) {
+		storedTheme = document.documentElement.getAttribute('data-theme');
+	}
+
+	// 3. Fallback: System
+	applyTheme(storedTheme || SYSTEM);
 }
 
 export function setTheme(themeSetting) {

@@ -100,7 +100,7 @@ public class ServerSentEventService {
         
         // Zentraler Callback für alle Arten von Verbindungsabbrüchen
         Runnable cleanupCallback = () -> {
-            System.out.println("SSE connection for job " + jobId + " ended (timeout/error). Cleaning up.");
+            System.out.println("\tSSE connection for job " + jobId + " ended (timeout/error). Cleaning up.");
             emitters.remove(jobId);
             stopHeartbeat(jobId);
             cleanupJobData(jobId); 
@@ -108,7 +108,7 @@ public class ServerSentEventService {
         
         // Handler für den erfolgreichen Abschluss
         emitter.onCompletion(() -> {
-            System.out.println("SSE connection for job " + jobId + " completed successfully.");
+            System.out.println("\tSSE connection for job " + jobId + " completed successfully.");
             emitters.remove(jobId);
             stopHeartbeat(jobId);
             // HINWEIS: cleanupJobData wird hier NICHT aufgerufen,

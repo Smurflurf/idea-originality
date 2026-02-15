@@ -9,7 +9,8 @@ const CONFIG = {
 	rubberBandFactor: 0.4,
 	shadowDistanceDivisor: 100,
 	maxShadowOpacity: 0.6,
-	animDuration: 100
+	animDuration: 100,
+	headerFallbackHeight: 0 
 };
 
 let state = {
@@ -123,6 +124,14 @@ function handleStart(e) {
 	if (cleanupTimer) {
 		clearTimeout(cleanupTimer);
 		cleanupTimer = null;
+	}
+
+	let lShadow = document.querySelector('.swipe-shadow-left');
+	let rShadow = document.querySelector('.swipe-shadow-right');
+	if (!lShadow || !rShadow) {
+		createShadowElements(); // Falls sie fehlen (z.B. durch DOM-Reset), neu erstellen
+		lShadow = document.querySelector('.swipe-shadow-left');
+		rShadow = document.querySelector('.swipe-shadow-right');
 	}
 
 	state = {
@@ -241,61 +250,57 @@ function prepareStylesForSwipe() {
 }
 
 function prepareAllTabs() {
-    // Header-Höhe messen
     let headerHeight = 0;
+    
+    // 1. MESSUNG: Wir holen uns das Padding vom AKTIVEN Tab.
+    let currentPaddingTop = '110px'; 
+    if (state.activeTabIndex >= 0 && availableTabs[state.activeTabIndex]) {
+        const activeContent = availableTabs[state.activeTabIndex].content;
+        const computed = window.getComputedStyle(activeContent);
+        currentPaddingTop = computed.paddingTop;
+    }
+
+    const isHeaderHidden = document.body.classList.contains('is-header-hidden');
+    
     if (state.resultsContainer) {
         const header = state.resultsContainer.querySelector('.viz-toggle-header');
-        headerHeight = header ? header.offsetHeight : 0;
+        if (header && !isHeaderHidden) {
+            headerHeight = header.offsetHeight || CONFIG.headerFallbackHeight;
+        }
         
-        // Container einfrieren
         const currentHeight = state.resultsContainer.getBoundingClientRect().height;
         state.resultsContainer.style.height = `${currentHeight}px`;
         state.resultsContainer.classList.add('is-swiping');
     }
 
-    // Alle Tabs durchgehen
     availableTabs.forEach((t, i) => {
         const isNeighbor = Math.abs(i - state.activeTabIndex) <= 1;
         
         if (!isNeighbor) {
             t.content.style.display = 'none';
         } else {
-            // 1. Sichtbar machen und positionieren
             t.content.style.display = 'block';
             t.content.style.position = 'absolute';
-            t.content.style.top =  0; //`${headerHeight}px`;
+            t.content.style.top = `${headerHeight}px`;
             t.content.style.left = '0';
             t.content.style.width = '100%';
-            t.content.style.height = '100%'; //`calc(100% - ${headerHeight}px)`;
+            
+            // Padding zwingen (wie besprochen)
+            t.content.style.setProperty('padding-top', currentPaddingTop, 'important');
+            
+            t.content.style.height = `calc(100% - ${headerHeight}px)`;
             t.content.style.overflowY = 'hidden'; 
             
-            // 2. FORCED REFLOW (Layout berechnen lassen)
-            // Das ist entscheidend, damit width/height für Canvas bekannt sind
+            // Layout erzwingen
             void t.content.offsetHeight; 
 
-            // 3. Visualisierung updaten (Outlines, Punkte, Wrapper-Position)
-            const vizContainer = t.content.querySelector('.viz-stack-container');
-            if (vizContainer) {
-                // Trigger update in zoomAndPan.js
-                triggerPositionUpdateForViz(vizContainer.id);
-
-                // FIX: Crosshair explizit einmal neu zeichnen, da der MutationObserver
-                // manchmal zu langsam reagiert, wenn display von none auf block wechselt.
-                // Wir suchen den Toggle-Button für diesen Container
-                let prefix = 'own';
-                if (vizContainer.id.includes('nc')) prefix = 'nc';
-                if (vizContainer.id.includes('serendipity')) prefix = 'serendipity';
-                
-                // Wir feuern manuell einen Redraw, falls das Canvas existiert
-                const crosshairCanvas = document.getElementById(`viz-layer-${prefix}-crosshair-canvas`);
-                if (crosshairCanvas && crosshairCanvas.style.display !== 'none') {
-                     // Kleiner Hack: Wir triggern ein Resize-Event auf dem Window oder
-                     // rufen die Logik auf, aber am einfachsten ist es, dem Observer
-                     // im CrosshairRenderer Futter zu geben, indem wir kurz was am Wrapper ändern
-                     // ODER wir verlassen uns darauf, dass triggerPositionUpdateForViz den Wrapper-Style ändert.
-                     // Da wir redraw() in Schritt 1 gefixt haben, sollte triggerPositionUpdateForViz reichen!
+            // FIX: Update verzögern, damit Crosshairs & Punkte korrekte Maße haben
+            requestAnimationFrame(() => {
+                const vizContainer = t.content.querySelector('.viz-stack-container');
+                if (vizContainer) {
+                    triggerPositionUpdateForViz(vizContainer.id);
                 }
-            }
+            });
         }
         
         const dist = Math.abs(i - state.activeTabIndex);
@@ -325,29 +330,50 @@ function executeSwipe(deltaX) {
 	else if (state.mode === 'TABS') {
 		const width = state.containerWidth;
 		const idx = state.activeTabIndex;
-		let globalOffset = deltaX; // Beginne mit dem normalen Swipe-Abstand
 
-		// Prüfe, ob wir am Anfang oder Ende sind und nach außen swipen
-		if ((idx === 0 && deltaX > 0) || (idx === availableTabs.length - 1 && deltaX < 0)) {
-			// Wende den Rubber-Band-Effekt auf den globalen Offset an
-			globalOffset = applyRubberBand(deltaX, width);
+		let effectiveDelta = deltaX;
+		let showShadowLeft = false;
+		let showShadowRight = false;
 
-			// Schattenlogik bleibt hier
-			if (deltaX > 0) setShadowIntensity(state.leftShadow, deltaX);
-			else setShadowIntensity(state.rightShadow, deltaX);
-		} else {
-			// Im normalen Bereich keine Schatten
-			setShadowIntensity(state.leftShadow, 0);
-			setShadowIntensity(state.rightShadow, 0);
+		// 1. ABSOLUTE RÄNDER (Start und Ende der Liste)
+		// Hier wollen wir Rubberband UND Schatten
+		if (idx === 0 && deltaX > 0) {
+			effectiveDelta = applyRubberBand(deltaX, width);
+			showShadowLeft = true;
+		}
+		else if (idx === availableTabs.length - 1 && deltaX < 0) {
+			effectiveDelta = applyRubberBand(deltaX, width);
+			showShadowRight = true;
+		}
+		// 2. "VIRTUELLE" RÄNDER (Mehr als eine Seite swipen)
+		// Hier wollen wir Rubberband auf den ÜBERSCHUSS, aber KEINEN Schatten
+		else if (Math.abs(deltaX) > width) {
+			const sign = Math.sign(deltaX); // 1 für rechts, -1 für links
+			const excess = Math.abs(deltaX) - width;
+
+			// Den Überschuss dämpfen
+			const rubberBandedExcess = applyRubberBand(excess, width);
+
+			// Zusammenbauen: Volle Breite + gedämpfter Überschuss
+			effectiveDelta = sign * (width + rubberBandedExcess);
+
+			// Hier explizit KEINE Schattenflags setzen
 		}
 
-		// Diese Schleife wird jetzt IMMER ausgeführt und bewegt ALLE sichtbaren Tabs korrekt
+		// Schatten anwenden (oder resetten)
+		setShadowIntensity(state.leftShadow, showShadowLeft ? deltaX : 0);
+		setShadowIntensity(state.rightShadow, showShadowRight ? deltaX : 0);
+
+		// Positionen anwenden
 		availableTabs.forEach((tab, i) => {
-			const basePos = (i - state.activeTabIndex) * width; // Grundposition (0, -width, width)
-			tab.content.style.transform = `translateX(${basePos + globalOffset}px)`;
+			const basePos = (i - idx) * width;
+			tab.content.style.transform = `translateX(${basePos + effectiveDelta}px)`;
 		});
-	} else {
-		if (deltaX > 0) { setShadowIntensity(state.leftShadow, deltaX); } else { setShadowIntensity(state.rightShadow, deltaX); }
+	}
+	// Fallback für andere Modi (falls erweitert)
+	else {
+		if (deltaX > 0) { setShadowIntensity(state.leftShadow, deltaX); }
+		else { setShadowIntensity(state.rightShadow, deltaX); }
 	}
 }
 
@@ -441,18 +467,18 @@ function resetTabs() {
     }, CONFIG.animDuration);
 }
 function cleanupStyles() {
-	setSwipeLock(false);
-	if (state.resultsContainer) {
-	    state.resultsContainer.classList.remove('is-swiping');
-	    state.resultsContainer.style.height = ''; 
-	}
-		
-	if (state.menuEl) { 
+    setSwipeLock(false);
+    if (state.resultsContainer) {
+        state.resultsContainer.classList.remove('is-swiping');
+        state.resultsContainer.style.height = ''; 
+    }
+        
+    if (state.menuEl) { 
         state.menuEl.style.transition = ''; 
         if (!state.menuEl.classList.contains('is-open')) state.menuEl.style.transform = ''; 
     }
     
-	if (state.overlayEl) { 
+    if (state.overlayEl) { 
         state.overlayEl.style.transition = ''; 
         if (!state.menuEl || !state.menuEl.classList.contains('is-open')) { 
             state.overlayEl.style.display = ''; 
@@ -461,7 +487,7 @@ function cleanupStyles() {
         } 
     }
     
-	if (availableTabs.length > 0) { 
+    if (availableTabs.length > 0) { 
         availableTabs.forEach(t => { 
             t.content.style.transition = ''; 
             t.content.style.position = '';
@@ -469,6 +495,11 @@ function cleanupStyles() {
             t.content.style.left = '';
             t.content.style.width = '';
             t.content.style.height = '';
+            
+            // --- FIX: Inline-Style entfernen ---
+            // Damit greift wieder die CSS-Datei (egal ob online oder offline)
+            t.content.style.removeProperty('padding-top');
+            
             t.content.style.overflowY = '';
         }); 
     }

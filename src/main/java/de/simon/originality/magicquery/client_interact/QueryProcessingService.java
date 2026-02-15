@@ -12,6 +12,9 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.springframework.scheduling.annotation.Async;
@@ -53,6 +56,9 @@ public class QueryProcessingService {
 	private final Map<String, JobData> jobDataStore = new ConcurrentHashMap<>();
 	public static final Map<String, Map<String, String>> finalColorMaps = new ConcurrentHashMap<>();
 
+    private final ScheduledExecutorService cleanupScheduler = Executors.newSingleThreadScheduledExecutor();
+    private final Map<String, ScheduledFuture<?>> cleanupTasks = new ConcurrentHashMap<>();
+	
 	public QueryProcessingService(ServerSentEventService sseService, PythonService vectorizer,
 			DatabaseQuery databaseQuery, KnowledgeGraphService knowledgeGraph) {
 		this.sseService = sseService;
@@ -185,7 +191,7 @@ public class QueryProcessingService {
 
 			sseService.sendEvent(jobId, "COMPLETE", "Process finished.");
 			sseService.completeEmitter(jobId);
-
+            scheduleCleanup(jobId);
 		} catch (Exception e) {
 			e.printStackTrace();
 			String errorMessage = e.getMessage();
@@ -196,6 +202,42 @@ public class QueryProcessingService {
 			sseService.sendEvent(jobId, "ERROR", clientFriendlyError);
 			sseService.completeEmitter(jobId);
 		}
+	}
+
+	/**
+	 * Plant die automatische Löschung der Job-Daten nach einer längeren Zeitspanne.
+	 * Dies dient als Sicherheitsnetz, falls der Client kein "cleanup"-Signal
+	 * sendet.
+	 */
+	private void scheduleCleanup(String jobId) {
+		ScheduledFuture<?> task = cleanupScheduler.schedule(() -> {
+			System.out.println("\tDead Man's Switch: Auto-cleanup for job " + jobId + " triggered after timeout.");
+			sseService.cleanupJobData(jobId);
+			cleanupTasks.remove(jobId);
+		}, MagicNumbers.REMOVE_RESULTS_MS.asLong(), TimeUnit.MILLISECONDS);
+
+		cleanupTasks.put(jobId, task);
+		System.out.println("\tCleanup for " + jobId + " planned in " + MagicNumbers.REMOVE_RESULTS_MS.asLong() / 60000
+				+ " minutes.");
+	}
+
+	/**
+	 * Wird vom Controller aufgerufen, um die Daten sofort zu löschen und den
+	 * geplanten Task abzubrechen.
+	 */
+	public void triggerImmediateCleanup(String jobId) {
+		// 1. Geplanten Task abbrechen, falls er existiert
+		ScheduledFuture<?> task = cleanupTasks.remove(jobId);
+		if (task != null) {
+			task.cancel(false); // false, damit er nicht unterbrochen wird, falls er gerade läuft
+			System.out.println("\tClient-triggered cleanup for job " + jobId + ". Scheduled task cancelled.");
+		} else {
+			System.out.println("\tClient-triggered cleanup for job " + jobId
+					+ ". No scheduled task found (already executed or never scheduled).");
+		}
+
+		// 2. Daten sofort löschen
+		sseService.cleanupJobData(jobId);
 	}
 
 	private List<QueryResult> performSerendipityAnalysisAndVisualization(

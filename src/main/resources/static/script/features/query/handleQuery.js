@@ -1,7 +1,9 @@
 import { showQueryPopup, hideQueryPopup, queueSseEvent } from '/script/features/query/queryPopup.js';
 import { attachedFiles } from '/script/features/media/attachmentManager.js';
 import { getCsrfToken } from '/script/core/security.js';
-import { applyGeneralTranslations } from '/script/core/localization.js';
+import { applyGeneralTranslations, t } from '/script/core/localization.js';
+// NEU: Event Bus importieren
+import { emit, EVENTS } from '/script/core/eventBus.js';
 
 // BFCache Restore
 window.addEventListener('pageshow', function(event) {
@@ -62,7 +64,15 @@ export function sendQuery(intent) {
 				if (eventData.status === 'COMPLETE') {
 					eventSource.close();
 					queueSseEvent('RENDERING', t('popup.status.finalizing')); 
-					setTimeout(() => { window.location.href = `/results/${jobId}`; }, 100);
+					
+					sessionStorage.setItem(`pending_cleanup_${jobId}`, 'true');
+					
+                    // --- FIX 1: Soft Navigation statt Hard Reload ---
+                    // Wir geben dem Popup kurz Zeit für die Animation, dann feuern wir das Event.
+					setTimeout(() => { 
+                        emit(EVENTS.TTS_NAVIGATE, { url: `/results/${jobId}` });
+                    }, 100);
+
 				} else if (eventData.status === 'ERROR') {
 					eventSource.close();
 					if (queryButton) queryButton.disabled = false;
@@ -119,12 +129,9 @@ function showConsentPopup() {
 	});
 }
 
-// --- FIX: IDEMPOTENCY CHECK ---
 export function attachQueryListener() {
 	const ideaForm = document.querySelector('.idea-form');
 	if (!ideaForm) return;
-
-	// Wenn der Listener schon hängt (Attribut gesetzt), abbrechen.
 	if (ideaForm.dataset.listenerAttached === 'true') return;
 
 	ideaForm.addEventListener('submit', function(event) {
@@ -134,6 +141,5 @@ export function attachQueryListener() {
 		else showConsentPopup();
 	});
 
-	// Markieren, dass wir fertig sind
 	ideaForm.dataset.listenerAttached = 'true';
 }

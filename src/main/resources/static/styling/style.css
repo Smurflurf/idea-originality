@@ -1,6 +1,7 @@
 @import './colours.css';
 
 * {
+    -webkit-tap-highlight-color: transparent;
     box-sizing: border-box;
 }
 

@@ -96,16 +96,14 @@ function setupSingleCrosshair(prefix, crosshairCoords) {
     });
     
     // Observer 1: Zoom/Pan Änderungen
-    const wrapperObserver = new MutationObserver(redraw);
-    wrapperObserver.observe(wrapper, { attributes: true, attributeFilter: ['style'] });
+	const wrapperObserver = new MutationObserver(redraw);
+	wrapperObserver.observe(wrapper, { attributes: true, attributeFilter: ['style'] });
 
-    // Observer 2: Tab-Wechsel (z.B. von Own -> Neighbor)
-    const paneObserver = new MutationObserver((mutations) => {
-        if (mutations[0].target.classList.contains('active')) {
-            redraw();
-        }
-    });
-    paneObserver.observe(vizPane, { attributes: true, attributeFilter: ['class'] });
+	// Observer 2: Tab-Wechsel (z.B. von Own -> Neighbor)
+	const paneObserver = new MutationObserver(() => {
+		redraw();
+	});
+	paneObserver.observe(vizPane, { attributes: true, attributeFilter: ['class', 'style'] });
 
     // Observer 3: THEME WECHSEL (Das hat gefehlt!)
     // Wir beobachten das <html> Element auf Attribut-Änderungen (data-theme)
