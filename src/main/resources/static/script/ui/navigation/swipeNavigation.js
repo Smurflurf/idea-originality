@@ -267,25 +267,30 @@ function handleMove(e) {
         if (e.cancelable) e.preventDefault();
         if (!state.stylesPrepared) prepareStylesForSwipe();
 
-        if (!state.mode) {
-            const isMenuOpen = state.menuEl && state.menuEl.classList.contains('is-open');
-            // Hier nutzen wir die existierende Edge-Logik.
-            // Da wir bei Maus in handleStart schon auf <100px geprüft haben,
-            // ist das hier für Maus immer true.
-            const isEdgeSwipe = state.startX < CONFIG.edgeZone || state.activeTouchId === 'mouse';
-            const isOffline = document.documentElement.hasAttribute('data-is-offline');
+		if (!state.mode) {
+			const isMenuOpen = state.menuEl && state.menuEl.classList.contains('is-open');
+			const isEdgeSwipe = state.startX < CONFIG.edgeZone || state.activeTouchId === 'mouse';
+			const isOffline = document.documentElement.hasAttribute('data-is-offline');
 
-            if (isMenuOpen) {
-                state.mode = 'MENU_CLOSING';
-            }
-            else if (!isOffline && totalDeltaX > 0 && (state.activeTabIndex <= 0 || isEdgeSwipe)) {
-                state.mode = 'MENU_OPENING';
-            }
-            else if (availableTabs.length > 0) {
-                state.mode = 'TABS';
-                prepareAllTabs();
-            }
-        }
+			if (isMenuOpen) {
+				state.mode = 'MENU_CLOSING';
+			}
+			// NEU: Wenn wir am Rand starten (Edge), darf NUR das Menü reagieren
+			else if (isEdgeSwipe) {
+				if (totalDeltaX > 0 && !isOffline) {
+					state.mode = 'MENU_OPENING';
+				} else {
+					// Wichtig: Wenn am Rand nach links gewischt wird, 
+					// setzen wir KEINEN Modus. Das verhindert, dass 'TABS' aktiv wird.
+					return;
+				}
+			}
+			// Nur wenn NICHT am Rand gestartet wurde, erlauben wir Tab-Wechsel
+			else if (availableTabs.length > 0) {
+				state.mode = 'TABS';
+				prepareAllTabs();
+			}
+		}
 
         executeSwipe(totalDeltaX);
     }

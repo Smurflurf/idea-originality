@@ -61,10 +61,81 @@ async function getBlobFromCacheOrNetwork(url) {
 }
 
 async function resourceToDataURL(url) {
-	try {
+	/*try {
 		const blob = await getBlobFromCacheOrNetwork(url);
 		return await blobToDataURL(blob);
 	} catch (error) {
+		return "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+	}*/
+	return await getFastDataUrl(url); 
+}
+
+/**
+ * Konvertiert einen Blob extrem schnell in einen Base64-String.
+ * Nutzt den internen Buffer statt schwerfälliger FileReader-Events, wo möglich.
+ */
+function blobToBase64(blob) {
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.onloadend = () => resolve(reader.result);
+		reader.onerror = reject;
+		reader.readAsDataURL(blob);
+	});
+}
+
+
+// Einmalig erstellter Canvas zum Wiederverwenden (spart Memory-Allocations)
+let sharedCanvas = null;
+let sharedCtx = null;
+/**
+ * Smart-Hybrid: Konvertiert kleine Bilder (Icons/SVGs) sofort,
+ * komprimiert große Bilder aber blitzschnell via OffscreenCanvas.
+ */
+async function getFastDataUrl(url) {
+	try {
+		const absoluteUrl = new URL(url, document.baseURI).href;
+		const blob = await getBlobFromCacheOrNetwork(absoluteUrl);
+
+		const isFont = blob.type.includes('font') || url.match(/\.(woff2?|ttf|otf|eot)$/i);
+		const isSvg = blob.type.includes('svg') || url.endsWith('.svg');
+
+		// --- SPEED-PFAD 1: Kleinkram & Assets ---
+		// Erhöht auf 200KB: Das deckt fast alle Icons und Thumbnails ab.
+		// Diese werden "instant" ohne CPU-Last eingebettet.
+		if (isFont || isSvg || blob.size < 200000) {
+			return await blobToBase64(blob);
+		}
+
+		// --- SPEED-PFAD 2: Große Bilder komprimieren ---
+		const isImage = blob.type.startsWith('image/');
+		if (!isImage) return await blobToBase64(blob);
+
+		try {
+			// createImageBitmap nutzt Hardware-Beschleunigung
+			const bitmap = await createImageBitmap(blob);
+
+			// Shared Canvas initialisieren oder anpassen
+			if (!sharedCanvas) {
+				sharedCanvas = document.createElement('canvas');
+				sharedCtx = sharedCanvas.getContext('2d', { alpha: true });
+			}
+			sharedCanvas.width = bitmap.width;
+			sharedCanvas.height = bitmap.height;
+
+			// Blitzschnelles Zeichnen
+			sharedCtx.clearRect(0, 0, bitmap.width, bitmap.height);
+			sharedCtx.drawImage(bitmap, 0, 0);
+			bitmap.close();
+
+			// toDataURL('image/webp') ist extrem optimiert in Chromium/Safari.
+			// Wir nutzen Qualität 0.6 für den perfekten Mix aus Speed/Größe.
+			const dataUrl = sharedCanvas.toDataURL('image/webp', 0.6);
+
+			return dataUrl;
+		} catch (err) {
+			return await blobToBase64(blob); // Sicherer Fallback
+		}
+	} catch (e) {
 		return "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 	}
 }
@@ -300,20 +371,26 @@ async function createSelfContainedHTML() {
         } catch (error) {
             console.warn("[Bundler] CSS failed:", link.href, error);
             // Link entfernen oder Kommentar einfügen, damit kein kaputter Link bleibt
-            const comment = clonedDocument.createComment(` CSS LOAD FAILED: ${link.href} `);
-            if (link.parentNode) link.parentNode.replaceChild(comment, link);
-        }
-    }
-
-    // Image Embedding
-    console.log("[Bundler] Embedding Images...");
-    const originalImages = document.querySelectorAll('img');
-    const clonedImages = clonedDocument.querySelectorAll('img');
-    originalImages.forEach((originalImg, index) => {
-		if (clonedImages[index] && originalImg.complete && originalImg.naturalWidth > 0) {
-			clonedImages[index].src = imageElementToDataURL(originalImg);
+			const comment = clonedDocument.createComment(` CSS LOAD FAILED: ${link.href} `);
+			if (link.parentNode) link.parentNode.replaceChild(comment, link);
 		}
-	});
+	}
+
+	// Image Embedding
+	console.log("[Bundler] Embedding Images...");
+
+	const allImages = Array.from(clonedDocument.querySelectorAll('img[src]'));
+
+	// Wir starten ALLE Konvertierungen gleichzeitig. 
+	// Der Browser verwaltet die CPU-Last selbst am effizientesten.
+	await Promise.all(allImages.map(async (img) => {
+		const src = img.getAttribute('src');
+		if (!src || src.startsWith('data:')) return;
+
+		// getFastDataUrl entscheidet nun selbst: Direkt oder Komprimiert
+		img.src = await getFastDataUrl(src);
+		img.removeAttribute('srcset');
+	}));
 
 	restoreVisibility();
 
