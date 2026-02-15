@@ -16,8 +16,10 @@
 /* 1. Hamburger Button */
 .menu-trigger {
 	position: fixed;
-	top: 25px;
-	left: 30px;
+	top: 12px;
+	left: 12px;
+	width: 65px;
+	height: 65px;
 	z-index: 2010;
 	background: transparent;
 	border: none;
@@ -90,7 +92,7 @@
 
 .sidebar-menu.is-open {
 	transform: translateX(0);
-	box-shadow: 10px 0 30px rgba(var(--bg-black-rgb), 0.5);
+	box-shadow: none;
 }
 
 .sidebar-menu:not(.is-open) {

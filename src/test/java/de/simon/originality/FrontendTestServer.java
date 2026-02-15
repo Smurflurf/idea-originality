@@ -73,7 +73,7 @@ public class FrontendTestServer {
         HttpServer server = HttpServer.create(new InetSocketAddress("0.0.0.0", PORT), 0);
 
         server.createContext("/", new MainHandler());
-        server.createContext("/query/init", exchange -> sendJson(exchange, "{\"jobId\": \"test-job\"}"));
+        server.createContext("/query/init", exchange -> sendJson(exchange, "{\"jobId\": \"test-job-"+APP_VERSION+"\"}"));
         server.createContext("/query/status/", new SseHandler());
         server.createContext("/query/start/", new SimulationHandler());
         server.createContext("/query/filtered-results", new AjaxResultHandler());
@@ -277,7 +277,7 @@ public class FrontendTestServer {
     // --- DATEN-SETUP METHODE (ANGEREICHERT) ---
     private static void setupResultsContext(Context context, String reqPath) {
         String jobId = reqPath.replace("/results/", "");
-        if (jobId.isEmpty() || jobId.equals("/results")) jobId = "test-job";
+        if (jobId.isEmpty() || jobId.equals("/results")) jobId = "test-job-"+APP_VERSION;
 
         // Wir nutzen den Generator für echte Datenstrukturen
         MockDataGenerator data = new MockDataGenerator();
@@ -371,6 +371,9 @@ public class FrontendTestServer {
             list.add(createClusterResult("all_vectors-1-1", "Economics", 0.55f, 150000));
             list.add(createClusterResult("all_vectors-1-1-1", "Development Economics", 0.54f, 80000));
             list.add(createClusterResult("all_vectors-2-1", "Computational Statistics", 0.55f, 40000));
+            list.add(createClusterResult("all_vectors-2-1-1", "Computational Statistics1", 0.55f, 40000));
+            list.add(createClusterResult("all_vectors-2-1-2", "Computational Sta", 0.55f, 40000));
+            list.add(createClusterResult("all_vectors-2-1-3", "COSTATI", 0.55f, 40000));
             return list;
         }
 
@@ -577,7 +580,9 @@ public class FrontendTestServer {
             filesToBundle.add("downloadPopup.css");
             filesToBundle.add("menu.css");
             filesToBundle.add("translate.css");
-        }
+        } 
+        
+        filesToBundle.add("legal.css");
         
         StringBuilder sb = new StringBuilder("/* TEST BUNDLE */\n");
         Path stylingDir = Paths.get(STYLING_ROOT);

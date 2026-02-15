@@ -1146,12 +1146,11 @@ html, body {
 		/* Sicherheitszone links für Hamburger, rechts für Symmetrie (Zentrierung) */
 		padding: 0 0 0 60px; 
 	}
-}
 
-html[data-is-offline="true"] .viz-toggle-header  {
-	padding: 0 15px !important;
-	box-sizing: border-box; 
-    width: 100%;
+	/* Da der Hamburger Button offline weg ist, brauchen wir die 60px links nicht. */
+	html[data-is-offline="true"] .viz-toggle-header {
+		padding: 0 15px !important;
+	}
 }
 
 /* Klasse zum Verstecken beim Scrollen (unverändert) */
@@ -1186,12 +1185,6 @@ body.is-header-hidden .viz-content-pane.active,
 body.is-header-hidden .results-container.is-swiping .viz-content-pane {
     padding-top: 15px;
 }
-html[data-is-offline="true"] body.is-header-hidden .viz-content-pane.active {
-    padding-top: 15px !important;
-}
-html[data-is-offline="true"] .viz-content-pane {
-    padding-top: 110px !important;
-}
 
 .results-container.is-swiping .viz-content-pane {
 	transition: none;
@@ -1220,10 +1213,6 @@ html[data-is-offline="true"] .viz-content-pane {
 /* =================================================================== */
 .menu-trigger {
 	position: absolute !important;
-	top: 12px !important;
-	left: 12px !important;
-	width: 65px !important;
-	height: 65px !important;
 	display: flex !important;
 	align-items: center !important;
 	justify-content: center !important;

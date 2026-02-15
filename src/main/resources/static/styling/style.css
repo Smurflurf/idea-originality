@@ -375,7 +375,9 @@ html {
     /* Für Firefox: Daumenfarbe und transparente Schiene */
     scrollbar-color: var(--border-main) transparent;
     scrollbar-width: thin;
-}
+	scrollbar-gutter: stable;
+	width: 100%;
+	min-height: 100%;}
 
 /* Für Chrome, Safari, Edge */
 ::-webkit-scrollbar {
@@ -479,4 +481,24 @@ textarea::-webkit-scrollbar-thumb:hover {
 
 .debug-overlay {
     display: none;
+}
+
+
+
+/* =================================================================== */
+/* ==           	PERFORMANCE: NO INTERACTION ON SWIPE            == */
+/* =================================================================== */
+
+/* Wenn die Klasse aktiv ist (während des Swipes), ignorieren wir ALLES. */
+body.is-swiping-active,
+body.is-swiping-active * {
+    pointer-events: none !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    cursor: grabbing !important;
+}
+
+/* Ausnahme: Wir wollen den Cursor/Touchpunkt nicht verlieren */
+body.is-swiping-active {
+    cursor: grabbing !important;
 }

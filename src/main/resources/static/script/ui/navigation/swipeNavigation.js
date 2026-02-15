@@ -26,7 +26,8 @@ let state = {
 	menuEl: null,
 	overlayEl: null,
 	leftShadow: null,
-	rightShadow: null
+	rightShadow: null,
+	didSwipe: false
 };
 
 let cleanupTimer = null;
@@ -43,7 +44,32 @@ export function initializeSwipeNavigation() {
 	document.body.addEventListener('touchstart', handleStart, { passive: false });
 	document.body.addEventListener('touchmove', handleMove, { passive: false });
 	document.body.addEventListener('touchend', handleEnd);
-	document.body.addEventListener('touchcancel', handleEnd); 
+	document.body.addEventListener('touchcancel', handleEnd);
+	
+	document.body.addEventListener('mousedown', handleStart);
+	window.addEventListener('mousemove', handleMove); 
+	window.addEventListener('mouseup', handleEnd);
+
+	const blockEvents = ['mouseover', 'mouseenter', 'mouseout', 'mouseleave', 'click', 'focusin', 'focusout'];
+
+	blockEvents.forEach(eventType => {
+		document.body.addEventListener(eventType, (e) => {
+			// Wenn wir gerade ziehen ODER gerade gewischt haben:
+			if (state.isDragging || state.didSwipe) {
+
+				// AUSNAHME: Wenn das Event vom Skript kommt (z.B. trigger.click()), 
+				// ist isTrusted false. Das müssen wir durchlassen, damit das Menü aufgeht.
+				if (eventType === 'click' && !e.isTrusted) {
+					return;
+				}
+
+				e.preventDefault();
+				e.stopPropagation();
+				e.stopImmediatePropagation();
+				return false;
+			}
+		}, { capture: true, passive: false });
+	});
 
 	isInitialized = true;
 }
@@ -76,80 +102,102 @@ function setShadowIntensity(shadowEl, amount) {
 
 // --- PHASE 1: START ---
 function handleStart(e) {
-	if (state.isDragging) return;
-	
-	if (isAnimating) {
-		// 1. Breche alle geplanten Aufräum-Aktionen des vorherigen Swipes ab.
-		if (cleanupTimer) clearTimeout(cleanupTimer);
-		if (tabHidingTimeoutId) clearTimeout(tabHidingTimeoutId);
-		cleanupTimer = null;
-		tabHidingTimeoutId = null;
+    if (state.isDragging) return;
+    
+    // Performance: Laufende Animation sofort stoppen
+    if (isAnimating) {
+        if (cleanupTimer) clearTimeout(cleanupTimer);
+        if (tabHidingTimeoutId) clearTimeout(tabHidingTimeoutId);
+        cleanupTimer = null;
+        tabHidingTimeoutId = null;
 
-		// 2. "Friere" die laufende CSS-Animation sofort ein, indem wir die Transition entfernen.
-		//    Die Elemente bleiben genau dort stehen, wo sie gerade sind.
 		if (availableTabs.length > 0) {
 			availableTabs.forEach(t => {
-				// WICHTIG: Die aktuelle Position auslesen und als inline-style setzen,
-				// bevor wir die Transition entfernen.
-				const currentTransform = window.getComputedStyle(t.content).transform;
-				t.content.style.transform = currentTransform;
+				const style = window.getComputedStyle(t.content);
+				t.content.style.transform = style.transform;
 				t.content.style.transition = 'none';
 			});
 		}
-
-		// 3. Signalisiere, dass die Animation vorbei ist und ein neuer Drag beginnen kann.
 		isAnimating = false;
 	}
 
-
-	if (tabHidingTimeoutId) {
-		clearTimeout(tabHidingTimeoutId);
-		tabHidingTimeoutId = null;
-	}
+	if (tabHidingTimeoutId) clearTimeout(tabHidingTimeoutId);
 
 	const isPopupOpen = document.querySelector('.recorder-overlay.is-visible') ||
 		document.querySelector('.download-popup-overlay.is-visible');
 	if (isPopupOpen) return;
 
 	const ignoreSelector = 'input, textarea, .history-link, .topic-tabs-scroller, .attachments-container, .viz-stack-container.is-scroll-zoom-active';
+	if (e.target.closest(ignoreSelector)) return;
 
-	if (e.target.closest(ignoreSelector)) {
-		return;
+	let clientX, clientY, identifier;
+
+	if (e.type === 'mousedown') {
+		if (e.button !== 0) return;
+
+		// --- NEU: INTELLIGENTE MARGIN-ERKENNUNG ---
+		// 1. Suche nach dem Hauptinhalt (Startseite oder Legal)
+		let contentElement = document.querySelector('.idea-form') || document.querySelector('.legal-content-wrapper');
+
+		// 2. Wenn nichts gefunden (Results Seite), suche das erste sichtbare Element im aktiven Tab
+		if (!contentElement) {
+			const activePane = document.querySelector('.viz-content-pane.active');
+			if (activePane) {
+				// Wir nehmen das erste Kind-Element, das kein HR ist (z.B. h1 oder hierarchy-container)
+				contentElement = activePane.querySelector('*:not(hr)');
+			}
+		}
+
+		let maxTriggerWidth = CONFIG.edgeZone; // Fallback 20px
+
+		if (contentElement) {
+			const rect = contentElement.getBoundingClientRect();
+			// Wenn das Element zentriert ist, ist rect.left der Abstand zum Rand
+			// Wir nutzen Math.max, um immer mindestens die edgeZone zu haben
+			maxTriggerWidth = Math.max(rect.left, CONFIG.edgeZone);
+		}
+
+		// DEBUG-TIPP: Falls es nicht klappt, schalte das Log ein:
+		// console.log("Margin detected:", maxTriggerWidth, "Click at:", e.clientX);
+
+		if (e.clientX > maxTriggerWidth) return;
+
+		clientX = e.clientX;
+		clientY = e.clientY;
+		identifier = 'mouse';
+	} else {
+		if (e.touches.length !== 1) return;
+		clientX = e.touches[0].clientX;
+		clientY = e.touches[0].clientY;
+		identifier = e.touches[0].identifier;
 	}
 
-	if (e.touches.length !== 1) return;
-	
-	const touch = e.touches[0];
-
-	if (cleanupTimer) {
-		clearTimeout(cleanupTimer);
-		cleanupTimer = null;
-	}
-
+	// Schatten-Elemente sicherstellen (unverändert)
 	let lShadow = document.querySelector('.swipe-shadow-left');
 	let rShadow = document.querySelector('.swipe-shadow-right');
 	if (!lShadow || !rShadow) {
-		createShadowElements(); // Falls sie fehlen (z.B. durch DOM-Reset), neu erstellen
+		createShadowElements();
 		lShadow = document.querySelector('.swipe-shadow-left');
 		rShadow = document.querySelector('.swipe-shadow-right');
 	}
 
 	state = {
 		isDragging: true,
-		activeTouchId: touch.identifier,
-		startX: touch.clientX,
-		startY: touch.clientY,
-		currentX: touch.clientX,
-		currentY: touch.clientY,
+		activeTouchId: identifier, // Hier nutzen wir die ermittelte ID
+		startX: clientX,
+		startY: clientY,
+		currentX: clientX,
+		currentY: clientY,
 		direction: null,
 		mode: null,
+		didSwipe: false,
 		activeTabIndex: (typeof getCurrentTabIndex === 'function') ? getCurrentTabIndex() : -1,
 		containerWidth: window.innerWidth,
 		resultsContainer: document.querySelector('.results-container'),
 		menuEl: document.getElementById('sidebar-menu'),
 		overlayEl: document.getElementById('menu-overlay'),
-		leftShadow: document.querySelector('.swipe-shadow-left'),
-		rightShadow: document.querySelector('.swipe-shadow-right'),
+		leftShadow: lShadow,
+		rightShadow: rShadow,
 		stylesPrepared: false
 	};
 }
@@ -163,76 +211,84 @@ function setSwipeLock(locked) {
 function handleMove(e) {
     if (!state.isDragging) return;
 
-    const touch = Array.from(e.changedTouches).find(t => t.identifier === state.activeTouchId);
-    if (!touch) return;
+    let clientX, clientY;
 
-    // Aktuelle Position
-    const currentX = touch.clientX;
-    const currentY = touch.clientY;
+    // --- NEU: Input Unterscheidung ---
+    if (state.activeTouchId === 'mouse') {
+        // Maus-Event hat Koordinaten direkt auf 'e'
+        // WICHTIG: Prüfen ob Buttons gedrückt sind (falls user Maustaste losgelassen hat außerhalb des Fensters)
+        if (e.buttons === 0) {
+            handleEnd(e);
+            return;
+        }
+        clientX = e.clientX;
+        clientY = e.clientY;
+    } else {
+        // Touch: Das richtige Touch-Objekt finden
+        if (!e.changedTouches) return;
+        const touch = Array.from(e.changedTouches).find(t => t.identifier === state.activeTouchId);
+        if (!touch) return; // Event gehört nicht zu unserem Finger
+        clientX = touch.clientX;
+        clientY = touch.clientY;
+    }
 
     // Totale Distanz seit Start
-    const totalDeltaX = currentX - state.startX;
-    const totalDeltaY = currentY - state.startY;
+    const totalDeltaX = clientX - state.startX;
+    const totalDeltaY = clientY - state.startY;
 
-    // --- NEU: DER "PRE-CHECK" ---
-    // Wir prüfen sofort den Winkel. Ist die Bewegung eher horizontal?
-    // Dann verbieten wir dem Browser SOFORT jegliches Scrollen.
-    // Wir warten NICHT auf die 10px Schwelle für diesen Block.
+    // Pre-Check (unverändert)
     if (Math.abs(totalDeltaX) > Math.abs(totalDeltaY)) {
         if (e.cancelable) e.preventDefault();
     }
-    // ----------------------------
 
-    state.currentX = currentX;
-    state.currentY = currentY;
+    state.currentX = clientX;
+    state.currentY = clientY;
 
-    // 1. Richtung bestimmen (erst ab Schwelle, damit wir nicht bei jedem Zittern den Modus locken)
+    // 1. Richtung bestimmen
     if (!state.direction) {
-        // Schwelle erreicht?
         if (Math.abs(totalDeltaX) > 10 || Math.abs(totalDeltaY) > 10) {
             
             if (Math.abs(totalDeltaX) > Math.abs(totalDeltaY)) {
-                // EINDEUTIG HORIZONTAL
                 state.direction = 'horizontal';
-                setSwipeLock(true); // CSS Lock aktivieren
+                state.didSwipe = true;
+                setSwipeLock(true);
                 prepareStylesForSwipe();
             } else {
-                // EINDEUTIG VERTIKAL
                 state.direction = 'vertical';
-                state.isDragging = false; // Wir klinken uns aus
+                state.isDragging = false;
                 cleanupStyles();
-                return; // Browser darf weitermachen (scrollen)
+                return;
             }
         }
     }
 
-	// 2. Ausführung (Nur wenn wir sicher im Horizontal-Modus sind)
-	if (state.direction === 'horizontal') {
-		if (e.cancelable) e.preventDefault();
-		if (!state.stylesPrepared) prepareStylesForSwipe();
+    // 2. Ausführung
+    if (state.direction === 'horizontal') {
+        if (e.cancelable) e.preventDefault();
+        if (!state.stylesPrepared) prepareStylesForSwipe();
 
-		if (!state.mode) {
-			const isMenuOpen = state.menuEl && state.menuEl.classList.contains('is-open');
-			const isEdgeSwipe = state.startX < CONFIG.edgeZone;
+        if (!state.mode) {
+            const isMenuOpen = state.menuEl && state.menuEl.classList.contains('is-open');
+            // Hier nutzen wir die existierende Edge-Logik.
+            // Da wir bei Maus in handleStart schon auf <100px geprüft haben,
+            // ist das hier für Maus immer true.
+            const isEdgeSwipe = state.startX < CONFIG.edgeZone || state.activeTouchId === 'mouse';
+            const isOffline = document.documentElement.hasAttribute('data-is-offline');
 
-			// NEU: Offline-Check hinzufügen
-			const isOffline = document.documentElement.hasAttribute('data-is-offline');
+            if (isMenuOpen) {
+                state.mode = 'MENU_CLOSING';
+            }
+            else if (!isOffline && totalDeltaX > 0 && (state.activeTabIndex <= 0 || isEdgeSwipe)) {
+                state.mode = 'MENU_OPENING';
+            }
+            else if (availableTabs.length > 0) {
+                state.mode = 'TABS';
+                prepareAllTabs();
+            }
+        }
 
-			if (isMenuOpen) {
-				state.mode = 'MENU_CLOSING';
-			}
-			// FIX: Nur in den Menü-Modus gehen, wenn wir NICHT offline sind
-			else if (!isOffline && totalDeltaX > 0 && (state.activeTabIndex <= 0 || isEdgeSwipe)) {
-				state.mode = 'MENU_OPENING';
-			}
-			else if (availableTabs.length > 0) {
-				state.mode = 'TABS';
-				prepareAllTabs();
-			}
-		}
-
-		executeSwipe(totalDeltaX);
-	}
+        executeSwipe(totalDeltaX);
+    }
 }
 
 function prepareStylesForSwipe() {
@@ -252,7 +308,8 @@ function prepareStylesForSwipe() {
 function prepareAllTabs() {
     let headerHeight = 0;
     
-    // 1. MESSUNG: Wir holen uns das Padding vom AKTIVEN Tab.
+    // 1. STATE MESSEN: Was zeigt der Browser GERADE an?
+    // Wir nehmen den Computed Style des aktiven Tabs als absolute Wahrheit.
     let currentPaddingTop = '110px'; 
     if (state.activeTabIndex >= 0 && availableTabs[state.activeTabIndex]) {
         const activeContent = availableTabs[state.activeTabIndex].content;
@@ -262,12 +319,15 @@ function prepareAllTabs() {
 
     const isHeaderHidden = document.body.classList.contains('is-header-hidden');
     
+    // Header-Höhe berechnen (für top-Offset)
     if (state.resultsContainer) {
         const header = state.resultsContainer.querySelector('.viz-toggle-header');
+        // Wir nehmen die Höhe nur, wenn der Header auch logisch sichtbar sein soll
         if (header && !isHeaderHidden) {
             headerHeight = header.offsetHeight || CONFIG.headerFallbackHeight;
         }
         
+        // Container einfrieren
         const currentHeight = state.resultsContainer.getBoundingClientRect().height;
         state.resultsContainer.style.height = `${currentHeight}px`;
         state.resultsContainer.classList.add('is-swiping');
@@ -281,20 +341,27 @@ function prepareAllTabs() {
         } else {
             t.content.style.display = 'block';
             t.content.style.position = 'absolute';
+            
+            // Layout fixieren
             t.content.style.top = `${headerHeight}px`;
             t.content.style.left = '0';
             t.content.style.width = '100%';
             
-            // Padding zwingen (wie besprochen)
-            t.content.style.setProperty('padding-top', currentPaddingTop, 'important');
+            // WICHTIG: Das gemessene Padding setzen. 
+            // Ohne '!important', da wir das CSS bereinigt haben. Inline gewinnt so oder so.
+            t.content.style.paddingTop = currentPaddingTop;
             
+            // Höhe berechnen: 100% minus der Header-Platzhalter oben
             t.content.style.height = `calc(100% - ${headerHeight}px)`;
             t.content.style.overflowY = 'hidden'; 
             
+            // Hardwarebeschleunigung für smootheres Rendering am Handy
+            t.content.style.willChange = 'transform';
+
             // Layout erzwingen
             void t.content.offsetHeight; 
 
-            // FIX: Update verzögern, damit Crosshairs & Punkte korrekte Maße haben
+            // Live-Elemente (Crosshairs) rendern lassen
             requestAnimationFrame(() => {
                 const vizContainer = t.content.querySelector('.viz-stack-container');
                 if (vizContainer) {
@@ -309,79 +376,116 @@ function prepareAllTabs() {
 }
 
 function executeSwipe(deltaX) {
-	if (state.mode === 'MENU_OPENING') {
-		let translate = -CONFIG.menuWidth + deltaX;
-		if (translate > 0) { setShadowIntensity(state.leftShadow, translate); translate = 0; } else { setShadowIntensity(state.leftShadow, 0); }
-		if (state.menuEl) {
-			state.menuEl.style.transform = `translateX(${translate}px)`;
-			if (state.overlayEl) {
-				const rawProgress = (CONFIG.menuWidth + translate) / CONFIG.menuWidth;
-				state.overlayEl.style.visibility = 'visible'; state.overlayEl.style.display = 'block'; state.overlayEl.style.opacity = Math.min(1, Math.max(0, rawProgress));
-			}
-		}
-	} else if (state.mode === 'MENU_CLOSING') {
-		let translate = deltaX;
-		if (translate > 0) { setShadowIntensity(state.leftShadow, translate); translate = 0; } else { setShadowIntensity(state.leftShadow, 0); }
-		if (state.menuEl) {
-			state.menuEl.style.transform = `translateX(${translate}px)`;
-			if (state.overlayEl) { state.overlayEl.style.opacity = 1 - Math.min(1, Math.max(0, Math.abs(translate) / CONFIG.menuWidth)); }
-		}
-	}
-	else if (state.mode === 'TABS') {
-		const width = state.containerWidth;
-		const idx = state.activeTabIndex;
+    // Helper: Schatten nur zeigen, wenn es NICHT die Maus ist
+    const allowShadow = state.activeTouchId !== 'mouse';
 
-		let effectiveDelta = deltaX;
-		let showShadowLeft = false;
-		let showShadowRight = false;
+    if (state.mode === 'MENU_OPENING') {
+        let translate = -CONFIG.menuWidth + deltaX;
+        
+        // Wir haben das Menü weiter als "offen" gezogen (Overscroll)
+        if (translate > 0) { 
+            if (allowShadow) {
+                setShadowIntensity(state.leftShadow, translate); 
+            }
+            translate = 0; // Menü stoppt visuell an der Kante
+        } else { 
+            setShadowIntensity(state.leftShadow, 0); 
+        }
 
-		// 1. ABSOLUTE RÄNDER (Start und Ende der Liste)
-		// Hier wollen wir Rubberband UND Schatten
-		if (idx === 0 && deltaX > 0) {
-			effectiveDelta = applyRubberBand(deltaX, width);
-			showShadowLeft = true;
-		}
-		else if (idx === availableTabs.length - 1 && deltaX < 0) {
-			effectiveDelta = applyRubberBand(deltaX, width);
-			showShadowRight = true;
-		}
-		// 2. "VIRTUELLE" RÄNDER (Mehr als eine Seite swipen)
-		// Hier wollen wir Rubberband auf den ÜBERSCHUSS, aber KEINEN Schatten
-		else if (Math.abs(deltaX) > width) {
-			const sign = Math.sign(deltaX); // 1 für rechts, -1 für links
-			const excess = Math.abs(deltaX) - width;
+        if (state.menuEl) {
+            state.menuEl.style.transform = `translateX(${translate}px)`;
+            if (state.overlayEl) {
+                const rawProgress = (CONFIG.menuWidth + translate) / CONFIG.menuWidth;
+                state.overlayEl.style.visibility = 'visible'; 
+                state.overlayEl.style.display = 'block'; 
+                state.overlayEl.style.opacity = Math.min(1, Math.max(0, rawProgress));
+            }
+        }
+    } 
+    else if (state.mode === 'MENU_CLOSING') {
+        let translate = deltaX;
+        
+        // Wir ziehen das geschlossene Menü noch weiter zu (Overscroll nach links? Unwahrscheinlich aber möglich)
+        // Oder wir ziehen es nach rechts über den Bildschirmrand (translate > 0)
+        if (translate > 0) { 
+            if (allowShadow) {
+                setShadowIntensity(state.leftShadow, translate); 
+            }
+            translate = 0; 
+        } else { 
+            setShadowIntensity(state.leftShadow, 0); 
+        }
 
-			// Den Überschuss dämpfen
-			const rubberBandedExcess = applyRubberBand(excess, width);
+        if (state.menuEl) {
+            state.menuEl.style.transform = `translateX(${translate}px)`;
+            if (state.overlayEl) { 
+                state.overlayEl.style.opacity = 1 - Math.min(1, Math.max(0, Math.abs(translate) / CONFIG.menuWidth)); 
+            }
+        }
+    }
+    else if (state.mode === 'TABS') {
+        const width = state.containerWidth;
+        const idx = state.activeTabIndex;
+        
+        let effectiveDelta = deltaX;
+        let showShadowLeft = false;
+        let showShadowRight = false;
 
-			// Zusammenbauen: Volle Breite + gedämpfter Überschuss
-			effectiveDelta = sign * (width + rubberBandedExcess);
+        // 1. ABSOLUTE RÄNDER
+        if (idx === 0 && deltaX > 0) {
+            effectiveDelta = applyRubberBand(deltaX, width);
+            showShadowLeft = true;
+        } 
+        else if (idx === availableTabs.length - 1 && deltaX < 0) {
+            effectiveDelta = applyRubberBand(deltaX, width);
+            showShadowRight = true;
+        }
+        // 2. VIRTUELLE RÄNDER (Zwischen den Tabs)
+        else if (Math.abs(deltaX) > width) {
+            const sign = Math.sign(deltaX);
+            const excess = Math.abs(deltaX) - width;
+            const rubberBandedExcess = applyRubberBand(excess, width);
+            effectiveDelta = sign * (width + rubberBandedExcess);
+        }
 
-			// Hier explizit KEINE Schattenflags setzen
-		}
+        // Schatten anwenden (Nur wenn Touch!)
+        if (allowShadow) {
+            setShadowIntensity(state.leftShadow, showShadowLeft ? deltaX : 0);
+            setShadowIntensity(state.rightShadow, showShadowRight ? deltaX : 0);
+        } else {
+            // Maus: Schatten sicherheitshalber auf 0 setzen
+            setShadowIntensity(state.leftShadow, 0);
+            setShadowIntensity(state.rightShadow, 0);
+        }
 
-		// Schatten anwenden (oder resetten)
-		setShadowIntensity(state.leftShadow, showShadowLeft ? deltaX : 0);
-		setShadowIntensity(state.rightShadow, showShadowRight ? deltaX : 0);
-
-		// Positionen anwenden
-		availableTabs.forEach((tab, i) => {
-			const basePos = (i - idx) * width;
-			tab.content.style.transform = `translateX(${basePos + effectiveDelta}px)`;
-		});
-	}
-	// Fallback für andere Modi (falls erweitert)
-	else {
-		if (deltaX > 0) { setShadowIntensity(state.leftShadow, deltaX); }
-		else { setShadowIntensity(state.rightShadow, deltaX); }
-	}
+        // Positionen anwenden
+        availableTabs.forEach((tab, i) => {
+            const basePos = (i - idx) * width;
+            tab.content.style.transform = `translateX(${basePos + effectiveDelta}px)`;
+        });
+    } 
+    else {
+        // Fallback
+        if (allowShadow) {
+            if (deltaX > 0) { setShadowIntensity(state.leftShadow, deltaX); } 
+            else { setShadowIntensity(state.rightShadow, deltaX); }
+        }
+    }
 }
 
 // --- PHASE 3: END ---
 function handleEnd(e) {
 	if (!state.isDragging) return;
-	const touch = Array.from(e.changedTouches).find(t => t.identifier === state.activeTouchId);
-	if (!touch) return;
+
+	// Check: War es unsere Maus oder unser Finger?
+	if (state.activeTouchId === 'mouse') {
+		// Bei Maus ist es egal welches MouseUp Event kommt, solange wir im Drag waren
+	} else {
+		if (!e.changedTouches) return;
+		const touch = Array.from(e.changedTouches).find(t => t.identifier === state.activeTouchId);
+		if (!touch) return;
+	}
+	
 	state.isDragging = false;
 	state.activeTouchId = null;
 
@@ -401,7 +505,8 @@ function handleEnd(e) {
 	let actionTaken = false;
 
 	if (state.mode === 'MENU_OPENING') {
-		actionTaken = true; if (deltaX > CONFIG.menuWidth * 0.3) openMenu(); else closeMenu();
+		actionTaken = true; 
+		if (deltaX > CONFIG.menuWidth * 0.3) openMenu(); else closeMenu();
 	} else if (state.mode === 'MENU_CLOSING') {
 		actionTaken = true; if (deltaX < -50) closeMenu(); else openMenu();
 	} else if (state.mode === 'TABS') {
@@ -496,11 +601,16 @@ function cleanupStyles() {
             t.content.style.width = '';
             t.content.style.height = '';
             
-            // --- FIX: Inline-Style entfernen ---
-            // Damit greift wieder die CSS-Datei (egal ob online oder offline)
-            t.content.style.removeProperty('padding-top');
-            
+            t.content.style.paddingTop = '';
+            t.content.style.willChange = '';
             t.content.style.overflowY = '';
         }); 
     }
+
+    // Interaktion wieder freigeben:
+    // Wir warten einen winzigen Moment (Next Tick), um sicherzustellen, 
+    // dass der Klick vom Loslassen des Fingers auch wirklich vorbei ist.
+    setTimeout(() => {
+        state.didSwipe = false;
+    }, 0);
 }

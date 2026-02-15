@@ -134,7 +134,6 @@ export function setupMenuInteractions() {
             if (sb) sb.style.paddingBottom = keyboardHeight > 100 ? `${keyboardHeight}px` : '';
         });
     }
-    setupAutoHideMenu();
 }
 
 
@@ -417,28 +416,4 @@ export function highlightActiveLink() {
             link.classList.remove('active');
         }
     });
-}
-
-function setupAutoHideMenu() {
-    if (window.innerWidth > 768) return;
-    const menuTrigger = document.getElementById('menu-trigger');
-    if (!menuTrigger) return;
-    
-    window.removeEventListener('scroll', autoHideScrollHandler);
-    window.addEventListener('scroll', autoHideScrollHandler);
-}
-
-let lastScrollY = 0;
-function autoHideScrollHandler() {
-    const menuTrigger = document.getElementById('menu-trigger');
-    if (!menuTrigger) return;
-    const currentScrollY = window.scrollY;
-    if (currentScrollY < 50) {
-        menuTrigger.classList.remove('is-scrolled-away');
-    } else if (currentScrollY > lastScrollY) {
-        menuTrigger.classList.add('is-scrolled-away');
-    } else {
-        menuTrigger.classList.remove('is-scrolled-away');
-    }
-    lastScrollY = currentScrollY;
 }

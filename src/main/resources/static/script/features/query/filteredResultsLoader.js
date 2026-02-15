@@ -126,17 +126,29 @@ function initializeTopicTabs(paneId, colorMap, queryVector) {
     }
 
     if (hierarchyContainer && tabsContainer) {
-        hierarchyContainer.addEventListener('click', (event) => {
-            const clickedBox = event.target.closest('.hierarchy-item-box');
-            if (!clickedBox) return;
-            const clusterId = clickedBox.dataset.clusterId;
-            const correspondingTab = contentPane.querySelector(`.topic-tab[data-cluster-id="${clusterId}"]`);
-            if (correspondingTab) {
-                tabsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                if (!correspondingTab.classList.contains('active')) {
-                    activateTabAndUpdateView(correspondingTab);
-                }
-            }
+		hierarchyContainer.addEventListener('click', (event) => {
+			const clickedBox = event.target.closest('.hierarchy-item-box');
+			if (!clickedBox) return;
+			const clusterId = clickedBox.dataset.clusterId;
+			const correspondingTab = contentPane.querySelector(`.topic-tab[data-cluster-id="${clusterId}"]`);
+			if (correspondingTab) {
+				// Der 'contentPane' ist unser scrollbarer Container
+				const scrollablePane = contentPane;
+
+				// Finde heraus, wie weit die Tab-Leiste vom oberen Rand des Containers entfernt ist
+				const targetOffsetTop = tabsContainer.offsetTop;
+
+				// Scrolle den Container sanft an die richtige Position
+				scrollablePane.scrollTo({
+					top: targetOffsetTop - 20, // -20px Puffer, damit es nicht ganz oben klebt
+					behavior: 'smooth'
+				});
+
+				// Wechsle den Tab wie gewohnt
+				if (!correspondingTab.classList.contains('active')) {
+					activateTabAndUpdateView(correspondingTab);
+				}
+			}
         });
     }
 
