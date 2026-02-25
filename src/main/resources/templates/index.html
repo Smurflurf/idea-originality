@@ -21,6 +21,7 @@
 
     
 <body class="is-centered-content" data-features="search">
+    <th:block th:replace="~{shared_fragments :: llmRedirectBodyNotice}"></th:block>	
 	<div th:replace="~{shared_fragments :: sideMenu}"></div>
 
 	<form class="idea-form" th:action="@{/query}" method="post">

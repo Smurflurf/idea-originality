@@ -31,10 +31,17 @@ export function emit(eventName, detail = null) {
  * @param {Function} callback - Erhält (detail) als Argument
  */
 export function on(eventName, callback) {
-    bus.addEventListener(eventName, (e) => {
-        // Wir packen e.detail direkt aus, damit der Consumer nicht e.detail schreiben muss
-        callback(e.detail);
-    });
+    // Referenz speichern, damit off() später genau diese Funktion wiederfindet
+    const wrapper = (e) => callback(e.detail);
+    callback._busWrapper = wrapper; 
+    bus.addEventListener(eventName, wrapper);
+}
+
+export function off(eventName, callback) {
+    if (callback._busWrapper) {
+        bus.removeEventListener(eventName, callback._busWrapper);
+        delete callback._busWrapper;
+    }
 }
 
 /**

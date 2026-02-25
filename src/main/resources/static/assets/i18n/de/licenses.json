@@ -11,8 +11,21 @@
 	"structure": [
 		{
 			"type": "license_section",
+			"title": "Nutzungsbedingungen (Terms of Use)",
+			"description": "Für die Nutzung des Ideenatlas gelten die folgenden Bedingungen:",
+			"items": [
+				{
+					"name": "Lizenz des Dienstes & Haftungsausschluss",
+					"url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+					"purpose": "Der Ideenatlas ist ein unkommerzielles privates Forschungsprojekt. Die von ihm generierten Inhalte (Analysen, Visualisierungen) stehen unter der unten genannten Lizenz. Diese Lizenz gilt NICHT für die Inhalte der gefundenen Forschungsarbeiten; für diese gelten die Lizenzen der jeweiligen Datenquelle (z.B. arXiv). Alle Resultate können Fehler enthalten und werden ohne Gewähr bereitgestellt.",
+					"license": "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International"
+				}
+			]
+		},
+		{
+			"type": "license_section",
 			"title": "Besonderer Dank",
-			"description": "Der Ideenatlas ist ein privates Forschungsprojekt, welches in seiner jetzigen Form ohne externe Unterstützung nicht möglich wäre.",
+			"description": "Der Ideenatlas wäre in seiner jetzigen Form ohne externe Unterstützung nicht möglich gewesen.",
 			"items": [
 				{
 					"name": "bwHPC (BwUniCluster3.0)",

@@ -171,3 +171,12 @@ function animate() {
          particles = particles.filter(p => p.visible);
     }
 }
+
+export function stopTextAnimator() {
+    if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+    }
+    particles = [];
+    stagedParticles = [];
+}

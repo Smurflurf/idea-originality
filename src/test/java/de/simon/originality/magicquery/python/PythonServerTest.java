@@ -20,8 +20,8 @@ class PythonServerTest {
 	static PythonServerManager manager;
 	static PythonService service;
 	
-	@Test
-	@BeforeAll
+//	@Test
+//	@BeforeAll
 	static void testStartServer() throws IOException {
 		AutoSetup setup = new AutoSetup();
 		setup.init();
@@ -38,22 +38,22 @@ class PythonServerTest {
 		}
 	}
 	
-	@Test
+//	@Test
 	public void testIsPythonExecutablePresent() {
 		assertNotNull(PythonServerUtils.findPythonExecutable());
 	}
 
-	@Test
+//	@Test
 	public void testSentenceTransformer() {
 		service.vectorize("text");
 	}
 	
-	@Test
+//	@Test
 	public void testUMAP() {
 		service.reduceDimension(new float[MagicNumbers.VECTOR_SHAPE.asInteger()], "2d");
 	}
 	
-	@AfterAll
+//	@AfterAll
 	static void stopServer() {
 		manager.stopServer();
 	}

@@ -14,15 +14,6 @@ const flashObserver = new IntersectionObserver((entries) => {
 }, { threshold: 0.2 });
 
 /**
- * Findet den scrollbaren Container (Pane).
- */
-function getScrollParent(node) {
-	if (node == null) return null;
-	if (node.classList.contains('viz-content-pane')) return node;
-	return getScrollParent(node.parentElement);
-}
-
-/**
  * Findet die Zielkarte robust, auch wenn Präfixe abweichen.
  * Strategie: 
  * 1. Exakte ID (z.B. nc-result-card-123)
@@ -70,58 +61,22 @@ function findTargetCard(paperId, contextPrefix) {
 
 /**
  * Scrollt das Element präzise in die Mitte des Viewports / Containers.
- * Nutzt getBoundingClientRect für maximale Genauigkeit.
  */
-function smoothScrollToElement(targetElement, duration = 600) {
+function smoothScrollToElement(targetElement) {
 	return new Promise(resolve => {
 		if (!targetElement) return resolve();
 
-		const pane = getScrollParent(targetElement);
-		if (!pane) return resolve();
+		const rect = targetElement.getBoundingClientRect();
+		const offsetToCenter = rect.top - (window.innerHeight / 2) + (rect.height / 2);
+		
+		window.scrollBy({
+			top: offsetToCenter,
+			behavior: 'smooth'
+		});
 
-		// Positionen relativ zum Viewport holen
-		const paneRect = pane.getBoundingClientRect();
-		const elementRect = targetElement.getBoundingClientRect();
-
-		// Aktueller Scroll-Status
-		const currentScrollTop = pane.scrollTop;
-
-		// Berechnung:
-		// Wir wollen: Element-Mitte == Pane-Mitte
-		// Differenz = (ElementTop - PaneTop) + (ElementHeight/2) - (PaneHeight/2)
-		const relativeTop = elementRect.top - paneRect.top;
-		const offsetToCenter = relativeTop + (elementRect.height / 2) - (paneRect.height / 2);
-
-		const targetScrollTop = currentScrollTop + offsetToCenter;
-		const startScrollTop = currentScrollTop;
-		const distance = targetScrollTop - startScrollTop;
-
-		let startTime = null;
-		function animationLoop(currentTime) {
-			if (startTime === null) startTime = currentTime;
-			const elapsedTime = currentTime - startTime;
-			const progress = Math.min(elapsedTime / duration, 1);
-
-			// Easing: Ease-In-Out
-			const easedProgress = progress < .5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress;
-
-			pane.scrollTop = startScrollTop + (distance * easedProgress);
-
-			if (elapsedTime < duration) {
-				requestAnimationFrame(animationLoop);
-			} else {
-				pane.scrollTop = targetScrollTop;
-				resolve();
-			}
-		}
-
-		// Nur animieren, wenn der Weg lohnenswert ist (> 2px)
-		if (Math.abs(distance) > 2) {
-			requestAnimationFrame(animationLoop);
-		} else {
-			pane.scrollTop = targetScrollTop;
-			resolve();
-		}
+		// Fallback: Resolve das Promise nach einer angemessenen Zeit für den Scrollvorgang,
+		// damit die Flash-Animation der Karte korrekt startet.
+		setTimeout(resolve, 400);
 	});
 }
 
@@ -152,6 +107,13 @@ function initializeInteractiveTooltips(selector, colorMap) {
 		onShow(instance) {
 			tippy.hideAll({ exclude: instance });
 		},
+
+		onHide(instance) {
+			if (instance.reference) {
+				instance.reference.classList.remove('is-hovered-from-tooltip');
+			}
+		},
+
 
 		content(reference) {
 			const paperId = reference.dataset.paperId;

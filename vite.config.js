@@ -15,6 +15,7 @@ export default defineConfig({
 		tooltips: 'src/main/resources/static/styling/tooltips.css',
 		legal: 'src/main/resources/static/styling/legal.css',
 		menu: 'src/main/resources/static/styling/menu.css',
+		print: 'src/main/resources/static/styling/variables/themes/print.css',
       },
       output: {
         entryFileNames: `[name].js`,

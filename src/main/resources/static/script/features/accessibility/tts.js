@@ -26,32 +26,17 @@ let progressFrameId = null;
 let stopTimeoutId = null;
 let pauseTimeoutId = null;
 
-
-/**
- * Findet den scrollbaren Container (Pane) oder das nächstbeste scrollbare Element.
- */
-function getScrollParent(node) {
-	if (node == null) return null;
-	// Auf der Results-Seite ist das der Haupt-Container für Scrollen
-	if (node.classList.contains('viz-content-pane')) return node;
-
-	// Fallback für andere Seiten (z.B. Impressum)
-	if (node.scrollHeight > node.clientHeight && getComputedStyle(node).overflowY !== 'hidden') {
-		return node;
-	}
-
-	return getScrollParent(node.parentElement);
-}
-
 const Highlighter = {
     snippet: null,
     searchString: null,
+    exactElement: null, // Speichert das angeklickte Element
     observer: null,
     debounceTimer: null,
 
-    start(text) {
+    start(text, exactElement) {
         this.snippet = text.trim();
-        this.searchString = this.snippet.substring(0, 60).replace(/["'´`]/g, '');
+        this.searchString = this.snippet.substring(0, 60);
+        this.exactElement = exactElement;
         this.ensureObserver();
         this.run(true); 
     },
@@ -59,6 +44,7 @@ const Highlighter = {
     stop() {
         this.snippet = null;
         this.searchString = null;
+        this.exactElement = null;
         if (this.observer) {
             this.observer.disconnect();
             this.observer = null;
@@ -81,69 +67,79 @@ const Highlighter = {
         });
     },
 
-	run(shouldScroll) {
-		if (!this.searchString) return;
+    run(shouldScroll) {
+        if (!this.searchString) return;
 
-		const candidates = document.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, span, div.expandable-abstract');
-		let bestMatch = null;
+        let bestMatch = null;
 
-		for (const el of candidates) {
-			const elText = el.textContent.replace(/["'´`]/g, '');
-			if (elText.includes(this.searchString) && (el.closest('.viz-content-pane') || el.closest('.result-card') || el.closest('.legal-content-wrapper'))) {
-				bestMatch = el;
-				break;
-			}
-		}
+        // 1. ABSOLUTE PRIORITÄT: Genau das Element, das angeklickt wurde!
+        if (this.exactElement && document.body.contains(this.exactElement)) {
+            bestMatch = this.exactElement;
+        } else {
+            // 2. FALLBACK: (z.B. wenn man aus einem Tooltip heraus geklickt hat und dieser sich schließt)
+            const normalize = (str) => str ? str.replace(/[\s\n\r]+/g, ' ').replace(/["'´`]/g, '').trim() : '';
+            const searchNorm = normalize(this.searchString);
 
-		if (bestMatch) {
-			this.clearAll();
+            // Zuerst nur IN Result Cards suchen (ignoriert die Hierarchie am Anfang der Seite)
+            const cardCandidates = document.querySelectorAll('.result-card p, .result-card h1, .result-card h2, .result-card h3, .result-card h4, .result-card li, .result-card span, div.expandable-abstract');
+            for (const el of cardCandidates) {
+                if (normalize(el.textContent).includes(searchNorm)) {
+                    bestMatch = el;
+                    break;
+                }
+            }
 
-			const collapsedHierarchy = bestMatch.closest('.hierarchy-list-wrapper.is-collapsed');
-			if (collapsedHierarchy) collapsedHierarchy.classList.remove('is-collapsed');
+            // Wenn immer noch nichts gefunden wurde, durchsuche den ganzen sichtbaren Rest
+            if (!bestMatch) {
+                const allCandidates = document.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, span');
+                for (const el of allCandidates) {
+                    if (normalize(el.textContent).includes(searchNorm) && (el.closest('.viz-content-pane') || el.closest('.legal-content-wrapper'))) {
+                        bestMatch = el;
+                        break;
+                    }
+                }
+            }
+        }
 
-			const abstractWrapper = bestMatch.closest('.abstract-wrapper:not(.expanded)');
-			if (abstractWrapper) abstractWrapper.classList.add('expanded');
+        if (bestMatch) {
+            this.clearAll();
 
-			bestMatch.classList.add('is-reading');
-			if (isPaused) bestMatch.classList.add('is-paused');
-			else bestMatch.classList.remove('is-paused');
+            const collapsedHierarchy = bestMatch.closest('.hierarchy-list-wrapper.is-collapsed');
+            if (collapsedHierarchy) collapsedHierarchy.classList.remove('is-collapsed');
 
-			if (shouldScroll) {
-				requestAnimationFrame(() => this.scrollIntoViewSafe(bestMatch));
-			}
-		}
-	},
+            const abstractWrapper = bestMatch.closest('.abstract-wrapper:not(.expanded)');
+            if (abstractWrapper) abstractWrapper.classList.add('expanded');
+
+            const jsonPayload = bestMatch.closest('.result-payload:not(.active)');
+            if (jsonPayload) {
+                jsonPayload.classList.add('active');
+                const toggleBtn = jsonPayload.previousElementSibling;
+                if (toggleBtn && toggleBtn.classList.contains('toggle-json-btn')) {
+                    toggleBtn.classList.add('active');
+                }
+            }
+
+            bestMatch.classList.add('is-reading');
+            if (isPaused) bestMatch.classList.add('is-paused');
+            else bestMatch.classList.remove('is-paused');
+
+            if (shouldScroll) {
+                setTimeout(() => this.scrollIntoViewSafe(bestMatch), 150);
+            }
+        }
+    },
 
     scrollIntoViewSafe(element) {
-	        if (!element) return;
-	        
-	        // 1. Richtigen Scroll-Container finden (auf Results Page ist das .viz-content-pane)
-	        const container = getScrollParent(element);
-	        
-	        // Wenn kein Container da ist (z.B. statische Seite ohne fixed Header), Fallback auf Native
-	        if (!container || container === document.body || container === document.documentElement) {
-	            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-	            return;
-	        }
-
-	        // 2. Position berechnen
-	        const elementRect = element.getBoundingClientRect();
-	        const containerRect = container.getBoundingClientRect();
-	        const currentScrollTop = container.scrollTop;
-
-	        // Wir wollen, dass die Mitte des Elements in der Mitte des Containers landet
-	        const relativeTop = elementRect.top - containerRect.top;
-	        const offsetToCenter = relativeTop + (elementRect.height / 2) - (containerRect.height / 2);
-	        
-	        const targetScrollTop = currentScrollTop + offsetToCenter;
-
-	        // 3. Container scrollen (Body bleibt unberührt!)
-	        container.scrollTo({
-	            top: targetScrollTop,
-	            behavior: 'smooth'
-	        });
-	    }
-	};
+        if (!element) return;
+        const rect = element.getBoundingClientRect();
+        const offsetToCenter = rect.top - (window.innerHeight / 2) + (rect.height / 2);
+        
+        window.scrollBy({
+            top: offsetToCenter,
+            behavior: 'smooth'
+        });
+    }
+};
 
 
 // --- INITIALIZATION & NAVIGATION ---
@@ -163,54 +159,53 @@ export function initTTS() {
 }
 
 async function restoreStateAndScroll() {
-	if (!currentContext.textSnippet || window.location.href !== currentContext.originUrl) return;
+    if (!currentContext.textSnippet || window.location.href !== currentContext.originUrl) return;
 
-	// View/Tab Logik
-	if (currentContext.viewId) {
-		const pane = document.getElementById(currentContext.viewId);
-		if (pane && !pane.classList.contains('active')) {
-			const prefix = currentContext.viewId.replace('-viz-content', '');
-			const btnId = `show-${prefix}-viz`;
-			const btn = document.getElementById(btnId);
-			if (btn) {
-				btn.click();
-				await new Promise(r => setTimeout(r, 50));
-			}
-		}
-	}
+    // View/Tab Logik (Main Tabs: Own, Neighbor, Serendipity)
+    if (currentContext.viewId) {
+        const pane = document.getElementById(currentContext.viewId);
+        if (pane && !pane.classList.contains('active')) {
+            const prefix = currentContext.viewId.replace('-viz-content', '');
+            const btnId = `show-${prefix}-viz`;
+            const btn = document.getElementById(btnId);
+            if (btn) {
+                btn.click();
+                await new Promise(r => setTimeout(r, 150)); // Etwas mehr Puffer für deine Swipe-Animation
+            }
+        }
+    }
 
-    // --- FIX 4: Warten auf das Event, wenn Tab gewechselt wird ---
-	if (currentContext.clusterId && currentContext.viewId) {
-		const pane = document.getElementById(currentContext.viewId);
-		if (pane) {
-			const targetTab = pane.querySelector(`.topic-tab[data-cluster-id="${currentContext.clusterId}"]`);
+    // Sub-Tab Logik (Topic Tabs / Filter)
+    if (currentContext.clusterId && currentContext.viewId) {
+        const pane = document.getElementById(currentContext.viewId);
+        if (pane) {
+            const targetTab = pane.querySelector(`.topic-tab[data-cluster-id="${currentContext.clusterId}"]`);
 
-			if (targetTab && !targetTab.classList.contains('active')) {
-				
-                // Promise, das auf das Fertig-Event wartet
-				const renderPromise = new Promise(resolve => {
-                    // Fallback Timer, falls Event verschluckt wird
+            if (targetTab && !targetTab.classList.contains('active')) {
+                // Promise, das auf das Event der AJAX-Filterladung wartet
+                const renderPromise = new Promise(resolve => {
                     const timeout = setTimeout(resolve, 2000); 
 
-					const listener = (data) => {
-						if (data.clusterId === currentContext.clusterId) {
+                    const listener = (data) => {
+                        if (data.clusterId === currentContext.clusterId) {
                             clearTimeout(timeout);
-							resolve();
-						}
-					};
-					on(EVENTS.FILTERED_RESULTS_RENDERED, listener, { once: true });
-				});
+                            resolve();
+                        }
+                    };
+                    on(EVENTS.FILTERED_RESULTS_RENDERED, listener, { once: true });
+                });
 
-				targetTab.click();
+                targetTab.click();
 
-				// Warten, bis Inhalt geladen ist!
-				await renderPromise;
-				await new Promise(r => setTimeout(r, 50)); // Kurzer Render-Puffer
-			}
-		}
-	}
+                // Warten, bis Inhalt geladen ist
+                await renderPromise;
+                await new Promise(r => setTimeout(r, 100)); // Kurzer DOM-Reflow-Puffer
+            }
+        }
+    }
 
-	Highlighter.run(true);
+    // Wenn alle Tabs richtig gesetzt sind, starte den Highlighter
+    Highlighter.run(true);
 }
 
 
@@ -234,10 +229,12 @@ export function executeReading(targetElement) {
             contextState.clusterId = mainPane.querySelector('.topic-tab.active')?.dataset.clusterId || null;
         }
     }
-    speak(textContent, contextState);
+    
+    // NEU: Wir geben das exakte Element mit!
+    speak(textContent, contextState, targetElement);
 }
 
-async function speak(text, contextData = {}) {
+async function speak(text, contextData = {}, exactElement = null) {
     if (!text) return;
     stop(true); 
 
@@ -248,7 +245,7 @@ async function speak(text, contextData = {}) {
         clusterId: contextData.clusterId || null
     };
 
-    Highlighter.start(text);
+    Highlighter.start(text, exactElement); 
 
     isDownloading = true; isPaused = false; activeSources = [];
     if (uiProgressBar) { uiProgressBar.style.width = '0%'; uiProgressBar.classList.remove('is-finished'); uiProgressBar.style.transition = 'none'; }
@@ -274,7 +271,7 @@ async function speak(text, contextData = {}) {
         updateUI('playing');
         startProgressLoop();
         const reader = response.body.getReader();
-        let totalBytesRead = 0, leftoverBytes = new Uint8Array(0), isFirstChunkProcessed = false;
+        let totalBytesRead = 0, leftoverBytes = new Uint8Array(0);
         while (true) {
             const { done, value } = await reader.read();
             if (done) { isDownloading = false; appendSilenceTailAndFade(); checkIfFinished(); break; }
@@ -297,8 +294,7 @@ async function speak(text, contextData = {}) {
             const dataToProcess = combined.slice(0, processableLength);
             leftoverBytes = combined.slice(processableLength);
             if (dataToProcess.length > 0) {
-                scheduleChunk(dataToProcess, !isFirstChunkProcessed);
-                isFirstChunkProcessed = true;
+                scheduleChunk(dataToProcess);
             }
         }
     } catch (e) {
@@ -307,10 +303,10 @@ async function speak(text, contextData = {}) {
 }
 
 function pause() {
-    if (audioContext && !isPaused) {
-        const now = audioContext.currentTime;
-        masterGainNode.gain.cancelScheduledValues(now);
-        masterGainNode.gain.linearRampToValueAtTime(0, now + 0.15);
+	if (audioContext && !isPaused) {
+		const now = audioContext.currentTime;
+		masterGainNode.gain.cancelScheduledValues(now);
+		masterGainNode.gain.setValueAtTime(0, now);
         isPaused = true;
         updateUI('paused');
         updateMediaSessionState('paused');
@@ -321,12 +317,12 @@ function pause() {
 }
 
 function resume() {
-    if (audioContext && isPaused) {
-        if (pauseTimeoutId) clearTimeout(pauseTimeoutId);
-        const resumeAction = () => {
-            const now = audioContext.currentTime;
-            masterGainNode.gain.cancelScheduledValues(now);
-            masterGainNode.gain.linearRampToValueAtTime(1, now + 0.15);
+	if (audioContext && isPaused) {
+		if (pauseTimeoutId) clearTimeout(pauseTimeoutId);
+		const resumeAction = () => {
+			const now = audioContext.currentTime;
+			masterGainNode.gain.cancelScheduledValues(now);
+			masterGainNode.gain.setValueAtTime(1, now);
             isPaused = false;
             updateUI('playing');
             updateMediaSessionState('playing');
@@ -338,13 +334,13 @@ function resume() {
 }
 
 export function stop(preserveContext = false) {
-    if (abortController) { abortController.abort(); abortController = null; }
-    isDownloading = false;
-    if (audioContext) {
-        if (audioContext.state === 'suspended') audioContext.resume();
-        const now = audioContext.currentTime;
-        masterGainNode.gain.cancelScheduledValues(now);
-        masterGainNode.gain.linearRampToValueAtTime(0, now + 0.1);
+	if (abortController) { abortController.abort(); abortController = null; }
+	isDownloading = false;
+	if (audioContext) {
+		if (audioContext.state === 'suspended') audioContext.resume();
+		const now = audioContext.currentTime;
+		masterGainNode.gain.cancelScheduledValues(now);
+		masterGainNode.gain.setValueAtTime(0, now);
         [...activeSources].forEach(entry => { try { entry.source.stop(); } catch (e) {} });
         activeSources = [];
     }
@@ -363,19 +359,18 @@ export function stop(preserveContext = false) {
 }
 
 // Helpers...
-function scheduleChunk(uint8Array, isFirstChunk) {
-    if (!abortController || !audioContext) return;
-    const int16Count = uint8Array.length / 2;
-    const float32Data = new Float32Array(int16Count); 
-    const dataView = new DataView(uint8Array.buffer, uint8Array.byteOffset);
-    const VOLUME_BOOST = 1;
-    for (let i = 0; i < int16Count; i++) {
-        const int16 = dataView.getInt16(i * 2, true); 
-        let floatVal = (int16 < 0 ? int16 / 32768 : int16 / 32767) * VOLUME_BOOST;
-        if (floatVal > 1.0) floatVal = 1.0; if (floatVal < -1.0) floatVal = -1.0;
-        if (isFirstChunk && i < 500) floatVal *= (i / 500);
-        float32Data[i] = floatVal;
-    }
+function scheduleChunk(uint8Array) {
+	if (!abortController || !audioContext) return;
+	const int16Count = uint8Array.length / 2;
+	const float32Data = new Float32Array(int16Count);
+	const dataView = new DataView(uint8Array.buffer, uint8Array.byteOffset);
+	const VOLUME_BOOST = 1;
+	for (let i = 0; i < int16Count; i++) {
+		const int16 = dataView.getInt16(i * 2, true);
+		let floatVal = (int16 < 0 ? int16 / 32768 : int16 / 32767) * VOLUME_BOOST;
+		if (floatVal > 1.0) floatVal = 1.0; if (floatVal < -1.0) floatVal = -1.0;
+		float32Data[i] = floatVal;
+	}
     const audioBuffer = audioContext.createBuffer(1, float32Data.length, 22050);
     audioBuffer.getChannelData(0).set(float32Data);
     const source = audioContext.createBufferSource();
@@ -515,19 +510,24 @@ function initAudioContext() {
 
 function appendSilenceTailAndFade() {
     if (!audioContext || !masterGainNode) return;
-    const silentDuration = 0.2;
-    const silentBuffer = audioContext.createBuffer(1, 22050 * silentDuration, 22050);
-    const source = audioContext.createBufferSource();
-    source.buffer = silentBuffer; source.connect(masterGainNode);
-    if (nextStartTime < audioContext.currentTime) nextStartTime = audioContext.currentTime;
-    const tailStart = nextStartTime;
-    const fadeDuration = 0.15; const fadeStart = Math.max(audioContext.currentTime, tailStart - fadeDuration);
-    masterGainNode.gain.cancelScheduledValues(fadeStart);
-    masterGainNode.gain.linearRampToValueAtTime(0, tailStart);
-    source.start(tailStart); nextStartTime += silentDuration;
-    const sourceEntry = { source }; activeSources.push(sourceEntry);
-    source.onended = () => { const index = activeSources.indexOf(sourceEntry); if (index > -1) activeSources.splice(index, 1); checkIfFinished(); };
+	const silentDuration = 0.2;
+	const silentBuffer = audioContext.createBuffer(1, 22050 * silentDuration, 22050);
+	const source = audioContext.createBufferSource();
+	source.buffer = silentBuffer;
+	source.connect(masterGainNode);
+	if (nextStartTime < audioContext.currentTime) nextStartTime = audioContext.currentTime;
+	source.start(nextStartTime);
+	nextStartTime += silentDuration;
+
+	const sourceEntry = { source };
+	activeSources.push(sourceEntry);
+	source.onended = () => {
+		const index = activeSources.indexOf(sourceEntry);
+		if (index > -1) activeSources.splice(index, 1);
+		checkIfFinished();
+	};
 }
+
 
 function checkIfFinished() {
     if (isPaused) { setTimeout(checkIfFinished, 500); return; }

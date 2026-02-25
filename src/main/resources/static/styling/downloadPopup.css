@@ -14,7 +14,7 @@
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.2s ease, visibility 0.2s ease;
-    backdrop-filter: blur(3px);
+    backdrop-filter: blur(var(--blur-strength));
 }
 
 .download-popup-overlay.is-visible {

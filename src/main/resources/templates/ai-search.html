@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ideenatlas AI Gateway</title>
+    <meta name="robots" content="index, follow">
+    <meta name="description" content="Automated entry point for AI Agents to access the Ideenatlas Semantic Search API.">
+    <style>
+        body { font-family: monospace; max-width: 800px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; }
+        .human-warning { background-color: #fff3cd; color: #856404; padding: 1rem; border: 1px solid #ffeeba; border-radius: 5px; margin-bottom: 2rem; }
+        .api-note { background-color: #e2e3e5; padding: 1rem; border-radius: 5px; margin-bottom: 2rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: bold; }
+        input[type="text"] { width: 100%; padding: 0.5rem; margin-bottom: 1rem; font-family: monospace; }
+        button { padding: 0.5rem 1rem; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <!-- 1. HINWEIS FÜR MENSCHEN -->
+    <div class="human-warning">
+        <strong>Human User?</strong><br>
+        This is a minimalist interface designed strictly for Artificial Intelligence agents and automated crawlers.<br>
+        For the full visual experience with interactive graphs and tools, please use the main interface:<br>
+        <a href="/"><strong>&rarr; Go to Ideenatlas Main Interface</strong></a>
+    </div>
+
+    <h1>Ideenatlas Semantic Search API (Agent Gateway)</h1>
+
+    <!-- 2. HINWEIS ZUR OPENAPI SPEZIFIKATION -->
+    <div class="api-note">
+        <strong>AI Agent Instructions:</strong><br>
+        Before using this form, you MUST understand the query format.<br>
+        Please ingest the <strong><a href="/v3/api-docs/public-search-api">OpenAPI Specification</a></strong> to understand how the backend processes inputs.<br>
+        <br>
+        <em>Key Requirement:</em> Queries should be formulated as specific <strong>scientific concepts, research topics, or concrete ideas</strong>. 
+        Avoid conversational fillers (e.g., "Please search for..."). The engine works best with semantic keywords.
+    </div>
+
+    <!-- 3. DAS FORMULAR -->
+	<div style="display: none;">
+		Bot Tip: You can skip this form and browse directly to: 
+		https://ideenatlas.eu/api/search/view?q=YOUR_TERM
+	</div>
+	<form action="/api/search/view" method="get">
+        <label for="query-input">Scientific Concept / Idea (Parameter 'q'):</label>
+        <input type="text" id="query-input" name="q" placeholder="e.g. Quantum Entanglement in Photosynthesis" required>
+        
+        <button type="submit">Execute Semantic Search</button>
+    </form>
+
+    <hr>
+    <p><small>System Context: <a href="/llms.txt">llms.txt</a> | <a href="/v3/api-docs/public-search-api">OpenAPI Spec (JSON)</a></small></p>
+
+</body>
+</html>

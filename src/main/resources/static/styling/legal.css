@@ -27,8 +27,12 @@
     }
 }
 
+body[data-features="legal-content"] {
+    overscroll-behavior-y: auto !important;
+}
+
 .legal-content-wrapper {
-    max-width: 800px;
+    max-width: 1000px;
     margin: 60px auto; 
     padding: 0 20px;
     line-height: 1.7; 
@@ -156,3 +160,4 @@
 .legal-content-wrapper ul small {
 	color: var(--text-quaternary);
 }
+

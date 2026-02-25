@@ -1,6 +1,7 @@
 package de.simon.originality;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,8 +12,11 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
-import org.springframework.security.web.header.writers.StaticHeadersWriter; 
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
+import org.springframework.security.web.header.writers.StaticHeadersWriter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import jakarta.servlet.FilterChain;
@@ -27,8 +31,12 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http
+		
+	    .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+	    
 		// 1. CSRF
 		.csrf(csrf -> csrf
+	            .ignoringRequestMatchers("/api/**", "/v3/**", "/mcp/**", "/sse/**", "/ai/**")
 				.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
 				.csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
 				)
@@ -59,8 +67,8 @@ public class SecurityConfig {
                 		        "font-src 'self' data:; " +
                 		        "img-src 'self' data: blob:; " +
 
-                		        "connect-src 'self' https://ideenatlas.eu; " +
-
+                                "connect-src 'self' https://ideenatlas.eu http://localhost:* ws://localhost:*; " +
+                                
                 		        "media-src 'self' blob:; " +
                 		        "worker-src 'self' blob:; " +
                 		        "object-src 'none'; " +
@@ -85,10 +93,20 @@ public class SecurityConfig {
 
 		// 3. Autorisierung
 		.authorizeHttpRequests(authz -> authz
-				.requestMatchers("/dist/**", "/vendor/**", "/assets/**", "/favicon.ico", "/sw.js").permitAll()
+			    .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+				
+				.requestMatchers("/dist/**", "/vendor/**", "/assets/**").permitAll()
 				.requestMatchers("/query/**", "/results/**", "/").permitAll()
+				.requestMatchers("/favicon.ico", "/sw.js", "/robots.txt", "/llms.txt", "/sitemap.xml", "/openapi.json").permitAll()
 				.requestMatchers("/impressum", "/privacy", "/licenses").permitAll()
-				.requestMatchers("/api/**").permitAll()
+				.requestMatchers("/ai/**", "/api/**", "/mcp/**", "/sse/**").permitAll()
+			    
+			    .requestMatchers("/v3/api-docs/**").permitAll()    // Die JSON-Spezifikation
+			    .requestMatchers("/swagger-ui/**").permitAll()     // Die Swagger-UI Dateien
+			    .requestMatchers("/swagger-ui.html").permitAll()   // Der Einstieg zur Swagger-UI
+			    .requestMatchers("/.well-known/**").permitAll()
+
+			    .requestMatchers("/version").permitAll()
 				.requestMatchers("/error").permitAll()
 				.anyRequest().denyAll() 
 				);
@@ -96,6 +114,20 @@ public class SecurityConfig {
 		return http.build();
 	}
 
+	@Bean
+	CorsConfigurationSource corsConfigurationSource() {
+		CorsConfiguration configuration = new CorsConfiguration();
+		configuration.setAllowedOriginPatterns(List.of("*"));
+		configuration.setAllowedMethods(List.of("GET", "POST", "OPTIONS"));
+		configuration.setAllowedHeaders(List.of("*"));
+	    configuration.setAllowCredentials(true); 
+	    configuration.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type", "Connection", "Last-Event-ID"));
+	    
+		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+		source.registerCorsConfiguration("/mcp/**", configuration);
+		source.registerCorsConfiguration("/sse/**", configuration);
+		return source;
+	}
 	private static class CsrfCookieFilter extends OncePerRequestFilter {
 		@Override
 		protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)

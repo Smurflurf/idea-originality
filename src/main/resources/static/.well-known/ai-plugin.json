@@ -1,0 +1,17 @@
+{
+    "schema_version": "v1",
+    "name_for_human": "Ideenatlas Search",
+    "name_for_model": "ideenatlas",
+    "description_for_human": "Semantic search for scientific papers.",
+    "description_for_model": "Search scientific papers, clusters, and finding serendipitous connections via vector search.",
+    "auth": {
+        "type": "none"
+    },
+    "api": {
+        "type": "openapi",
+        "url": "https://ideenatlas.eu/v3/api-docs/public-search-api"
+    },
+    "logo_url": "https://ideenatlas.eu/favicon.ico",
+    "contact_email": "support@ideenatlas.eu",
+    "legal_info_url": "https://ideenatlas.eu/impressum"
+}

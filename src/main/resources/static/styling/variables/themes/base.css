@@ -201,7 +201,7 @@
     
     /* GLASS CONTAINER (query popup textcontainer) */
     --bg-popup-glass: rgba(41, 42, 45, 0.6);
-    --blur-strength: 5px;
+    --blur-strength: 1px;
 
     /* WOLKEN: Hellblau / Lila (Standard) */
     --cloud-rgb-1: 80, 100, 180;

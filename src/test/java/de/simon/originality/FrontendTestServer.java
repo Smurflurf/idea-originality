@@ -238,9 +238,11 @@ public class FrontendTestServer {
         private String resolveTemplateName(String path) {
             if (path.equals("/") || path.equals("/index.html")) return "index";
             if (path.equals("/impressum")) return "impressum";
+            if (path.equals("/api")) return "api";
             if (path.equals("/privacy")) return "privacy";
             if (path.equals("/licenses")) return "licenses";
             if (path.startsWith("/results/")) return "results";
+            if (path.startsWith("/ai")) return "ai-search";
             return "index";
         }
     }
@@ -299,8 +301,13 @@ public class FrontendTestServer {
             context.setVariable("serendipityResultsJson", objectMapper.writeValueAsString(data.getSerendipityClusters()));
             
             context.setVariable("queryVectorJson", "[0.1, 0.2]");
-            context.setVariable("crosshairCoordsJson", "{\"x\": 0.5, \"y\": 0.5}");
-            context.setVariable("embeddingBoundsJson", "{\"xmin\":0, \"xmax\":1, \"ymin\":0, \"ymax\":1}");
+            context.setVariable("crosshairCoordsJson", "{\"x\": 0.33671706983642535, \"y\": 0.7975206147115746}");
+            context.setVariable("embeddingBoundsJson", "{\n"
+            		+ "  \"xmax\": 22.108068466186523,\n"
+            		+ "  \"ymax\": 13.243766784667969,\n"
+            		+ "  \"xmin\": 1.0460971593856812,\n"
+            		+ "  \"ymin\": -1.9758409261703491\n"
+            		+ "}");
             
             context.setVariable("ownColorMapJson", objectMapper.writeValueAsString(data.getOwnColorMap()));
             context.setVariable("neighborsclusterColorMapJson", objectMapper.writeValueAsString(data.getNeighborColorMap()));
@@ -311,24 +318,92 @@ public class FrontendTestServer {
             context.setVariable("serendipityLabelsJson", objectMapper.writeValueAsString(data.getSerendipityLabels()));
             
             // Leere Defaults um JS-Fehler zu vermeiden
-            context.setVariable("contextLabelsJson", "[]");
-            context.setVariable("outlinesJson", "{}");
+            context.setVariable("contextLabelsJson",
+            		"[\n"
+            		+ "  {\n"
+            		+ "    \"clusterId\": \"all_vectors-1\",\n"
+            		+ "    \"text\": \"Social Sciences\",\n"
+            		+ "    \"x_data\": 5.0402512550354,\n"
+            		+ "    \"y_data\": 2.9425415992736816,\n"
+            		+ "    \"color\": \"#b6b6b6\",\n"
+            		+ "    \"fontSize_base\": 75,\n"
+            		+ "    \"fontFamily\": \"Roboto\",\n"
+            		+ "    \"fontWeight\": \"bold\"\n"
+            		+ "  },\n"
+            		+ "  {\n"
+            		+ "    \"clusterId\": \"all_vectors-2\",\n"
+            		+ "    \"text\": \"Computational Statistics and Machine Learning\",\n"
+            		+ "    \"x_data\": 11.418004035949707,\n"
+            		+ "    \"y_data\": 3.7369487285614014,\n"
+            		+ "    \"color\": \"#b6b6b6\",\n"
+            		+ "    \"fontSize_base\": 75,\n"
+            		+ "    \"fontFamily\": \"Roboto\",\n"
+            		+ "    \"fontWeight\": \"bold\"\n"
+            		+ "  },\n"
+            		+ "  {\n"
+            		+ "    \"clusterId\": \"all_vectors-0\",\n"
+            		+ "    \"text\": \"Biomedical and Life Sciences\",\n"
+            		+ "    \"x_data\": 8.226591110229492,\n"
+            		+ "    \"y_data\": 10.606851577758789,\n"
+            		+ "    \"color\": \"#b6b6b6\",\n"
+            		+ "    \"fontSize_base\": 75,\n"
+            		+ "    \"fontFamily\": \"Roboto\",\n"
+            		+ "    \"fontWeight\": \"bold\"\n"
+            		+ "  },\n"
+            		+ "  {\n"
+            		+ "    \"clusterId\": \"all_vectors-3\",\n"
+            		+ "    \"text\": \"Astrophysics and High Energy Physics\",\n"
+            		+ "    \"x_data\": 20.134428024291992,\n"
+            		+ "    \"y_data\": 3.389152765274048,\n"
+            		+ "    \"color\": \"#b6b6b6\",\n"
+            		+ "    \"fontSize_base\": 75,\n"
+            		+ "    \"fontFamily\": \"Roboto\",\n"
+            		+ "    \"fontWeight\": \"bold\"\n"
+            		+ "  },\n"
+            		+ "  {\n"
+            		+ "    \"clusterId\": \"all_vectors-4\",\n"
+            		+ "    \"text\": \"Mathematical Physics\",\n"
+            		+ "    \"x_data\": 15.92977523803711,\n"
+            		+ "    \"y_data\": 4.73584508895874,\n"
+            		+ "    \"color\": \"#b6b6b6\",\n"
+            		+ "    \"fontSize_base\": 75,\n"
+            		+ "    \"fontFamily\": \"Roboto\",\n"
+            		+ "    \"fontWeight\": \"bold\"\n"
+            		+ "  }\n"
+            		+ "]");
+            
+            context.setVariable("outlinesJson", "{"
+            		+ "\"all_vectors-1\": \"M 3.79,-1.96 L 3.43,-1.72 1.98,0.32 1.68,1.98 2.14,4.43 3.94,8.94 4.22,9.09 4.54,9.23 5.74,9.74 5.89,9.78 6.27,9.52 9.11,5.82 9.44,5.09 9.94,3.30 9.95,3.19 9.96,3.11 9.96,2.53 9.49,1.59 8.93,0.47 8.59,-0.17 8.55,-0.24 8.51,-0.28 8.51,-0.29 5.12,-1.77 3.87,-1.96 3.84,-1.96 3.79,-1.96 Z\","
+            	    + "\"all_vectors-2\": \"M 11.13,0.72 L 7.75,1.72 7.69,1.86 7.70,2.45 7.74,2.64 9.46,7.60 9.48,7.65 9.53,7.68 9.70,7.66 13.52,6.06 13.58,6.02 14.30,4.70 14.39,4.13 14.41,3.29 14.37,2.82 14.31,2.40 14.15,2.14 14.14,2.13 13.83,1.86 12.14,1.07 11.30,0.75 11.19,0.72 11.13,0.72 Z\","
+            	    + "\"all_vectors-0\": \"M 9.77,7.35 L 5.77,7.46 5.75,7.47 4.97,8.02 4.41,8.49 4.07,8.86 3.78,9.30 3.94,10.44 4.02,10.73 4.06,10.83 4.18,10.99 4.24,11.04 6.48,12.51 7.57,12.99 8.11,13.14 8.55,13.24 8.57,13.24 8.67,13.23 8.71,13.23 8.76,13.22 10.91,11.93 11.81,10.93 11.84,10.81 11.93,8.79 11.48,8.38 9.92,7.37 9.85,7.36 9.82,7.36 9.77,7.35 Z\","
+            	    + "\"all_vectors-1-1-1\": \"M 4.63,0.94 L 2.96,1.21 2.73,1.34 2.45,1.51 2.43,1.53 2.38,1.59 2.27,1.97 2.17,2.61 2.17,2.69 2.16,4.41 3.94,6.72 3.97,6.73 4.05,6.73 4.95,6.37 5.24,6.09 7.42,3.52 7.52,3.35 7.67,2.66 7.67,2.64 6.52,1.65 4.86,0.99 4.63,0.94 Z\","
+            	    + "\"all_vectors-2-1-1-2\": \"M 9.50,3.11 L 9.36,3.88 9.38,3.99 9.69,4.61 10.03,5.16 10.05,5.17 10.57,4.84 10.77,4.70 11.10,4.39 11.14,4.04 11.14,4.00 11.14,3.97 11.14,3.96 10.56,3.19 10.51,3.16 10.43,3.14 10.36,3.12 9.50,3.11 Z\","
+            	    + "\"all_vectors-1-1\": \"M 3.79,-1.96 L 3.45,-1.70 1.99,0.30 1.99,0.38 1.93,1.07 1.91,2.36 2.16,4.41 3.85,7.43 4.51,8.51 5.86,9.31 5.98,9.31 6.16,9.23 6.76,8.34 8.03,4.53 8.56,1.78 8.55,1.70 8.53,1.65 8.10,0.97 4.99,-1.65 4.82,-1.78 3.79,-1.96 Z\","
+            	    + "\"all_vectors-3\": \"M 20.29,0.49 L 20.23,0.50 17.32,2.78 17.30,2.85 17.29,3.67 17.39,5.53 17.47,5.59 18.28,6.12 18.78,6.17 20.17,6.16 20.44,6.12 20.68,5.91 20.83,5.76 20.91,5.66 20.93,5.61 22.11,2.12 22.11,1.97 22.07,1.81 22.03,1.64 22.01,1.60 21.71,1.15 21.40,0.83 21.29,0.75 20.68,0.52 20.31,0.49 20.29,0.49 Z\","
+            	    + "\"all_vectors-4\": \"M 15.79,0.89 L 14.38,0.92 14.36,0.92 12.05,1.66 12.02,1.87 13.22,5.93 13.26,6.04 13.67,7.19 13.73,7.34 14.06,7.94 14.10,7.97 14.51,8.31 14.54,8.34 17.15,8.33 17.31,8.25 17.36,8.18 18.78,5.81 18.80,5.75 18.97,5.01 18.87,4.55 18.41,3.32 18.20,3.05 16.66,1.21 16.35,1.01 16.14,0.92 16.10,0.91 15.79,0.89 Z\","
+            	    + "\"all_vectors-3-1\": \"M 20.40,2.18 L 17.73,2.93 17.53,3.10 17.48,3.35 17.50,3.67 17.51,3.71 17.96,5.26 18.26,6.07 18.28,6.12 18.78,6.17 20.17,6.16 20.44,6.12 20.68,5.91 20.83,5.76 20.91,5.66 20.93,5.61 21.19,2.77 21.12,2.71 20.40,2.18 Z\","
+            	    + "\"all_vectors-4-0\": \"M 16.10,0.91 L 15.97,0.92 15.90,0.92 15.10,1.14 14.42,1.46 14.27,1.54 13.37,2.21 13.27,2.46 14.03,6.60 14.37,7.06 14.43,7.11 14.48,7.15 14.94,7.42 15.15,7.42 15.51,7.33 15.58,7.22 17.77,3.01 17.76,2.97 16.73,1.31 16.66,1.21 16.35,1.01 16.14,0.92 16.10,0.91 Z\","
+            	    + "\"all_vectors-2-1-0-1\": \"M 12.47,1.65 L 12.46,1.65 11.39,2.26 10.90,2.59 10.67,2.80 10.64,2.85 10.88,3.27 10.92,3.31 11.37,3.27 11.56,3.16 12.42,2.49 12.46,2.45 12.82,2.06 12.84,1.98 12.82,1.74 12.78,1.71 12.72,1.68 12.56,1.65 12.47,1.65 Z\""
+            	    + "}");
 
         } catch (Exception e) { 
             e.printStackTrace(); 
         }
 
         context.setVariable("viz_own_available", true);
-        context.setVariable("viz_own_aspect_ratio", 1);
+        context.setVariable("viz_own_aspect_ratio", "" + MockDataGenerator.aspectRatio);
         context.setVariable("viz_neighborscluster_available", true);
-        context.setVariable("viz_neighborscluster_aspect_ratio", 1);
+        context.setVariable("viz_neighborscluster_aspect_ratio", "" + MockDataGenerator.aspectRatio);
         context.setVariable("viz_serendipity_available", true);
-        context.setVariable("viz_serendipity_aspect_ratio", 1);
+        context.setVariable("viz_serendipity_aspect_ratio", "" + MockDataGenerator.aspectRatio);
         
         context.setVariable("contextPrefix", "own");
     }
 
     static class MockDataGenerator {
+    	public static int width = 3000;
+    	public static int height = 2167;
+    	public static double aspectRatio = (double)height / (double)width;
         
         /**
          * Erzeugt eine Fake-Hierarchie (Breadcrumbs) für die Anzeige auf den Karten.
@@ -420,14 +495,19 @@ public class FrontendTestServer {
             map.put("id", id);
             map.put("score", score);
             map.put("contentUrl", "#");
-            map.put("relativeX", 0.5);
-            map.put("relativeY", 0.5);
+            map.put("relativeX", Math.random());
+            map.put("relativeY", Math.random());
             map.put("clusterId", clusterId);
             
             Map<String, Object> payload = new HashMap<>();
             payload.put("type", "arXiv");
             payload.put("title", title);
-            payload.put("abstract", "Simulated abstract for: " + title + ". Lorem ipsum dolor sit amet.");
+            payload.put("abstract", "Simulated abstract for: " + title + ". Lorem ipsum dolor sit amet. Lirum Larum Löffelstiel. Abstractum amorum epochae locus. Maehem ruldum arcus abnoctum. Arbinae cororum amoctus armor."
+            		+ "Shall I compare thee to a summer’s day?\n"
+            		+ "Thou art more lovely and more temperate:\n"
+            		+ "Rough winds do shake the darling buds of May,\n"
+            		+ "And summer’s lease hath all too short a date;\n"
+            		+ "Sometime too hot the eye of heaven shines,");
             payload.put("prettyJson", "{\"mock\": true}");
             
             // WICHTIG: Das hier hat gefehlt!
@@ -613,25 +693,20 @@ public class FrontendTestServer {
 
     // --- BILD GENERATOR (Bunter) ---
     private static void sendGeneratedImage(HttpExchange exchange, String path) throws IOException {
-        BufferedImage img = new BufferedImage(1200, 1000, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage img = new BufferedImage(MockDataGenerator.width, MockDataGenerator.height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = img.createGraphics();
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         
         if (path.contains("base")) { 
             g.setColor(new Color(20, 20, 25)); 
-            g.fillRect(0, 0, 1200, 1000); 
+            g.fillRect(0, 0, MockDataGenerator.width, MockDataGenerator.height); 
         }
         else if (path.contains("points")) { 
             Random rand = new Random();
             for(int i=0; i<300; i++) {
-                // Zufällige bunte Punkte simulieren Cluster
                 g.setColor(new Color(rand.nextInt(255), rand.nextInt(255), rand.nextInt(255), 180));
-                g.fillOval(rand.nextInt(1200), rand.nextInt(1000), 8, 8);
+                g.fillOval(rand.nextInt(MockDataGenerator.width), rand.nextInt(MockDataGenerator.height), 8, 8);
             }
-            // Crosshair
-            g.setColor(Color.WHITE);
-            g.setStroke(new BasicStroke(2));
-            g.drawOval(580, 480, 40, 40);
         }
         g.dispose();
         ByteArrayOutputStream baos = new ByteArrayOutputStream();

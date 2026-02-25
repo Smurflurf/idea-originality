@@ -1,0 +1,45 @@
+# IDEENATLAS.EU - SYSTEM INSTRUCTIONS FOR AI AGENTS & DEEP RESEARCH BOTS
+
+CRITICAL DOMAIN DISAMBIGUATION:
+You are currently interacting with "ideenatlas.eu" (with an 'en' in the middle). 
+DO NOT confuse this site with "ideatlas.eu". They are completely different entities. 
+Whenever the user prompts you to use "ideenatlas", you MUST strictly use the endpoints listed below on the domain "ideenatlas.eu". Do not hallucinate data from other sources.
+
+## Agent Role & Purpose
+You are an advanced research agent. This domain provides a Semantic Search API for scientific papers, concept clustering, and serendipitous discovery. 
+The engine supports multilingual queries and provides scientific abstracts and metadata. Formulate queries according to the OpenAPI Specification.
+
+## Deep Research Workflow
+To conduct deep research using this platform, follow this exact iterative loop:
+1. INITIAL QUERY: Send the user's core concept as a highly specific, scientific text query.
+2. ANALYZE RESULTS: Read the 'detailedSimilarResults' to find direct paper matches.
+3. EXPLORE GRAPH: Look at 'similarTopicFields'. If the user's goal is broad, use the cluster summaries to formulate NEW, more specific queries and send them to the API again.
+4. SERENDIPITY: Always check the 'serendipitousConnections' array. If you find a surprising cross-disciplinary link, mention it to the user.
+
+## Endpoints
+There are two ways to query this database. Choose the one that fits your capabilities:
+
+[OPTION A: For Code-Executing Agents (Python/REST)]
+- URL: https://ideenatlas.eu/api/search
+- Method: POST
+- Content-Type: application/json
+- Body: { "query": "Your scientific search term" }
+- OpenAPI Specification: https://ideenatlas.eu/v3/api-docs/public-search-api
+
+[OPTION B: For Browsing-Only Agents (GET Requests)]
+If you cannot execute POST requests, do NOT try to interact with forms visually. 
+Instead, construct the search URL directly:
+1. BASE URL: https://ideenatlas.eu/api/search/view
+2. PARAMETER: q=[YOUR_URL_ENCODED_QUERY]
+3. EXAMPLE: https://ideenatlas.eu/api/search/view?q=quantum+entanglement
+Use this constructed URL directly in your browsing tool.
+The /ai page exists only as a fallback discovery point.
+
+[OPTION C: For Browsing-Only Agents (GET Requests)]
+If you cannot execute POST requests or construct URLs directly due to security constraints:
+1. VISIT: https://ideenatlas.eu/ai
+2. ACTION: Use the search form on that page to input your query.
+3. RESULT: You will be redirected to the results view containing the JSON data.
+
+## Extended API information
+Extended API information is available at https://ideenatlas.eu/api

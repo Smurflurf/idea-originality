@@ -24,40 +24,66 @@ function temporarilyRevealAll(doc) {
 // --- INTELLIGENT CACHE/NETWORK FETCHING ---
 
 async function getFromCacheOrNetwork(url) {
-	const absoluteUrl = new URL(url, document.baseURI).href;
-	if ('caches' in window) {
-		try {
-			const keys = await caches.keys();
-			for (const key of keys) {
-				if (key.includes('static') || key.includes('job')) {
-					const cache = await caches.open(key);
-					const cachedRes = await cache.match(absoluteUrl, { ignoreSearch: true });
-					if (cachedRes) return await cachedRes.text();
-				}
-			}
-		} catch (e) {}
-	}
-	const res = await fetch(absoluteUrl, { mode: 'cors' });
-	if (!res.ok) throw new Error(`HTTP ${res.status}`);
-	return await res.text();
+    const absoluteUrl = new URL(url, document.baseURI).href;
+    
+    // VERSUCH 1: Standard Fetch (geht durch den Service Worker!)
+    // Wir nutzen 'no-cache', damit der Browser nicht seinen lokalen HTTP-Disk-Cache nutzt,
+    // sondern den Service Worker (oder das Netzwerk) fragt.
+    try {
+        const res = await fetch(absoluteUrl, { cache: 'no-cache' });
+        if (res.ok) {
+            return await res.text();
+        }
+    } catch (e) {
+        console.warn(`[Bundler] Fetch failed for ${url}, trying manual cache fallback...`);
+    }
+
+    // VERSUCH 2: Manueller Cache-Zugriff (nur als absoluter Notfall, falls SW tot ist)
+    if ('caches' in window) {
+        try {
+            const keys = await caches.keys();
+            for (const key of keys) {
+                // Nur Caches nutzen, die explizit zur AKTUELLEN Seite gehören könnten
+                // (Hier wäre es besser, nur den statischen Cache zu prüfen, aber wir kennen den Namen hier nicht)
+                if (key.includes('static') || key.includes('job')) {
+                    const cache = await caches.open(key);
+                    const cachedRes = await cache.match(absoluteUrl, { ignoreSearch: true });
+                    if (cachedRes) return await cachedRes.text();
+                }
+            }
+        } catch (e) {}
+    }
+
+    throw new Error(`Resource not found: ${url}`);
 }
 
 
 async function getBlobFromCacheOrNetwork(url) {
-	const absoluteUrl = new URL(url, document.baseURI).href;
-	if ('caches' in window) {
-		try {
-			const keys = await caches.keys();
-			for (const key of keys) {
-				const cache = await caches.open(key);
-				const cachedRes = await cache.match(absoluteUrl, { ignoreSearch: true });
-				if (cachedRes) return await cachedRes.blob();
-			}
-		} catch (e) {}
-	}
-	const res = await fetch(absoluteUrl, { cache: 'force-cache' });
-	if (!res.ok) throw new Error(`Network error`);
-	return await res.blob();
+    const absoluteUrl = new URL(url, document.baseURI).href;
+
+    // VERSUCH 1: Fetch via Service Worker
+    try {
+        const res = await fetch(absoluteUrl, { cache: 'no-cache' });
+        if (res.ok) {
+            return await res.blob();
+        }
+    } catch (e) {
+        console.warn(`[Bundler] Blob fetch failed for ${url}, trying fallback...`);
+    }
+
+    // VERSUCH 2: Manueller Cache Fallback
+    if ('caches' in window) {
+        try {
+            const keys = await caches.keys();
+            for (const key of keys) {
+                const cache = await caches.open(key);
+                const cachedRes = await cache.match(absoluteUrl, { ignoreSearch: true });
+                if (cachedRes) return await cachedRes.blob();
+            }
+        } catch (e) {}
+    }
+    
+    throw new Error(`Network error for blob: ${url}`);
 }
 
 async function resourceToDataURL(url) {
@@ -305,15 +331,30 @@ async function createSelfContainedHTML() {
     
     const currentTheme = document.documentElement.getAttribute('data-theme');
     if (currentTheme) clonedDocument.documentElement.setAttribute('data-theme', currentTheme);
-    const currentLang = document.documentElement.lang;
-    if (currentLang) clonedDocument.documentElement.setAttribute('lang', currentLang);
+	const currentLang = document.documentElement.lang;
+	if (currentLang) clonedDocument.documentElement.setAttribute('lang', currentLang);
 
-    const popupsToRemove = ['.download-popup-overlay', '#download-popup-overlay', '.recorder-overlay', '.query-popup-modal', '.confirmation-dialog-overlay'];
+	const popupsToRemove = [
+		'.download-popup-overlay',
+		'#download-popup-overlay',
+		'.recorder-overlay',
+		'.query-popup-modal',
+		'.confirmation-dialog-overlay',
+		'#tts-floating-player', 
+		'.custom-translate-cursor'
+	];
     popupsToRemove.forEach(selector => clonedDocument.querySelectorAll(selector).forEach(el => el.remove()));
 
     const menuElements = ['#menu-trigger', '#sidebar-menu', '#menu-overlay', '.sidebar-footer'];
     menuElements.forEach(selector => clonedDocument.querySelectorAll(selector).forEach(el => el.remove()));
 
+	const highlightClasses = ['is-reading', 'is-paused', 'is-translating', 'translate-highlight'];
+	highlightClasses.forEach(cls => {
+		clonedDocument.querySelectorAll(`.${cls}`).forEach(el => el.classList.remove(cls));
+	});
+	clonedDocument.body.classList.remove('translate-mode-active');
+	clonedDocument.body.classList.remove('translate-mode-active');
+	
 	clonedDocument.body.classList.remove('is-loading', 'is-swiping-active', 'no-scroll', 'modal-open', 'is-header-hidden');
     clonedDocument.body.style.overflow = '';
     clonedDocument.body.style.paddingRight = ''; 
@@ -433,15 +474,44 @@ async function createSelfContainedHTML() {
         buttonInClone.classList.remove('loading'); 
     }
 
-	let bannerText = t('download.offline_banner') || 'Archived Version';
+	let bannerText = t('download.offline_banner') || 'Archived version.';
 
-    const notice = clonedDocument.createElement('div');
-    notice.textContent = bannerText;
-    notice.style.cssText = 'position:fixed; bottom:0; left:0; width:100%; background:#333; color:#eee; text-align:center; padding:5px; font-size:12px; z-index:9999; font-family: sans-serif;';
-    clonedDocument.body.appendChild(notice);
+	const notice = clonedDocument.createElement('div');
+	notice.id = 'offline-archive-banner';
+	notice.style.cssText = `
+		    position: fixed; 
+	        bottom: 0;
+	        left: 0;
+		    width: 100%; 
+		    background: rgba(30, 30, 30, 0.95); 
+		    color: #eee; 
+		    text-align: center; 
+		    padding: 12px 40px; 
+		    font-size: 13px; 
+		    z-index: 2147483647; 
+		    font-family: sans-serif;
+	        box-shadow: 0 -4px 15px rgba(0,0,0,0.4);
+	        display: flex;
+	        justify-content: center;
+	        align-items: center;
+	        backdrop-filter: blur(5px);
+		`;
+	notice.innerHTML = `
+	        <span>${bannerText}</span>
+	        <button id="offline-banner-close" aria-label="Close" style="position: absolute; right: 15px; background: transparent; border: none; color: #aaa; font-size: 20px; cursor: pointer; padding: 5px 10px; line-height: 1;">&times;</button>
+	    `;
+	clonedDocument.body.appendChild(notice);
 
-    console.log("[Bundler] HTML generation complete.");
-    return `<!DOCTYPE html>${clonedDocument.documentElement.outerHTML}`;
+	const closeScript = clonedDocument.createElement('script');
+	closeScript.textContent = `
+	        document.getElementById('offline-banner-close')?.addEventListener('click', function() { 
+	            document.getElementById('offline-archive-banner')?.remove(); 
+	        });
+	    `;
+	clonedDocument.body.appendChild(closeScript);
+
+	console.log(" HTML generation complete.");
+	return `<!DOCTYPE html>${clonedDocument.documentElement.outerHTML}`;
 }
 
 function triggerDownload(blob, fileName) {
@@ -578,11 +648,39 @@ function createDownloadPopup() {
 	document.getElementById('download-json-choice-btn').addEventListener('click', () => handleDownloadChoice('json'));
 }
 
-function showDownloadPopup() { if (!activePopup) createDownloadPopup(); setTimeout(() => activePopup.classList.add('is-visible'), 10); }
+// Hilfsfunktion zum Sperren/Freigeben des Hintergrunds
+function setBackgroundScroll(locked) {
+    const contentSelectors = ['.idea-form', '.results-container', '.legal-content-wrapper', '.no-results-message'];
+    contentSelectors.forEach(selector => {
+        const el = document.querySelector(selector);
+        if (el) el.inert = locked; // Verhindert Klicks/Tabbing im Hintergrund
+    });
+
+    if (locked) {
+        document.body.style.overflow = 'hidden';
+        document.documentElement.style.overflow = 'hidden';
+        document.body.style.touchAction = 'none';
+    } else {
+        document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
+        document.body.style.touchAction = '';
+	}
+}
+
+function showDownloadPopup() {
+	if (!activePopup) createDownloadPopup();
+
+	setBackgroundScroll(true);
+
+	setTimeout(() => activePopup.classList.add('is-visible'), 10);
+}
 
 function hideDownloadPopup() {
 	if (!activePopup) return;
 	activePopup.classList.remove('is-visible');
+
+	setBackgroundScroll(false);
+
 	setTimeout(() => { if (activePopup) { activePopup.remove(); activePopup = null; } }, 300);
 }
 
@@ -610,7 +708,9 @@ async function handleDownloadChoice(format) {
 		console.error(error);
 		alert("Export failed: " + error.message);
 	} finally {
-		button.disabled = false; icon.className = originalIconClass; hideDownloadPopup();
+		button.disabled = false; 
+		icon.className = originalIconClass; 
+		hideDownloadPopup();
 	}
 }
 

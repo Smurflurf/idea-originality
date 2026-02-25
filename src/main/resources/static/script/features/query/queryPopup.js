@@ -1,5 +1,5 @@
 import * as gravitySpinner from '/script/animation/gravitySpinner.js';
-import { initTextAnimator, prepareTextExplosion, triggerPreparedExplosion, resizeAndScaleCanvas } from '/script/animation/textAnimator.js';
+import { initTextAnimator, prepareTextExplosion, triggerPreparedExplosion, resizeAndScaleCanvas, stopTextAnimator } from '/script/animation/textAnimator.js';
 import { animConfig } from '/script/animation/animationConfig.js';
 import { sendQuery } from '/script/features/query/handleQuery.js';
 import { t, applyGeneralTranslations } from '/script/core/localization.js';
@@ -200,6 +200,7 @@ export function hideQueryPopup() {
 		if (menuTrigger) menuTrigger.classList.remove('is-hidden');
 		
         gravitySpinner.stop();
+		stopTextAnimator();
         activePopup.remove();
         activePopup = null;
     }

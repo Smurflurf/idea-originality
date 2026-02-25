@@ -6,12 +6,12 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.5.2</version>
+		<version>4.1.0-M2</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>de.simon</groupId>
 	<artifactId>originality</artifactId>
-	<version>4.1.218</version>
+	<version>4.1.267</version>
 	<name>originality</name>
 	<description>A tool to find relevant and unexpected papers.</description>
 	<url />
@@ -28,6 +28,7 @@
 		<url />
 	</scm>
 	<properties>
+		<mcp-bom-scope>import</mcp-bom-scope>
 		<java.version>21</java.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
@@ -36,19 +37,88 @@
 			<id>jitpack.io</id>
 			<url>https://jitpack.io</url>
 		</repository>
+
+		<repository>
+			<name>Central Portal Snapshots</name>
+			<id>central-portal-snapshots</id>
+			<url>https://central.sonatype.com/repository/maven-snapshots/</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+
+		<repository>
+			<id>oss-snapshots</id>
+			<name>Sonatype OSS Snapshots</name>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+
+		<repository>
+			<id>oss-snapshots-s01</id>
+			<name>Sonatype OSS Snapshots S01</name>
+			<url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+
+		<repository>
+			<id>spring-milestones</id>
+			<name>Spring Milestones</name>
+			<url>https://repo.spring.io/milestone</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+
+		<repository>
+			<id>spring-snapshots</id>
+			<name>Spring Snapshots</name>
+			<url>https://repo.spring.io/snapshot</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+		</repository>
 	</repositories>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>io.modelcontextprotocol.sdk</groupId>
+				<artifactId>mcp-bom</artifactId>
+				<version>1.0.0-RC3</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			
+			<dependency>
+				<groupId>org.springframework.ai</groupId>
+				<artifactId>spring-ai-bom</artifactId>
+				<version>2.0.0-SNAPSHOT</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 	<dependencies>
-	
-	    
-		<!-- OGNL: Wird vom "nackten" Thymeleaf im Testserver benötigt (Spring nutzt stattdessen SpEL) -->
-		<dependency>
+		<!-- OGNL: Wird vom "nackten" Thymeleaf im Testserver benötigt (Spring
+		nutzt stattdessen SpEL) -->
+		<dependency>	
 			<groupId>ognl</groupId>
 			<artifactId>ognl</artifactId>
 			<version>3.3.4</version>
 			<scope>test</scope>
 		</dependency>
 
-		<!-- Javassist: Wird von OGNL benötigt (wird oft transitiv geladen, aber sicher ist sicher) -->
+		<!-- Javassist: Wird von OGNL benötigt (wird oft transitiv geladen, aber
+		sicher ist sicher) -->
 		<dependency>
 			<groupId>org.javassist</groupId>
 			<artifactId>javassist</artifactId>
@@ -56,6 +126,17 @@
 			<scope>test</scope>
 		</dependency>
 
+		<dependency>
+            <groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-starter-mcp-server-webmvc</artifactId>
+			<!-- Wir excluden das problematische Community-Paket, falls es nicht im RC3 enthalten ist -->
+		</dependency>
+
+		<!-- Für die asynchrone Verarbeitung (optional, aber empfohlen für ChatGPT Timeouts) -->
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-core</artifactId>
+        </dependency>
 
 		<dependency>
 			<groupId>com.googlecode.soundlibs</groupId>
@@ -71,9 +152,9 @@
 		<dependency>
 			<groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
 			<artifactId>owasp-java-html-sanitizer</artifactId>
-			<version>20240325.1</version>
+			<version>20260102.1</version>
 		</dependency>
-  
+
 		<dependency>
 			<groupId>de.rototor.snuggletex</groupId>
 			<artifactId>snuggletex-core</artifactId>
@@ -82,22 +163,22 @@
 		<dependency>
 			<groupId>io.qdrant</groupId>
 			<artifactId>client</artifactId>
-			<version>1.16.2</version>
+			<version>1.17.0</version>
 		</dependency>
 		<dependency>
 			<groupId>io.grpc</groupId>
 			<artifactId>grpc-protobuf</artifactId>
-			<version>1.78.0</version>
+			<version>1.79.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.protobuf</groupId>
 			<artifactId>protobuf-java</artifactId>
-			<version>4.33.2</version>
+			<version>4.33.5</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.genai</groupId>
 			<artifactId>google-genai</artifactId>
-			<version>1.34.0</version>
+			<version>1.40.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -121,6 +202,12 @@
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>3.0.1</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
 			<groupId>org.jgrapht</groupId>
 			<artifactId>jgrapht-core</artifactId>
 			<version>1.5.2</version>
@@ -140,7 +227,7 @@
 	</dependencies>
 
 	<build>
-		 <resources>
+		<resources>
 			<resource>
 				<directory>src/main/resources</directory>
 				<filtering>true</filtering>
@@ -174,7 +261,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-resources-plugin</artifactId>
-				<version>3.3.1</version>
 				<configuration>
 					<delimiters>
 						<delimiter>@</delimiter>

@@ -1,2 +1,80 @@
+# -----------------------------------------------------------------------------
+# ROBOTS.TXT FOR IDEENATLAS SEMANTIC SEARCH API
+# -----------------------------------------------------------------------------
+# Policy Summary:
+# 1. LIVE RAG & BROWSING: ALLOWED. 
+# 2. INDEXING: GENERALLY ALLOWED.
+# 3. AI TRAINING/SCRAPING: STRICTLY PROHIBITED.
+# -----------------------------------------------------------------------------
+
+# --- SECTION 1: GLOBAL LLM DISCOVERY (ALWAYS ALLOWED) ---
+# We allow every bot to see these discovery files so they know how to 
+# use the API correctly instead of scraping the HTML.
 User-agent: *
+Allow: /robots.txt
+Allow: /llms.txt
+Allow: /sitemap.xml
+Allow: /ai
+Allow: /.well-known/ai-plugin.json
+Allow: /v3/api-docs/
+Allow: /api/search
+Allow: /api/search/view
+
+# --- SECTION 2: BLOCK AI TRAINING CRAWLERS ---
+# These bots are known to harvest data for model training. 
+# We block them from the main site but they still see the "Allow" rules above.
+# For testing purposes, some crawlers are 
+
+User-agent: GPTBot
 Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: Applebot-Extended
+Disallow: /
+
+User-agent: FacebookBot
+Disallow: /
+
+User-agent: meta-externalagent
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: Diffbot
+Disallow: /
+
+User-agent: ImagesiftBot
+Disallow: /
+
+# --- SECTION 3: ALLOW LIVE RAG AGENTS ---
+# These user-agents explicitly identify real-time retrieval on behalf of a user.
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Cohere-rag
+Allow: /
+
+# --- SECTION 4: GENERAL FALLBACK ---
+# We allow standard access to ensure tools like Google Gemini (via Googlebot)
+# and Microsoft Copilot (via Bingbot) can function for grounding.
+User-agent: *
+Disallow: /admin
+Disallow: /query/
+# We allow access to /results/, so bots see the 'noindex' tag
+Allow: /results/ 
+Allow: /
+
+# --- SITEMAP DISCOVERY ---
+Sitemap: https://ideenatlas.eu/sitemap.xml

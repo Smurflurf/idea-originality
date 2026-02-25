@@ -259,6 +259,13 @@ function getLanguages() {
 function renderLanguageList(displayLocale) {
     const container = document.getElementById('translate-language-list');
     if (!container) return;
+
+    const submenu = document.getElementById('translate-submenu');
+    let topActiveBtn = null;
+    if (submenu) {
+        topActiveBtn = Array.from(submenu.querySelectorAll('.language-option')).find(btn => !container.contains(btn));
+    }
+
     const languages = getLanguages();
     if (languages.length === 0) {
         container.innerHTML = `<div style="padding:10px; color:var(--text-disabled); text-align:center; font-size:0.8rem;"><i>Offline / No Data</i></div>`;
@@ -269,54 +276,101 @@ function renderLanguageList(displayLocale) {
 
     let uiLocale = displayLocale;
     if (!uiLocale || uiLocale === 'system') uiLocale = navigator.language || 'en';
-    let uiFormatter;
+    
+    let uiFormatter, englishFormatter;
     try { uiFormatter = new Intl.DisplayNames([uiLocale], { type: 'language' }); } catch (e) { uiFormatter = { of: (code) => code }; }
+    try { englishFormatter = new Intl.DisplayNames(['en'], { type: 'language' }); } catch (e) { englishFormatter = { of: (code) => code }; }
 
-    container.innerHTML = '';
-    const fragment = document.createDocumentFragment();
-    const renderedList = languages.map(lang => {
+    const fullList = languages.map(lang => {
         const code = lang.code;
         let displayName = lang.name;
+        
+        // Ein Set filtert automatisch doppelte Begriffe raus
+        const uniqueTerms = new Set([code, lang.name]);
+
+        // 1. Name in der aktuellen UI-Sprache (z.B. "Französisch")
         try {
-            const formattedUiName = uiFormatter.of(code);
-            if (formattedUiName && formattedUiName.toLowerCase() !== code.toLowerCase()) displayName = formattedUiName;
+            const uiName = uiFormatter.of(code);
+            if (uiName && uiName.toLowerCase() !== code.toLowerCase()) {
+                displayName = uiName; // Das zeigen wir im UI an
+                uniqueTerms.add(uiName);
+            }
         } catch(e) {}
-        const uniqueTerms = new Set([code, lang.name, displayName]);
+
+        // 2. Nativer Name (wie die Sprache sich selbst nennt, z.B. "Français")
+        try {
+            const nativeFormatter = new Intl.DisplayNames([code], { type: 'language' });
+            const nativeName = nativeFormatter.of(code);
+            if (nativeName) uniqueTerms.add(nativeName);
+        } catch(e) {}
+
+        // 3. Englischer Name (als globaler Fallback, z.B. "French")
+        try {
+            const enName = englishFormatter.of(code);
+            if (enName) uniqueTerms.add(enName);
+        } catch(e) {}
+
         const searchString = Array.from(uniqueTerms).filter(Boolean).join(" ").toLowerCase();
         return { code, displayName, searchString };
     });
 
-    // "System" Button manuell hinzufügen
-    renderedList.unshift({
+    fullList.unshift({
         code: 'system',
-        displayName: t('themes.system') || 'System Default', // Nutzt I18N für Konsistenz
+        displayName: t('themes.system') || 'System Default',
         searchString: 'system default automatic',
     });
 
-    renderedList.sort((a, b) => {
-        if (a.code === activeSetting) return -1;
-        if (b.code === activeSetting) return 1;
-        if (a.code === 'system') return -1; // System immer oben nach dem aktiven
+    let activeIndex = fullList.findIndex(item => item.code === activeSetting);
+    let activeItem = fullList[activeIndex];
+    
+    if (!activeItem) {
+        activeItem = fullList.find(item => item.code === 'system');
+        activeIndex = fullList.indexOf(activeItem);
+    }
+
+    if (topActiveBtn && activeItem) {
+        topActiveBtn.dataset.lang = activeItem.code;
+        topActiveBtn.dataset.search = activeItem.searchString;
+        const iconClass = activeItem.code === 'system' ? 'fa-solid fa-desktop' : 'fa-solid fa-globe';
+        
+        topActiveBtn.innerHTML = `
+            <span>
+                <i class="${iconClass}" style="font-size: 0.8em; opacity: 0.7;"></i> 
+                <span>${activeItem.displayName}</span>
+            </span>
+            <i class="fa-solid fa-check check-icon" style="opacity: 1"></i>
+        `;
+    }
+
+    if (activeIndex > -1) {
+        fullList.splice(activeIndex, 1);
+    }
+
+    fullList.sort((a, b) => {
+        if (a.code === 'system') return -1;
         if (b.code === 'system') return 1;
         return a.displayName.localeCompare(b.displayName);
     });
 
-    renderedList.forEach(item => {
+    container.innerHTML = '';
+    const fragment = document.createDocumentFragment();
+    
+    fullList.forEach(item => {
         const btn = document.createElement('button');
         btn.className = 'theme-submenu-item language-option';
         btn.dataset.lang = item.code;
         btn.dataset.search = item.searchString;
         const iconClass = item.code === 'system' ? 'fa-solid fa-desktop' : 'fa-solid fa-globe';
-        const isActive = item.code === activeSetting;
 
         btn.innerHTML = `
             <span>
                 <i class="${iconClass}" style="font-size: 0.8em; opacity: 0.7;"></i> 
                 <span>${item.displayName}</span>
             </span>
-            <i class="fa-solid fa-check check-icon" style="opacity: ${isActive ? '1' : '0'}"></i>
+            <i class="fa-solid fa-check check-icon" style="opacity: 0"></i>
         `;
         fragment.appendChild(btn);
     });
+    
     container.appendChild(fragment);
 }

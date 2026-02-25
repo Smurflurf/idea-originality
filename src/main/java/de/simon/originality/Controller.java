@@ -29,18 +29,20 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+import org.springframework.web.servlet.view.RedirectView;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.context.WebContext;
@@ -49,12 +51,15 @@ import org.thymeleaf.web.servlet.JakartaServletWebApplication;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.primitives.Floats;
 
 import de.simon.originality.comparators.ClusterIdComparator;
+import de.simon.originality.dto.ApiManifestDto;
+import de.simon.originality.dto.ApiSearchRequestDto;
+import de.simon.originality.dto.JsonApiResponseDto;
 import de.simon.originality.magicquery.DataPathService;
 import de.simon.originality.magicquery.MagicNumbers;
+import de.simon.originality.magicquery.client_interact.JsonApiSearchService;
 import de.simon.originality.magicquery.client_interact.QueryProcessingService;
 import de.simon.originality.magicquery.client_interact.ServerSentEventService;
 import de.simon.originality.magicquery.cluster_analysis.graph.KnowledgeGraphService;
@@ -64,6 +69,13 @@ import de.simon.originality.magicquery.python.PythonService;
 import de.simon.originality.magicquery.visualization.LabelData;
 import de.simon.originality.magicquery.visualization.VisualizationLayer;
 import de.simon.originality.magicquery.visualization.VisualizationManager;
+import de.simon.originality.service.LegalPageRendererService;
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -75,8 +87,10 @@ public class Controller {
 	private final TemplateEngine templateEngine;
 	private final HtmlSanitizerService htmlSanitizer; 
     private final PythonService pythonService;
+    private final JsonApiSearchService jsonApiSearchService;
     private final ExecutorService translationExecutor;
-	public record FilteredSearchRequest(List<Float> queryVector, String clusterId) {}
+	private final LegalPageRendererService legalPageRenderer;
+    public record FilteredSearchRequest(List<Float> queryVector, String clusterId) {}
 	public record FilteredResultsResponse(String html, List<Map<String, Object>> pointsData) {}
     public record TranslationRequest(String text, String target_lang) {}
     
@@ -85,6 +99,7 @@ public class Controller {
 	double dataWidth = KnowledgeGraphService.getXMax() - dataXMin;
 	double dataHeight = KnowledgeGraphService.getYMax() - dataYMin;
 
+	
     @Value("${app.version}")
     private String appVersion;
 	
@@ -93,54 +108,200 @@ public class Controller {
 			ServerSentEventService sseService,
 			TemplateEngine templateEngine,
 			HtmlSanitizerService htmlSanitizer,
-			PythonService pythonService) {
+			PythonService pythonService,
+			JsonApiSearchService jsonApiSearchService,
+			LegalPageRendererService legalPageRenderer) {
 		this.databaseQuery = databaseQuery;
 		this.queryProcessingService = queryProcessingService;
 		this.sseService = sseService;
 		this.templateEngine = templateEngine;
 		this.htmlSanitizer = htmlSanitizer;
 		this.pythonService = pythonService;
+        this.jsonApiSearchService = jsonApiSearchService;
+        this.legalPageRenderer = legalPageRenderer;
 		this.translationExecutor = Executors.newCachedThreadPool();
 	}
 
-	@GetMapping("")
-	public String index(Model model) {
-		model.addAttribute("appVersion", appVersion);
-		return "index";
+	/**
+	 * Der Endpoint für menschliche Besucher im Browser.
+	 * Gibt die normale index Seite zurück.
+	 */
+    @GetMapping(value = "", headers = "Accept=text/html", produces = MediaType.TEXT_HTML_VALUE)
+	public String index(Model model, HttpServletResponse response) {
+        response.setHeader("X-Robots-Tag", "index, follow");
+        model.addAttribute("appVersion", appVersion);
+        return "index";
+    }
+	
+	/**
+     * API manifest endpoint for LLMs and other API clients.
+     * Responds to requests expecting a JSON response.
+     */
+    @GetMapping(value = "", headers = "!Accept=text/html", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<ApiManifestDto> apiRoot() {
+    	ApiManifestDto manifest = new ApiManifestDto(
+            "Ideenatlas Semantic Search API",
+            "This API provides tools to semantically analyze a text query (like an idea or question) against a large knowledge base of scientific documents. " +
+            "The primary function is the '/api/search' endpoint. It returns a structured analysis of relevant topics, similar papers, and serendipitous connections. " +
+            "The full technical specification is available at the openapiSpecUrl.",
+            appVersion,
+            "/v3/api-docs/public-search-api"
+        );
+    	
+    	return ResponseEntity.ok()
+    			.header("X-Robots-Tag", "index, follow")
+                .body(manifest);
+    }
+
+	@GetMapping("favicon.ico")
+	public String favicon() {
+		return "forward:/assets/favicons/favicon.ico";
 	}
 
-	/**
-	 * favicon.ico wird irgendwann später hinzugefügt
-	 */
-	@ResponseStatus(HttpStatus.NO_CONTENT)
-	@RequestMapping("favicon.ico")
-	public void favicon() {}
-	
 	@GetMapping("/impressum")
-	public String impressum(Model model) {
-	    model.addAttribute("appVersion", appVersion);
-	    return "impressum";
+	public String impressum(Model model, java.util.Locale locale, @RequestParam(required = false) String lang, 
+			@CookieValue(value = "lang", required = false) String cookieLang) {
+	    return prepareLegalPage(model, locale, lang, "impressum", cookieLang);
 	}
 
 	@GetMapping("/privacy")
-	public String privacy(Model model) {
-	    model.addAttribute("appVersion", appVersion);
-	    return "privacy";
+	public String privacy(Model model, java.util.Locale locale, @RequestParam(required = false) String lang, 
+			@CookieValue(value = "lang", required = false) String cookieLang) {
+	    return prepareLegalPage(model, locale, lang, "privacy", cookieLang);
 	}
-	
+
 	@GetMapping("/licenses")
-	public String licenses(Model model) {
-	    model.addAttribute("appVersion", appVersion);
-	    return "licenses"; 
+	public String licenses(Model model, java.util.Locale locale, @RequestParam(required = false) String lang, 
+			@CookieValue(value = "lang", required = false) String cookieLang) {
+	    return prepareLegalPage(model, locale, lang, "licenses", cookieLang);
+	}
+
+	@GetMapping("/api")
+	public String api(Model model, java.util.Locale locale, @RequestParam(required = false) String lang, 
+			@CookieValue(value = "lang", required = false) String cookieLang) {
+	    return prepareLegalPage(model, locale, lang, "api", cookieLang);
+	}
+
+	
+	
+	/* REDIRECTS */
+	@GetMapping("/api/")
+	@Hidden 
+	public RedirectView redirectApiWithSlash() {
+	    RedirectView redirectView = new RedirectView("/api");
+	    redirectView.setStatusCode(HttpStatus.MOVED_PERMANENTLY);
+	    return redirectView;
+	}
+	@GetMapping("/openapi.json")
+	@Hidden 
+	public RedirectView redirectOpenApiSpec() {
+	    RedirectView redirectView = new RedirectView("/v3/api-docs/public-search-api");
+	    redirectView.setStatusCode(HttpStatus.MOVED_PERMANENTLY);
+	    return redirectView;
 	}
 	
-	@RequestMapping("/api/version")
+	
+	@RequestMapping("/version")
     @ResponseBody
 	public String version() {
 		return appVersion;
 	}
+
+	@GetMapping("/ai")
+	public String aiSearchBridge(Model model) {
+	    return "ai-search"; 
+	}
+	
+	@PostMapping("/api/search")
+    @ResponseBody
+    @Operation(
+            summary = "Search semantically for scientific papers", 
+            operationId = "searchIdeenatlas", 
+            description = "Searches ideenatlas.eu; the query gets converted to a vector, based on that scientific clusters and papers are found and returned."
+            )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200", 
+            description = "Search and analysis were successful.", 
+            content = { @Content(mediaType = "application/json", schema = @Schema(implementation = JsonApiResponseDto.class)) }
+        ),
+        @ApiResponse(responseCode = "400", description = "Invalid request, e.g., the query was empty.", content = @Content),
+        @ApiResponse(responseCode = "500", description = "An internal server error occurred during processing.", content = @Content)
+	})
+	public ResponseEntity<JsonApiResponseDto> getSearchResultsAsJson(@RequestBody ApiSearchRequestDto request,
+			@RequestHeader(value = HttpHeaders.USER_AGENT, required = false) String userAgent) {
+
+		if (request.query() == null || request.query().isBlank()) {
+			return ResponseEntity.badRequest().build();
+		}
+
+		try {
+			// User Agent logging, um zu prüfen ob es klappt
+			String caller = (userAgent != null) ? userAgent : "Unknown Source";
+			System.out.println("API-Call received from: " + caller);
+
+			JsonApiResponseDto response = jsonApiSearchService.performSearch(request.query());
+			return ResponseEntity.ok()
+					.header("X-Robots-Tag", "noindex, follow")
+					.body(response);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+		}
+	}
+	
+	@GetMapping(value = "/api/search/view", produces = MediaType.TEXT_HTML_VALUE)
+	@ResponseBody
+	@Operation(
+            summary = "Semantic Search for Browsing Bots (HTML Wrapped JSON)", 
+            operationId = "searchIdeenatlasHTML", 
+            description = "Searches ideenatlas.eu; the query gets converted to a vector, based on that scientific clusters and papers are found and returned."
+            )
+	public String getSearchResultsAsHtmlForBots(
+	        @RequestParam("q") String query, // ?q=...
+	        @RequestHeader(value = HttpHeaders.USER_AGENT, required = false) String userAgent) {
+		try {
+			// User Agent logging, um zu prüfen ob es klappt
+			String caller = (userAgent != null) ? userAgent : "Unknown Source";
+			System.out.println("View API-Call received from: " + caller);
+			
+			// 1. Die Suche ganz normal ausführen (holt das volle DTO)
+			JsonApiResponseDto response = jsonApiSearchService.performSearch(query);
+
+			// 2. Das DTO in einen schönen JSON-String verwandeln
+			// Wir nutzen 'writerWithDefaultPrettyPrinter', damit es für ChatGPT leichter
+			// lesbar ist
+			ObjectMapper mapper = new ObjectMapper();
+			String jsonString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(response);
+
+			// 3. Das JSON in ein minimales HTML-Gerüst packen
+			// Der <pre>-Tag sorgt dafür, dass Zeilenumbrüche erhalten bleiben.
+			// Die style-Attribute sorgen dafür, dass es auch auf kleinen Screens (Mobile)
+			// lesbar bleibt (Wrapping).
+			return """
+				    <!DOCTYPE html>
+				    <html lang="en">
+				    <head>
+				        <meta charset="UTF-8">
+				        <title>Ideenatlas API Search Results</title>
+				        <meta name="robots" content="noindex, follow">
+				    </head>
+				    <body style="font-family: sans-serif; background-color: #f5f5f5; padding: 20px;">
+				        <h1>Search Results for: %s</h1>
+				        <div id="results-container" style="background-color: white; border: 1px solid #ddd; padding: 15px; border-radius: 5px;">
+				            <pre id="json-data" style="white-space: pre-wrap; word-wrap: break-word;">%s</pre>
+				        </div>
+				    </body>
+				    </html>
+				    """.formatted(htmlSanitizer.sanitize(query), jsonString);
+		} catch (Exception e) {
+			return "<html><body><h1>Error processing query</h1><p>" + e.getMessage() + "</p></body></html>";
+		}
+	}
 	
 	@PostMapping("/api/translate")
+	@Hidden
     public SseEmitter translateText(@RequestBody TranslationRequest request) {
         SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
         emitter.onTimeout(() -> {
@@ -177,6 +338,7 @@ public class Controller {
 	
 	@PostMapping("/api/tts")
     @ResponseBody
+    @Hidden
     public ResponseEntity<StreamingResponseBody> textToSpeech(@RequestBody Map<String, String> payload) {
         String text = payload.get("text");
 
@@ -206,6 +368,7 @@ public class Controller {
 	
 	@PostMapping("/query/init") 
 	@ResponseBody
+	@Hidden
 	public Map<String, String> initQuery( 
 			@RequestParam(value = "idea-text", required = false) String ideaText,
 			@RequestParam(value = "files", required = false) List<MultipartFile> files,
@@ -215,6 +378,7 @@ public class Controller {
 
 	@PostMapping("/query/start/{jobId}")
 	@ResponseBody
+	@Hidden
 	public ResponseEntity<Void> startProcessing(@PathVariable String jobId) {
 		queryProcessingService.processQuery(jobId);
 		System.out.println("New job started: " + jobId);
@@ -222,6 +386,7 @@ public class Controller {
 	}
 
 	@GetMapping("/query/status/{jobId}")
+	@Hidden
 	public SseEmitter getQueryStatus(@PathVariable String jobId) {
 		SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
 		sseService.addEmitter(jobId, emitter);
@@ -229,6 +394,7 @@ public class Controller {
 	}
 
 	@GetMapping("/results/{jobId}")
+	@Hidden
 	public ResponseEntity<String> getResults(@PathVariable String jobId, 
 			HttpServletRequest request, 
 			HttpServletResponse response) throws IOException { // IOException wird für den VisualizationManager benötigt
@@ -475,6 +641,7 @@ public class Controller {
 		return ResponseEntity
 				.ok()
 			    .contentType(MediaType.TEXT_HTML) 
+	            .header("X-Robots-Tag", "noindex, nofollow, noarchive") 
 				.body(htmlContent);
 	}
 
@@ -484,6 +651,7 @@ public class Controller {
      */
     @PostMapping("/results/{jobId}/cleanup")
     @ResponseBody
+    @Hidden
     public ResponseEntity<Void> cleanupJob(@PathVariable String jobId) {
         queryProcessingService.triggerImmediateCleanup(jobId);
         return ResponseEntity.ok().build();
@@ -491,6 +659,7 @@ public class Controller {
 	
 	@GetMapping(value = "/results/{jobId}/image/{imageName}", produces = MediaType.IMAGE_PNG_VALUE)
 	@ResponseBody
+	@Hidden
 	public ResponseEntity<byte[]> getVisualizationImage(@PathVariable String jobId, @PathVariable String imageName) {
 
 	    final BufferedImage image = QueryProcessingService.finalVisualizations.get(jobId + "_" + imageName);
@@ -551,6 +720,7 @@ public class Controller {
 	
 	@PostMapping("/query/filtered-results")
 	@ResponseBody
+	@Hidden
 	public ResponseEntity<FilteredResultsResponse> getFilteredResultsFragment(@RequestBody FilteredSearchRequest request) {
 	    // --- Schritt 1: Datenbankabfrage ---
 	    float[] vector = Floats.toArray(request.queryVector());
@@ -612,7 +782,29 @@ public class Controller {
 	}
 
 
+	private String prepareLegalPage(Model model, java.util.Locale requestLocale, String forcedLang, String pageName, @CookieValue(value = "lang", required = false) String cookieLang) {
+	    String lang = "en"; // Default
 
+	    // Priorität: 1. URL Parameter (?lang=de) -> 2. Cookie -> 3. Browser Header (requestLocale)
+	    if (forcedLang != null) {
+	        lang = forcedLang;
+	    } else if (cookieLang != null) {
+	        lang = cookieLang;
+	    } else if (requestLocale != null) {
+	        lang = requestLocale.getLanguage();
+	    }
+
+	    // Validierung (nur 'de' oder 'en' zulassen)
+	    if (!"de".equalsIgnoreCase(lang)) {
+	        lang = "en";
+	    } else {
+	        lang = "de";
+	    }
+
+	    model.addAttribute("appVersion", appVersion);
+	    model.addAttribute("fallbackHtml", legalPageRenderer.renderFallbackHtml(pageName, lang));
+	    return pageName;
+	}
 
     /**
      * Loads the outlines.json into a map.

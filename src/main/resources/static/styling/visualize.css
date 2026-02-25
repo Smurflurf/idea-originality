@@ -8,7 +8,6 @@
 }
 
 .viz-stack-container.is-scroll-zoom-active {
-    /* War: rgba(138, 180, 248, 1) -> color-primary */
     box-shadow: 0 0 0 2px var(--color-primary);
     border-radius: 11px; 
 }
@@ -34,7 +33,6 @@
 #viz-layer-nc-base,
 #viz-layer-serendipity-base {
     filter: var(--viz-base-filter);
-    will-change: filter;
 }
 
 .zoom-pan-wrapper {
@@ -114,6 +112,7 @@
     background-clip: content-box;
     transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
     pointer-events: none;
+    will-change: transform, box-shadow;
 }
 
 .point-hitbox:hover .neighbor-point {
@@ -125,4 +124,30 @@
 .point-hitbox.is-hovered-from-tooltip .neighbor-point {
     transform: scale(1.8) !important;
     box-shadow: 0 0 10px rgba(var(--text-primary-rgb), 0.6);
+}
+
+
+/* =================================================================== */
+/* PERFORMANCE OPTIMIERUNGEN FÜR VIZ CONTAINER                         */
+/* =================================================================== */
+
+/* 1. GPU Compositing erzwingen: Sagt dem Browser, dass sich diese 
+      Elemente bewegen/skalieren werden. Sie werden als Textur auf der GPU gespeichert. */
+.viz-wrapper,
+.image-canvas,
+.labels-canvas,
+.rendered-canvas,
+.hover-canvas,
+.outlines-svg {
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* 2. Richtiges Verstecken: opacity: 0 reicht nicht! 
+      visibility: hidden nimmt das Canvas komplett aus der Render-Pipeline des Browsers */
+.is-hidden {
+    opacity: 0 !important;
+    visibility: hidden !important; 
+    pointer-events: none !important;
 }

@@ -10,6 +10,8 @@ export function initializeHierarchyToggles() {
         // 1. Prüfen, ob auf einen "Ausklappen"-Button geklickt wurde.
         const toggleButton = event.target.closest('.toggle-hierarchy-btn');
         if (toggleButton) {
+			console.log('Hierarchy Toggle Button Geklickt!', toggleButton); 
+
             event.stopPropagation(); 
             const wrapper = toggleButton.closest('.hierarchy-list-wrapper');
             if (wrapper) {

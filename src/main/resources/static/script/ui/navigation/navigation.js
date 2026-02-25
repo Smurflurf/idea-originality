@@ -40,6 +40,8 @@ function isCurrentUrl(url) {
 
 function isPersistent(element) {
     if (!element) return false;
+    if (element.hasAttribute('data-is-persistent')) return true; 
+
     if (element.id && PERSISTENT_IDS.includes(element.id)) return true;
     if (element.classList && element.classList.length > 0) {
         return PERSISTENT_CLASSES.some(c => element.classList.contains(c));

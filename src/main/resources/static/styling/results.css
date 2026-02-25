@@ -31,6 +31,7 @@
     text-decoration: none;
     color: inherit; 
     transition: color 0.2s ease;
+    cursor: pointer;
 }
 
 .result-title-link:hover {
@@ -89,11 +90,17 @@
     }
 }
 
-
 .results-container {
-    width: 80%;
-    max-width: 900px; 
-    min-height: 100dvh; 
+	width: 100% !important; 
+	max-width : none !important;
+	min-height: 100dvh;
+	display: flex;
+	flex-direction: column;
+	padding: 0;
+	margin: 0 auto;
+	position: relative;
+	background-color: var(--bg-app);
+	max-width: none !important;min-height: 100dvh; 
     display: flex;
     flex-direction: column;
     padding: 0; 
@@ -359,22 +366,30 @@ h2 {
     transition: gap 0.3s ease-out;
 }
 
-.hierarchy-list li {
-    overflow: hidden; 
-    max-height: 500px; 
-    opacity: 1;
-    transition: max-height 0.3s ease-out, opacity 0.2s ease-out, padding-left 0.3s ease-out;
+.hierarchy-list li  {
+	overflow: hidden;
+	max-height: 500px;
+	opacity: 1;
+	transition: max-height 0.3s ease-out, opacity 0.2s ease-out,
+		padding-left 0.3s ease-out;
 }
 
+/* 1. Alle li-Elemente im eingeklappten Zustand komplett kollabieren lassen */
 .hierarchy-list-wrapper.is-collapsed .hierarchy-list li {
-    max-height: 0;
-    opacity: 0;
+	max-height: 0;
+	min-height: 0;
+	margin: 0;
+	opacity: 0;
+	visibility: hidden;
 }
 
+/* 2. NUR das letzte li-Element wieder sichtbar und groß machen */
 .hierarchy-list-wrapper.is-collapsed .hierarchy-list li:last-child {
-    max-height: 120px; 
-    opacity: 1;
-    padding-left: 0;
+	max-height: 120px;
+	min-height: 24px;
+	opacity: 1;
+	visibility: visible;
+	padding-left: 0;
 }
 
 .hierarchy-list-wrapper.is-collapsed .hierarchy-list li:last-child::before {
@@ -928,7 +943,7 @@ h2 {
         gap: 8px;
     }
     .results-container {
-        width: 95%;
+        width: 98%;
     }
 }
 
@@ -958,19 +973,6 @@ h2 {
 }
 
 /* =================================================================== */
-/* ==               PERFORMANCE OPTIMIZATION (CULLING)              == */
-/* =================================================================== */
-
-.result-card {
-    content-visibility: auto;
-    contain-intrinsic-size: 300px; 
-}
-
-.result-card.is-visible {
-    content-visibility: visible;
-}
-
-/* =================================================================== */
 /* ==               TOOLTIP-SPECIFIC INTERACTIVITY                == */
 /* =================================================================== */
 
@@ -982,6 +984,11 @@ h2 {
     text-decoration: underline;
     text-decoration-thickness: 1px;
 }
+
+.tippy-box .result-summary:hover p {
+    cursor: pointer;
+}
+
 
 /* =================================================================== */
 /* ==                 		NO RESULTS MESSAGE		                == */
@@ -1070,7 +1077,7 @@ h2 {
 /* 1. Isolation: Die Karte als unabhängigen Inhalt definieren */
 .result-card {
     /* 'contain' hilft dem Browser, Grenzen für Rendering & Selection zu erkennen */
-    contain: content; 
+    contain: layout style; 
 }
 
 /* 2. UI-Elemente unselektierbar machen (Die Grenzen schaffen) */
@@ -1091,7 +1098,6 @@ h2 {
 /* Das zwingt den Browser, hier den Fokus für die Auswahl zu setzen */
 .result-summary,
 .expandable-abstract,
-.result-title-link,
 .result-payload {
     -webkit-user-select: text;
     user-select: text;
@@ -1105,127 +1111,123 @@ h2 {
 }
 
 /* =================================================================== */
-/* ==       	   	    SCROLL FIX: UNABHÄNGIGE TABS	            == */
+/* ==       SCROLL, SCREENSHOT & PRINT FIX (FINALE VERSION)         == */
 /* =================================================================== */
 
-/* 1. Globalen Scroll deaktivieren */
-html, body { 
-    overflow: hidden !important; 
-    height: 100dvh !important; 
-    width: 100% !important; 
+/* 1. Body ist der alleinige Scroller */
+html, body {
+    height: auto !important;
+    min-height: 100%;
+	overscroll-behavior-y: none;
 }
 
-/* 2. Container ist die "Bühne", füllt den Screen */
+body {
+    overflow-x: hidden !important;
+}
+
+/* 2. Der Hauptcontainer ist nur noch ein Rahmen ohne eigene Höhe */
 .results-container {
     position: relative;
-    width: 100% !important;
-    height: 100% !important;
-    overflow: hidden;
-    padding: 0 !important;
+    width: 100%;
     max-width: none !important;
+    height: auto !important; /* WICHTIG: Keine feste Höhe mehr! */
+    min-height: 100dvh;
+    padding: 0 !important;
+    overflow: hidden; /* Verhindert, dass swipe-Animationen überlaufen */
 }
 
-/* 3. HEADER: Schwebt oben, swipet NICHT mit */
+/* 3. Header bleibt fixiert */
 .viz-toggle-header {
-	position: absolute;
+	position: fixed;
 	top: 0;
 	left: 0;
 	right: 0;
 	height: 90px;
 	z-index: 100;
 	background: var(--bg-app);
-	transition: transform 0.3s ease-in-out;
+	transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 	display: flex;
 	justify-content: center;
 	align-items: center;
-    box-sizing: border-box;
+	box-sizing: border-box;
 }
 
-@media ( max-width : 768px) {
-	.viz-toggle-header {
-		/* Sicherheitszone links für Hamburger, rechts für Symmetrie (Zentrierung) */
-		padding: 0 0 0 60px; 
-	}
-
-	/* Da der Hamburger Button offline weg ist, brauchen wir die 60px links nicht. */
-	html[data-is-offline="true"] .viz-toggle-header {
-		padding: 0 15px !important;
-	}
+/* WICHTIG: Wenn wir manuell eingreifen (Klasse vom JS), muss die Transition AUS sein, 
+   sonst "schwimmt" der Header hinterher */
+.viz-toggle-header.is-manual-scroll {
+	transition: none !important;
 }
 
-/* Klasse zum Verstecken beim Scrollen (unverändert) */
-.viz-toggle-header.is-scroll-hidden {
+@media (max-width: 768px) {
+	.viz-toggle-header { padding: 0 0 0 60px; }
+	html[data-is-offline="true"] .viz-toggle-header { padding: 0 15px !important; }
+}
+
+/* 4. TABS: Fixierte Fenster, die NICHT MEHR SELBST SCROLLEN */
+.viz-content-pane {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    width: 100%;
+    
+    min-height: 100vh; 
+    height: auto; 
+    
+    display: none;
+    overflow: visible !important;
+    
+    padding-top: 110px !important;
+    
+    background: var(--bg-app);
+    z-index: 5;
+	transition: none;
+	
+	will-change: transform;
+	backface-visibility: hidden;
+	transform: translate3d(0, 0, 0);
+}
+
+/* --- LOGIK ZUM VERSTECKEN & PADDING-FIX (JETZT PER JS GESTEUERT) --- */
+body.is-header-hidden .viz-toggle-header {
     transform: translateY(-100%);
 }
-
-/* 4. TABS: Starten jetzt UNTER dem Header */
-/* Wenn wir NICHT swipen und der Header DA ist, hat der Tab sein top: 90px */
-.viz-content-pane {
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    display: none;
-    overflow-y: auto !important;
-	padding: 110px 0 calc(30px + env(safe-area-inset-bottom)) 0;
-	background: var(--bg-app);
-    transition: padding-top 0.3s ease-in-out; /* Nur das Padding animiert */
-    overflow-anchor: none;
-}
-
-/* Neue Regel: Wenn der Header weg ist, füllt der Tab den ganzen Screen */
-.viz-content-pane.is-header-hidden {
-	top: 0;
-	height: 100%;
-}
-
-body.is-header-hidden .viz-toggle-header {
-	transform: translateY(-100%);
-}
-
-body.is-header-hidden .viz-content-pane.active,
-body.is-header-hidden .results-container.is-swiping .viz-content-pane {
-    padding-top: 15px;
-}
-
 .results-container.is-swiping .viz-content-pane {
-	transition: none;
-	top: 0 !important;
-	height: 100% !important;
+    transition: none;
 }
 
-/* Inhalt im Tab wieder zentrieren */
+/* --- INHALTS-STYLING (BLEIBT GLEICH) --- */
 .viz-content-pane > * {
     max-width: 900px;
     margin-inline: auto;
     width: 90%;
 }
-
-/* KORREKTUR: Zwingt den HR-Trennstrich zur Zentrierung mit !important */
-.viz-content-pane > hr {
-    margin: 30px auto !important;
-}
-
-.viz-content-pane > *:first-child {
-    margin-top: 0 !important;
-}
+.viz-content-pane > hr { margin: 30px auto !important; }
+.viz-content-pane > *:first-child { margin-top: 0 !important; }
 
 /* =================================================================== */
 /* ==       	    Menu Button auf header höhe			            == */
 /* =================================================================== */
 .menu-trigger {
-	position: absolute !important;
-	display: flex !important;
-	align-items: center !important;
-	justify-content: center !important;
-	background: transparent;
-	border: none !important;
-	z-index: 110 !important;
-	transition: transform 0.3s ease-in-out !important;
+    position: fixed !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: transparent;
+    border: none !important;
+    z-index: 110 !important; 
 }
 
 @media (max-width: 768px) {
 	/* Der Button verschwindet mit, wenn der Header versteckt wird */
     body.is-header-hidden .menu-trigger {
-        transform: translateY(-100%) !important;
+        transform: translateY(-150%) !important;
+    }
+}
+
+@media (min-width: 768px) {
+	/* Der Button verschwindet nicht, wenn der Header versteckt wird */
+    body.is-header-hidden .menu-trigger {
+        transform: translateY(0%) !important;
     }
 }
 
@@ -1239,3 +1241,4 @@ body.is-header-hidden .results-container.is-swiping .viz-content-pane {
         margin: 0 !important;
     }
 }
+

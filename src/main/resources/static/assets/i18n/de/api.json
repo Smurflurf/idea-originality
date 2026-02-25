@@ -1,0 +1,183 @@
+{
+	"page_title": "API & KI-Integration",
+	"intro": "Der Ideenatlas stellt eine öffentliche, dokumentierte Schnittstelle (API) bereit. Diese ist gezielt darauf optimiert, sowohl von klassischen Applikationen als auch autonom von KI-Agenten (Large Language Models) genutzt zu werden.",
+	"structure": [
+		{
+			"type": "section_title",
+			"text": "1. Verfügbare Endpunkte"
+		},
+		{
+			"type": "subsection_title",
+			"text": "REST API (Empfohlen für Code & API-Agenten)"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Die primäre Such-Schnittstelle liefert strukturierte JSON-Antworten. Sie umfasst direkte Suchtreffer, Hierarchie-Pfade innerhalb des Wissensgraphen, thematisch ähnliche Cluster sowie berechnete Serendipitäts-Verbindungen."
+				}
+			]
+		},
+		{
+			"type": "list",
+			"items": [
+				{
+					"label": "Methode",
+					"text": "POST"
+				},
+				{
+					"label": "Endpunkt",
+					"text": "/api/search"
+				},
+				{
+					"label": "Content-Type",
+					"text": "application/json"
+				},
+				{
+					"label": "Payload",
+					"text": "{ \"query\": \"Die ausführliche, wissenschaftliche Suchanfrage\" }"
+				}
+			]
+		},
+		{
+			"type": "subsection_title",
+			"text": "Browsing API (Für Web-Scraping LLMs)"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Für KI-Assistenten im 'Browsing Mode' (z.B. ChatGPT Web, Claude, Perplexity), die keine POST-Requests senden können, existiert ein GET-Wrapper. Dieser führt die Vektorsuche aus und formatiert die JSON-Antwort in ein minimales, leicht maschinenlesbares HTML-Gerüst."
+				}
+			]
+		},
+		{
+			"type": "list",
+			"items": [
+				{
+					"label": "Methode",
+					"text": "GET"
+				},
+				{
+					"label": "Endpunkt",
+					"text": "/api/search/view?q=Zu+bearbeitende+Suchanfrage,+halte+sie+spezifisch"
+				}
+			]
+		},
+		{
+			"type": "subsection_title",
+			"text": "AI Gateway (Browsing Interface)"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Für KI-Agenten, die keine URLs manuell konstruieren dürfen, steht ein minimalistischer HTML-Einstiegspunkt bereit. Dieser enthält ein Suchformular, das zur API-Ansicht weiterleitet."
+				}
+			]
+		},
+		{
+			"type": "list",
+			"items": [
+				{
+					"label": "URL",
+					"text": "https://ideenatlas.eu/ai"
+				},
+				{
+					"label": "Aktion",
+					"text": "Suchanfrage über Formular senden (Parameter 'q')"
+				}
+			]
+		},
+		{
+			"type": "section_title",
+			"text": "2. Agent Discovery & Spezifikationen"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Um die autonome Nutzung durch KI-Systeme ohne menschliches Eingreifen zu gewährleisten, unterstützt der Ideenatlas vollumfänglich die gängigen Machine-Discovery-Standards:"
+				}
+			]
+		},
+		{
+			"type": "list",
+			"items": [
+				{
+					"label": "OpenAPI 3.0",
+					"text": "Die vollständige technische Beschreibung aller Endpunkte und Schema-Definitionen der DTOs."
+				},
+				{
+					"label": "llms.txt",
+					"text": "Direkte Text-Instruktionen für LLMs zur korrekten Nutzung der Schnittstellen."
+				},
+				{
+					"label": "ai-plugin.json",
+					"text": "Metadaten für die direkte Integration als OpenAI Plugin / Custom GPT."
+				}
+			]
+		},
+		{
+			"type": "lines_block",
+			"headline": "Direkte Links zu den Ressourcen",
+			"lines": [
+				[
+					{
+						"text": "OpenAPI Spec (JSON): "
+					},
+					{
+						"text": "/v3/api-docs/public-search-api",
+						"url": "/v3/api-docs/public-search-api"
+					}
+				],
+				[
+					{
+						"text": "Swagger UI (Interaktiv): "
+					},
+					{
+						"text": "/swagger-ui.html",
+						"url": "/swagger-ui.html"
+					}
+				],
+				[
+					{
+						"text": "LLM Instructions: "
+					},
+					{
+						"text": "/llms.txt",
+						"url": "/llms.txt"
+					}
+				],
+				[
+					{
+						"text": "AI Plugin Manifest: "
+					},
+					{
+						"text": "/.well-known/ai-plugin.json",
+						"url": "/.well-known/ai-plugin.json"
+					}
+				]
+			]
+		},
+		{
+			"type": "section_title",
+			"text": "3. Fair Use Policy"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Die API ist offen und erfordert derzeit keinen API-Key. Wir bitten darum, massenhaftes automatisiertes Scraping der Datenbank zu unterlassen und Rate Limits von maximal "
+				},
+				{
+					"text": "einem Request pro Sekunde",
+					"bold": true
+				},
+				{
+					"text": " einzuhalten. Eine missbräuchliche Nutzung führt zur temporären Sperrung der aufrufenden IP-Adresse."
+				}
+			]
+		}
+	]
+}

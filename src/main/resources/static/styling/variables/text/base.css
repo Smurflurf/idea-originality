@@ -1,0 +1,56 @@
+:root {
+    /* =================================================================== */
+    /* 1. SPACING (Abstände: Margin, Padding, Gap)                         */
+    /* =================================================================== */
+    /* Wir nutzen ein 4px/8px Raster. 
+       Das ersetzt alte Misch-Werte wie 5px, 10px, 15px, 20px etc. */
+    --space-xxs:  4px;   /* Für minimale Lücken, z.B. Icons neben Text */
+    --space-xs:   8px;   /* Ersetzt die bisherigen 8px & 10px */
+    --space-sm:   12px;  /* Guter Zwischenwert für inneres Padding */
+    --space-md:   16px;  /* Ersetzt die bisherigen 15px & 16px (Standard-Abstand) */
+    --space-lg:   24px;  /* Ersetzt die bisherigen 20px & 25px */
+    --space-xl:   32px;  /* Ersetzt die bisherigen 30px */
+    --space-xxl:  48px;  /* Ersetzt die bisherigen 40px & 50px */
+    --space-xxxl: 64px;  /* Für große Sektions-Abstände */
+
+    /* =================================================================== */
+    /* 2. BORDER RADIUS (Abrundungen)                                      */
+    /* =================================================================== */
+    /* Verhindert den Mix aus 4px, 5px, 8px, 12px... */
+    --radius-sm:  4px;   /* Kleine Buttons, Tags, Tooltips */
+    --radius-md:  8px;   /* Standard: Karten, Eingabefelder (z.B. .result-card) */
+    --radius-lg:  12px;  /* Große Elemente: Modals (z.B. .query-popup-modal) */
+    --radius-pill: 50px; /* Für abgerundete Schalter (Toggle-Buttons) */
+    --radius-circle: 50%;/* Für perfekt runde Elemente (z.B. Lade-Spinner) */
+
+    /* =================================================================== */
+    /* 3. TYPOGRAPHY (Schriftgrößen)                                       */
+    /* =================================================================== */
+    /* Vereinheitlicht das Chaos aus px, rem und em */
+    --font-size-xs:   0.75rem;  /* ~12px - Kleine Labels, Tooltips */
+    --font-size-sm:   0.875rem; /* ~14px - Metadaten, Subtext, kleine Links */
+    --font-size-base: 1rem;     /* ~16px - Standard Fließtext */
+    --font-size-lg:   1.125rem; /* ~18px - Wichtiger Text, kleine Header */
+    --font-size-xl:   1.25rem;  /* ~20px - Mittlere Header */
+    --font-size-xxl:  1.5rem;   /* ~24px - Große Header / Titel */
+
+    /* =================================================================== */
+    /* 4. Z-INDEX (Tiefenebenen)                                           */
+    /* =================================================================== */
+    /* Verhindert "z-index: 999999" Kriege */
+    --z-hide:     -1;    /* Elemente hinter dem Hintergrund */
+    --z-base:     0;     /* Normale Dokumenten-Ebene */
+    --z-elevated: 10;    /* Leicht angehoben (z.B. aktive Tabs, Sticky Elemente) */
+    --z-dropdown: 50;    /* Dropdowns */
+    --z-header:   100;   /* Header & Menü (.menu-trigger) */
+    --z-modal:    1000;  /* Popups, Dialoge */
+    --z-overlay:  2000;  /* Abgedunkelter Hintergrund hinter Modals */
+    --z-max:      50000; /* Absolute Top-Ebene (Text-Explosion, Tooltips) */
+
+    /* =================================================================== */
+    /* 5. ANIMATIONS & TRANSITIONS                                         */
+    /* =================================================================== */
+    --transition-fast: 0.15s ease;      /* Für Hovers (Farbe, Scale) */
+    --transition-base: 0.3s ease;       /* Standard Übergänge */
+    --transition-slow: 0.5s ease-out;   /* Z.B. max-height beim Query-Popup */
+}

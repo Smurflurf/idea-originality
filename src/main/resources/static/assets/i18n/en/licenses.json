@@ -10,9 +10,22 @@
 	},
 	"structure": [
 		{
+		    "type": "license_section",
+		    "title": "Terms of Use",
+		    "description": "The following terms apply to the use of Ideenatlas:",
+		    "items": [
+		        {
+		            "name": "Service License & Disclaimer",
+		            "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+		            "purpose": "Ideenatlas is a non-commercial private research project. Its generated content (analyses, visualizations) is licensed under the terms below. This license does NOT apply to the content of the search results themselves; for these, the licenses of the respective data sources (e.g., arXiv) apply. All results may contain errors and are provided without warranty.",
+		            "license": "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International"
+		        }
+		    ]
+		},
+		{
 			"type": "license_section",
 			"title": "Special Acknowledgements",
-			"description": "The Ideenatlas is a private research project which would not have been possible in its current form without external support.",
+			"description": "The Ideenatlas would not have been possible in its current form without external support.",
 			"items": [
 				{
 					"name": "bwHPC (BwUniCluster3.0)",

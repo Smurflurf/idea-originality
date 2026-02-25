@@ -15,6 +15,8 @@ import '/styling/downloadPopup.css';
 import { initializeContext, getContext, isDataAvailable, isOfflineMode, getJobTitle } from '/script/core/context.js';
 import { t, initializeLocalization, renderPage } from '/script/core/localization.js'; 
 import { initFPSMonitor } from '/script/core/fps.js';
+import { initPrintHelper } from '/script/core/printHelper.js';
+import { executeGlobalCleanup } from '/script/core/lifecycleManager.js';
 
 // ===================================================================
 // 2. UI & BASE IMPORTS
@@ -159,7 +161,10 @@ function initMath(container) {
 // 6. MAIN ROUTING LOGIC
 // ===================================================================
 async function handlePageChange(container) {
-	// 0. DATEN UPDATE (WICHTIGSTE ÄNDERUNG)
+	// A. GLOBAL CLEANUP
+	executeGlobalCleanup(); 
+	
+	// B. DATEN UPDATE (WICHTIGSTE ÄNDERUNG)
 	// Bei Soft-Navigation hat navigation.js das neue HTML mit dem Inline-Script ausgeführt.
 	// Das hat window.INITIAL_DATA aktualisiert.
 	// Aber unser Context-Modul hat noch den alten Stand. Wir müssen es zwingen, neu zu lesen.
@@ -167,11 +172,11 @@ async function handlePageChange(container) {
 		initializeContext(window.INITIAL_DATA);
 	}
 
-	// A. GLOBAL CLEANUP
+	// C. VIZ CLEANUP
 	clearAvailableTabs();
 	disposeAllVisualizations();
 
-	// B. GLOBAL INIT
+	// D. GLOBAL INIT
 	initializeTippy();
 
 	initGlobalMenuListeners(); // Singleton: Startet SoftNav & Swipe einmalig
@@ -188,7 +193,7 @@ async function handlePageChange(container) {
 
 	initMath(container);
 
-	// C. FEATURE LOADING
+	// E. FEATURE LOADING
 	const featureString = document.body.getAttribute('data-features') || '';
 	const features = featureString.split(',').map(s => s.trim()).filter(Boolean);
 
@@ -236,6 +241,8 @@ async function bootstrapApp() {
 		pageName = pageName.replace('.html', '');
 		
 		await initializeLocalization(['common', pageName]);
+		
+		initPrintHelper(); 
 				
 		// 3. App starten
 		await handlePageChange(document.body);

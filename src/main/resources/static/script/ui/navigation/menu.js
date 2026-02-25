@@ -36,6 +36,7 @@ export function closeSidebar() {
         sidebar.style.transform = '';
         sidebar.style.transition = '';
         sidebar.style.overscrollBehavior = '';
+        sidebar.inert = true;
     }
 
     if (overlay && overlay.classList.contains('is-visible')) {
@@ -50,13 +51,44 @@ export function closeSidebar() {
     document.body.classList.remove('is-swiping-active');
 }
 
+
 // --- 1. GLOBAL LISTENER ---
+
+function initGlobalScrollHideFallback() {
+    let lastY = window.scrollY;
+    
+    window.addEventListener('scroll', () => {
+        if (document.querySelector('.viz-toggle-header')) return;
+
+        const trigger = document.getElementById('menu-trigger');
+        if (!trigger) return;
+
+        if (window.innerWidth > 768) {
+            trigger.classList.remove('is-scrolled-away');
+            return;
+        }
+
+        const currentY = window.scrollY;
+        
+        // Erst ab 60px ausblenden, um Flackern am oberen Rand zu vermeiden
+        if (currentY > 60 && currentY > lastY) {
+            trigger.classList.add('is-scrolled-away'); // Verstecken
+        } else {
+            trigger.classList.remove('is-scrolled-away'); // Anzeigen
+        }
+        
+        lastY = currentY;
+    }, { passive: true });
+}
+
+
 export function initGlobalMenuListeners() {
     if (window.menuLogicActive) return;
     window.menuLogicActive = true;
     initializeSoftNavigation();
     initializeSwipeNavigation();
-
+	initGlobalScrollHideFallback(); 
+	
     on(EVENTS.LANG_CHANGED, (data) => {
         renderHistoryList();
         let path = window.location.pathname;
@@ -87,11 +119,16 @@ export function setupMenuInteractions() {
     const overlay = document.getElementById('menu-overlay');
     const closeBtn = document.getElementById('menu-close-btn');
 
+	if (sidebar && !sidebar.classList.contains('is-open')) {
+		sidebar.inert = true;
+	}
+
     if (trigger && !trigger.dataset.listenerAttached) {
         trigger.dataset.listenerAttached = 'true';
 
         const preventScrollEvents = (e) => { if (e.cancelable) e.preventDefault(); };
         function openMenu() {
+			if (sidebar) sidebar.inert = false;
             sidebar.classList.add('is-open');
             overlay.classList.add('is-visible');
             overlay.addEventListener('touchmove', preventScrollEvents, { passive: false });

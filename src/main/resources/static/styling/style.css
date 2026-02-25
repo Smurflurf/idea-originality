@@ -10,9 +10,6 @@ html, body {
     min-height: 100%; 
     margin: 0;
     padding: 0;
-    overflow-y: auto; 
-    overflow-x: hidden;
-    overscroll-behavior-y: auto; 
     background-color: var(--bg-app);
 }
 
@@ -21,15 +18,8 @@ body {
     background-color: var(--bg-app);
     color: var(--text-primary);
     margin: 0;
-    overscroll-behavior-x: none;
-}
-
-body.is-swiping-active {
-    overflow: hidden !important;
-    touch-action: none !important; 
-    overscroll-behavior: none !important;
-    user-select: none !important;
-    -webkit-user-select: none !important;
+	overscroll-behavior-y: none; 
+	overflow-x : hidden ;
 }
 
 .results-container, 
@@ -118,9 +108,7 @@ textarea {
 }
 
 textarea:hover {
-    /* War: #8f9194 -> text-quaternary */
     border-color: var(--text-quaternary);
-    /* War: #d3d4d8 -> text-input-hover */
     color: var(--text-input-hover);
 }
 
@@ -149,7 +137,6 @@ textarea:focus {
 }
 
 .media-toggle-checkbox:checked + .media-button-label {
-    /* War: #f55c5c -> color-danger-light */
     border: 1px solid var(--color-danger-light); 
 }
 
@@ -202,7 +189,6 @@ textarea:focus {
 }
 
 .media-menu li:hover {
-    /* War: #4a4e52aa -> bg-element-hover mit ca. 66% Alpha */
     background-color: rgba(var(--bg-element-hover-rgb), 0.66);
 }
 
@@ -371,13 +357,20 @@ textarea:focus {
 /* =================================================================== */
 /* ==             GLOBALE SCROLLBAR STYLES (NEU)                    == */
 /* =================================================================== */
+
 html {
-    /* Für Firefox: Daumenfarbe und transparente Schiene */
     scrollbar-color: var(--border-main) transparent;
     scrollbar-width: thin;
-	scrollbar-gutter: stable;
-	width: 100%;
-	min-height: 100%;}
+    
+    /* Gutter WEG, damit kein grauer Rand entsteht */
+    scrollbar-gutter: stable; 
+    
+    /* Scrollbar IMMER erzwingen -> Kein Springen des Layouts */
+    overflow-y: scroll; 
+    
+    width: 100%;
+    min-height: 100%;
+}
 
 /* Für Chrome, Safari, Edge */
 ::-webkit-scrollbar {
@@ -483,22 +476,36 @@ textarea::-webkit-scrollbar-thumb:hover {
     display: none;
 }
 
-
-
 /* =================================================================== */
 /* ==           	PERFORMANCE: NO INTERACTION ON SWIPE            == */
 /* =================================================================== */
 
 /* Wenn die Klasse aktiv ist (während des Swipes), ignorieren wir ALLES. */
-body.is-swiping-active,
-body.is-swiping-active * {
-    pointer-events: none !important;
-    user-select: none !important;
-    -webkit-user-select: none !important;
-    cursor: grabbing !important;
+body.is-swiping-active, body.is-swiping-active *, html.is-swiping-active
+	{
+	pointer-events: none !important;
+	user-select: none !important;
+	-webkit-user-select: none !important;
+	-moz-user-select: none !important;
+	-ms-user-select: none !important;
+	cursor: grabbing;
 }
 
-/* Ausnahme: Wir wollen den Cursor/Touchpunkt nicht verlieren */
-body.is-swiping-active {
-    cursor: grabbing !important;
+body.is-swiping-active ::selection {
+	background: transparent !important;
+}
+
+body.is-swiping-active ::-moz-selection {
+	background: transparent !important;
+}
+
+body.is-swiping-active #menu-overlay {
+    pointer-events: auto !important;
+}
+
+/* =================================================================== */
+/* ==       PERFORMANCE: HOVER-SPERRE BEIM SCHNELLEN SCROLLEN       == */
+/* =================================================================== */
+body.is-actively-scrolling {
+    pointer-events: none !important;
 }

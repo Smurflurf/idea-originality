@@ -1,15 +1,29 @@
 /**
- * FPS Monitor 
- * Ein Debug-Tool zur Performance-Analyse.
- * Aktivierung: 7 Klicks schnell hintereinander auf den Query-Button (.run-button).
+ * FPS Monitor - Korrigierte Singleton-Version
  */
 
+let isInitialized = false;
+let animationId = null;
+
 export function initFPSMonitor() {
-    // 1. Container erstellen
-    const wrapper = document.createElement('div');
+    // 1. Singleton-Check: Existiert der Monitor bereits im DOM?
+    let wrapper = document.getElementById('fps-counter-wrapper');
+    
+    if (wrapper) {
+        console.log('[FPS] Monitor already exists, skipping creation.');
+        return;
+    }
+
+    console.log('[FPS] Initializing Monitor...');
+
+    // 2. Container erstellen
+    wrapper = document.createElement('div');
     wrapper.id = 'fps-counter-wrapper';
     wrapper.popover = "manual"; 
     
+    // Initial: Nicht persistent, da versteckt
+    wrapper.setAttribute('data-is-persistent', 'false');
+
     wrapper.style.cssText = `
         inset: auto; 
         margin: 0; 
@@ -31,38 +45,26 @@ export function initFPSMonitor() {
         box-shadow: 0 4px 15px rgba(0,0,0,0.5);
     `;
     
-    // 2. Canvas für den Graphen
+    // Canvas & Context Setup
     const canvas = document.createElement('canvas');
     const PR = Math.round(window.devicePixelRatio || 1);
     const CSS_WIDTH = 250;
     const CSS_HEIGHT = 60; 
     const WIDTH = CSS_WIDTH * PR;
     const HEIGHT = CSS_HEIGHT * PR;
-    
     canvas.width = WIDTH;
     canvas.height = HEIGHT;
     canvas.style.cssText = `width:${CSS_WIDTH}px; height:${CSS_HEIGHT}px; display:block; border-right: 1px solid #444; flex-shrink: 0;`;
     const ctx = canvas.getContext('2d');
-    
     ctx.fillStyle = '#111';
     ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-    // 3. Info Panel für Text-Werte
     const infoPanel = document.createElement('div');
     infoPanel.style.cssText = `
-        background: transparent; 
-        color: #00ff00; 
-        font-family: 'Courier New', monospace; 
-        font-size: 11px; 
-        padding-left: 4px; 
-        line-height: 1.3; 
-        width: 80px; 
-        height: ${CSS_HEIGHT}px; 
-        display: flex; 
-        flex-direction: column; 
-        justify-content: space-between; 
-        user-select: none; 
-        flex-shrink: 0;
+        background: transparent; color: #00ff00; font-family: 'Courier New', monospace; 
+        font-size: 11px; padding-left: 4px; line-height: 1.3; width: 80px; 
+        height: ${CSS_HEIGHT}px; display: flex; flex-direction: column; 
+        justify-content: space-between; user-select: none; flex-shrink: 0;
     `;
     infoPanel.innerHTML = 'init...';
 
@@ -70,51 +72,59 @@ export function initFPSMonitor() {
     wrapper.appendChild(infoPanel);
     document.body.appendChild(wrapper);
 
-    // --- SECRET TRIGGER LOGIC ---
-    let tapCount = 0;
-    let lastTapTime = 0;
-    const TAP_LIMIT = 7;
-    const TIME_WINDOW = 500; 
+    // --- SECRET TRIGGER LOGIC (Globaler Schutz) ---
+    if (!isInitialized) {
+        let tapCount = 0;
+        let lastTapTime = 0;
+        const TAP_LIMIT = 7;
+        const TIME_WINDOW = 500; 
 
-    document.addEventListener('pointerdown', (e) => {
-        const btn = e.target.closest('.run-button');
-        if (!btn) return;
+        document.addEventListener('pointerdown', (e) => {
+            const btn = e.target.closest('.run-button');
+            if (!btn) return;
 
-        const currentTime = Date.now();
-        if (currentTime - lastTapTime > TIME_WINDOW) {
-            tapCount = 1;
-        } else {
-            tapCount++;
-        }
-        lastTapTime = currentTime;
-
-        if (tapCount >= TAP_LIMIT) {
-            tapCount = 0;
-            if (wrapper.style.display !== 'none') {
-                wrapper.hidePopover();
-                wrapper.style.display = 'none';
-                console.log('[FPS] Monitor DISABLED');
+            const currentTime = Date.now();
+            if (currentTime - lastTapTime > TIME_WINDOW) {
+                tapCount = 1;
             } else {
-                window._lastFrameTime = performance.now();
-                wrapper.style.display = 'flex';
-                wrapper.showPopover();
-                console.log('[FPS] Monitor ENABLED');
+                tapCount++;
             }
-        }
-    }, true);
+            lastTapTime = currentTime;
+
+            if (tapCount >= TAP_LIMIT) {
+                tapCount = 0;
+                // Wir suchen das Element jedes Mal frisch, falls es durch Navigation verschoben wurde
+                const currentWrapper = document.getElementById('fps-counter-wrapper');
+                if (!currentWrapper) return;
+
+                if (currentWrapper.style.display !== 'none') {
+                    // DEAKTIVIEREN
+                    currentWrapper.hidePopover();
+                    currentWrapper.style.display = 'none';
+                    currentWrapper.setAttribute('data-is-persistent', 'false');
+                    console.log('[FPS] Monitor DISABLED & NON-PERSISTENT');
+                } else {
+                    // AKTIVIEREN
+                    window._lastFrameTime = performance.now();
+                    currentWrapper.style.display = 'flex';
+                    currentWrapper.showPopover();
+                    currentWrapper.setAttribute('data-is-persistent', 'true');
+                    console.log('[FPS] Monitor ENABLED & PERSISTENT');
+                }
+            }
+        }, true);
+        isInitialized = true;
+    }
 
     // --- MONITORING LOGIC ---
     let prevTime = performance.now();
     let frames = 0;
-    
     let fpsHistory = []; 
     let maxFps = 0;
     let avgFps = 60;
-    
     let pitFps = 120; 
     let pitHoldTime = 0; 
     const PIT_HOLD_DURATION = 1300; 
-
     let lastGraphY = HEIGHT; 
     let lastPitGraphY = HEIGHT; 
     const UPDATE_DIVIDER = 2; 
@@ -130,13 +140,8 @@ export function initFPSMonitor() {
 
     function updateGraph(fps) {
         const now = performance.now();
-
-        if (fps < pitFps) {
-            pitFps = fps;
-            pitHoldTime = now + PIT_HOLD_DURATION;
-        } else if (now > pitHoldTime) {
-            pitFps = fps;
-        }
+        if (fps < pitFps) { pitFps = fps; pitHoldTime = now + PIT_HOLD_DURATION; } 
+        else if (now > pitHoldTime) { pitFps = fps; }
 
         const scrollStep = 1 * PR;
         const padding = 2 * PR;
@@ -144,7 +149,6 @@ export function initFPSMonitor() {
 
         ctx.globalCompositeOperation = 'copy';
         ctx.drawImage(canvas, scrollStep, 0, WIDTH - scrollStep, HEIGHT, 0, 0, WIDTH - scrollStep, HEIGHT);
-        
         ctx.globalCompositeOperation = 'source-over';
         ctx.fillStyle = '#111';
         ctx.fillRect(WIDTH - scrollStep, 0, scrollStep, HEIGHT);
@@ -155,34 +159,30 @@ export function initFPSMonitor() {
         ctx.fillRect(WIDTH - scrollStep, y60, scrollStep, 1 * PR); 
         ctx.fillRect(WIDTH - scrollStep, y30, scrollStep, 1 * PR);
 
-        // PIT (Rot)
         const scaledPit = Math.min(pitFps, 70);
         const currentPitY = HEIGHT - ((scaledPit / 70) * graphHeight);
-        ctx.lineWidth = 1.5 * PR; 
-        ctx.strokeStyle = '#ff3333'; 
-        ctx.beginPath();
-        ctx.moveTo(WIDTH - scrollStep * 2, lastPitGraphY);
-        ctx.lineTo(WIDTH - (scrollStep/2), currentPitY);
-        ctx.stroke();
-        lastPitGraphY = currentPitY;
+        ctx.lineWidth = 1.5 * PR; ctx.strokeStyle = '#ff3333'; ctx.beginPath();
+        ctx.moveTo(WIDTH - scrollStep * 2, lastPitGraphY); ctx.lineTo(WIDTH - (scrollStep/2), currentPitY);
+        ctx.stroke(); lastPitGraphY = currentPitY;
 
-        // Current (Blau)
         const scaledFps = Math.min(fps, 70); 
         const currentY = HEIGHT - ((scaledFps / 70) * graphHeight);
-        ctx.lineWidth = 2 * PR;
-        ctx.strokeStyle = '#3399ff'; 
-        ctx.beginPath();
-        ctx.moveTo(WIDTH - scrollStep * 2, lastGraphY); 
-        ctx.lineTo(WIDTH - (scrollStep/2), currentY);
-        ctx.stroke();
-        lastGraphY = currentY;
+        ctx.lineWidth = 2 * PR; ctx.strokeStyle = '#3399ff'; ctx.beginPath();
+        ctx.moveTo(WIDTH - scrollStep * 2, lastGraphY); ctx.lineTo(WIDTH - (scrollStep/2), currentY);
+        ctx.stroke(); lastGraphY = currentY;
     }
 
     function animate() {
-        if (wrapper.style.display !== 'none') {
+        const currentWrapper = document.getElementById('fps-counter-wrapper');
+        // Falls das Element gelöscht wurde (nicht persistent beim Seitenwechsel), Loop stoppen!
+        if (!currentWrapper) {
+            animationId = null;
+            return; 
+        }
+
+        if (currentWrapper.style.display !== 'none') {
             const time = performance.now();
             frames++;
-
             if (time >= prevTime + 1000) {
                 const fps = Math.round((frames * 1000) / (time - prevTime));
                 if (fps > 0) {
@@ -190,7 +190,6 @@ export function initFPSMonitor() {
                     if (fpsHistory.length > 20) fpsHistory.shift(); 
                     const sum = fpsHistory.reduce((a, b) => a + b, 0);
                     avgFps = Math.round(sum / fpsHistory.length);
-                    if (fps > maxFps) maxFps = fps;
                     infoPanel.innerHTML = `
                         <span style="color:#3399ff; font-weight:bold; font-size:12px;">NOW:${fps}</span>
                         <span style="color:#aaa">AVG:${avgFps}</span>
@@ -210,12 +209,13 @@ export function initFPSMonitor() {
             } else {
                 window._lastFrameTime = time; 
             }
-        } else {
-             window._lastFrameTime = performance.now();
         }
-        requestAnimationFrame(animate);
+        animationId = requestAnimationFrame(animate);
     }
 
-    window._lastFrameTime = performance.now();
-    requestAnimationFrame(animate);
+    // Nur einen Loop starten
+    if (!animationId) {
+        window._lastFrameTime = performance.now();
+        animationId = requestAnimationFrame(animate);
+    }
 }

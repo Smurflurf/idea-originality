@@ -211,6 +211,10 @@
 					"text": "Dient der Sicherheit und verhindert Cross-Site-Request-Forgery-Angriffe."
 				},
 				{
+					"label": "lang (Cookie)",
+					"text": "Speichert die vom Nutzer ausgewählte Sprache (e.g., 'en' oder 'de'), um die website korrekt anzuzeigen."
+				},
+				{
 					"label": "IndexedDB (Lokaler Cache)",
 					"text": "Suchergebnisse werden temporär lokal im Browser gespeichert, um ein versehentliches Löschen dieser zu vermeiden. Diese Daten verbleiben auf dem Endgerät."
 				}
@@ -255,6 +259,44 @@
 			]
 		},
 		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Wichtig: ",
+					"bold": true
+				},
+				{
+					"text": "Die externe Umformulierung der Eingabe findet ausschließlich bei Verwendung der Ideenatlas Website statt. Bei Nutzung " 
+				},
+				{
+					"text": "der API",
+					"url": "/api"
+				},	
+				{
+					"text": " wird der Eingabetext nicht optimiert und die Such-Pipeline ist technisch einschrittig."
+				}
+			]
+		},
+		{
+		    "type": "subsection_title",
+		    "text": "Nutzung der API"
+		},
+		{
+		    "type": "paragraph",
+		    "content": [
+		        {
+		            "text": "Der Ideenatlas stellt eine "
+				},
+				{
+					"text": "öffentliche Programmierschnittstelle (API)",
+					"url": "/api"
+				},
+				{
+					"text": " zur Verfügung, die es externen Diensten und KI-Agenten ermöglicht, Suchanfragen programmatisch durchzuführen. Anfragen, die über diese API eingehen, werden nicht an Dritte weitergeleitet."
+		        }
+		    ]
+		},
+		{
 			"type": "subsection_title",
 			"text": "Einsatz von Google Gemini"
 		},
@@ -269,7 +311,7 @@
 					"bold": true
 				},
 				{
-					"text": " genutzt. Anbieter ist Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irland für Nutzer im EWR und der Schweiz."
+					"text": " genutzt. Anbieter ist Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irland für Nutzer im Europäischen Wirtschaftsraum (EWR) und der Schweiz."
 				}
 			]
 		},
@@ -282,6 +324,9 @@
 				{
 					"text": "nicht zur Verbesserung der Google-Dienste oder zum Training von KI-Modellen verwendet.",
 					"bold": true
+				},
+				{
+					"text": " Diese Verarbeitung erfolgt gemäß den Bedingungen für 'Paid Services', auch wenn der Ideenatlas derzeit die kostenfreie API-Stufe nutzt."
 				}
 			]
 		},
@@ -291,6 +336,23 @@
 				{
 					"text": "Unabhängig davon wird empfohlen, keine personenbezogenen oder sensiblen Daten in das Suchfeld einzugeben. Die Rechtsgrundlage für die Verarbeitung zur Bereitstellung der Suchfunktion ist das berechtigte Interesse an einem funktionalen und qualitativ hochwertigen Online-Angebot (Art. 6 Abs. 1 lit. f DSGVO)."
 				}
+			]
+		},
+		{
+			"type": "lines_block",
+			"lines": [
+				[
+					{
+						"text": "Weitere Informationen finden Sie in den "
+					},
+					{
+						"text": "Gemini API Terms of Service",
+						"url": "https://ai.google.dev/gemini-api/terms"
+					},
+					{
+						"text": "."
+					}
+				]
 			]
 		},
 		{
@@ -317,6 +379,33 @@
 				},
 				{
 					"text": " Die Verarbeitung erfolgt ausschließlich zum Zweck der Übersetzung im Moment der Anfrage („Fire-and-Forget“). Es erfolgt keine Weitergabe dieser Daten an externe Dritte wie Google oder andere Dienstanbieter. Die Rechtsgrundlage für diese Verarbeitung ist das berechtigte Interesse an der Bereitstellung einer mehrsprachigen Benutzeroberfläche (Art. 6 Abs. 1 lit. f DSGVO)."
+				}
+			]
+		},
+		{
+			"type": "subsection_title",
+			"text": "Echtzeit-TTS (intern)"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Das optionale Text To Speech wird direkt auf der Serverinfrastruktur der Anwendung ausgeführt. Wenn ein Text zum Vorlesen ausgewählt wird, wird dieser an den Server gesendet, dort die Sprache des Textes maschinell erkannt, über ein passendes Piper TTS Modell vorgelesen und das Ergebnis direkt an den Browser zurückgestreamt."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Bei diesem Prozess werden "
+				},
+				{
+					"text": "weder der Originaltext noch das resultierende Audio permanent gespeichert.",
+					"bold": true
+				},
+				{
+					"text": " Die Verarbeitung erfolgt ausschließlich zum Zweck des Vorlesens im Moment der Anfrage („Fire-and-Forget“). Es erfolgt keine Weitergabe dieser Daten an externe Dritte wie Google oder andere Dienstanbieter. Die Rechtsgrundlage für diese Verarbeitung ist das berechtigte Interesse an der Bereitstellung einer barrierefreien Benutzeroberfläche (Art. 6 Abs. 1 lit. f DSGVO)."
 				}
 			]
 		},

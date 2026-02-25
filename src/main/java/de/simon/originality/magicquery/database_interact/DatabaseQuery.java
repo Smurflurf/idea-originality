@@ -70,7 +70,7 @@ public class DatabaseQuery {
 	                .build();
 
 	        List<ScoredPoint> searchResult = client.searchAsync(request).get();
-
+	        
 	        return searchResult.stream()
 	                .map(this::convertScoredPointToQueryResult)
 	                .collect(Collectors.toList());
@@ -141,7 +141,7 @@ public class DatabaseQuery {
 		Map<String, Object> payload = convertPayloadMap(scoredPoint.getPayloadMap());
 
 		if (scoredPoint.getVectors() != null && scoredPoint.getVectors().getVector() != null) {
-            payload.put("vector", scoredPoint.getVectors().getVector().getDataList());
+            payload.put("vector", scoredPoint.getVectors().getVector().getDense().getDataList());
         }
 		
 		return new QueryResult(id, score, payload, TypeSpecificOperations.getContentUrl(payload));

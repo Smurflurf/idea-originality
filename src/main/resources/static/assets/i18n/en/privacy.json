@@ -211,6 +211,10 @@
 					"text": "Serves security purposes and prevents Cross-Site Request Forgery attacks."
 				},
 				{
+					"label": "lang (Cookie)",
+					"text": "Saves the user's preferred language setting (e.g., 'en' or 'de') to display the website correctly on subsequent visits."
+				},
+				{
 					"label": "IndexedDB (Local Cache)",
 					"text": "Search results are temporarily stored locally in the browser to prevent accidental deletion. This data remains on the end device."
 				}
@@ -255,6 +259,44 @@
 			]
 		},
 		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Important: ",
+					"bold": true
+				},
+				{
+					"text": "The external reformulation of the input only takes place when using the Ideenatlas website. When using "
+				},
+				{
+					"text": "the API",
+					"url": "/api"
+				},
+				{
+					"text": ", the input text is not optimized, and the search pipeline is technically a single-step process."
+				}
+			]
+		},
+		{
+			"type": "subsection_title",
+			"text": "Usage of the API"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Ideenatlas provides a "
+				},
+				{
+					"text": "public programming interface (API)",
+					"url": "/api"
+				},
+				{
+					"text": " that allows external services and AI agents to perform search queries programmatically. Requests received via this API are not forwarded to third parties."
+				}
+			]
+		},
+		{
 			"type": "subsection_title",
 			"text": "Use of Google Gemini"
 		},
@@ -269,7 +311,7 @@
 					"bold": true
 				},
 				{
-					"text": " is used. The provider for users in the EEA and Switzerland is Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Ireland."
+					"text": " is used. The provider for users in the European Economic Area (EEA) and Switzerland is Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Ireland."
 				}
 			]
 		},
@@ -282,6 +324,9 @@
 				{
 					"text": "not used to improve Google's services or to train AI models.",
 					"bold": true
+				},
+				{
+					"text": " This processing takes place in accordance with the terms for 'Paid Services', even if Ideenatlas currently uses the free API tier."
 				}
 			]
 		},
@@ -291,6 +336,23 @@
 				{
 					"text": "Regardless, it is recommended not to enter any personal or sensitive data into the search field. The legal basis for the processing to provide the search functionality is our legitimate interest in a functional and high-quality online service (Art. 6 Para. 1 lit. f GDPR)."
 				}
+			]
+		},
+		{
+			"type": "lines_block",
+			"lines": [
+				[
+					{
+						"text": "Further information can be found in the "
+					},
+					{
+						"text": "Gemini API Terms of Service",
+						"url": "https://ai.google.dev/gemini-api/terms"
+					},
+					{
+						"text": "."
+					}
+				]
 			]
 		},
 		{
@@ -317,6 +379,33 @@
 				},
 				{
 					"text": " The processing occurs solely for the purpose of translation at the moment of the request ('fire-and-forget'). This data is not shared with external third parties such as Google or other service providers. The legal basis for this processing is the legitimate interest in providing a multilingual user interface (Art. 6 Para. 1 lit. f GDPR)."
+				}
+			]
+		},
+		{
+			"type": "subsection_title",
+			"text": "Real-time TTS (internal)"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "The optional Text-To-Speech functionality is executed directly on the application's server infrastructure. When a text is selected for reading, it is sent to the server, where the language is automatically recognized, synthesized using an appropriate Piper TTS model, and the result is streamed directly back to the browser."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "During this process, "
+				},
+				{
+					"text": "neither the original text nor the resulting audio is permanently stored.",
+					"bold": true
+				},
+				{
+					"text": " The processing occurs solely for the purpose of reading aloud at the moment of the request ('fire-and-forget'). No data is shared with external third parties such as Google or other service providers. The legal basis for this processing is the legitimate interest in providing an accessible user interface (Art. 6 Para. 1 lit. f GDPR)."
 				}
 			]
 		},

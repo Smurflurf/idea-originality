@@ -119,7 +119,7 @@
     
     /* GLASS CONTAINER (query popup textcontainer) */
     --bg-popup-glass: rgba(0, 0, 0, 0.4);
-    --blur-strength: 12px; 
+    --blur-strength: 1px; 
 
     /* WOLKEN: Etwas kühleres, helles Blau/Weiß */
     --cloud-rgb-1: 100, 120, 255;

@@ -24,15 +24,24 @@
     <link rel="stylesheet" th:href="@{/dist/legal.css(v=${appVersion})}">
 </head>
 <body data-features="legal-content">
+    <th:block th:replace="~{shared_fragments :: llmRedirectBodyNotice}"></th:block>	
     <div th:replace="~{shared_fragments :: sideMenu}"></div>
 
-    <div id="licenses-content" class="legal-content-wrapper">
-        <div class="loading-placeholder">
-			<i class="fa-solid fa-circle-notch fa-spin fa-2x"></i>
-		</div>
-    </div>
+	<div id="licenses-content" class="legal-content-wrapper">
+		<!-- 1. Fallback für Bots/Curl (Server-Side Rendered) -->
+		<th:block th:if="${fallbackHtml}">
+			<div th:utext="${fallbackHtml}"></div>
+		</th:block>
 
-    <!-- WICHTIG: Nur dieses Script. Es startet den Router. -->
+		<!-- 2. Ladespinner für JS-Clients (wird bei Hydration ersetzt) -->
+		<th:block th:unless="${fallbackHtml}">
+			<div class="loading-placeholder">
+				<i class="fa-solid fa-circle-notch fa-spin fa-2x"></i>
+			</div>
+		</th:block>
+	</div>
+
+	<!-- WICHTIG: Nur dieses Script. Es startet den Router. -->
     <script type="module" th:src="@{/dist/main.js(v=${appVersion})}" defer></script>
 </body>
 </html>

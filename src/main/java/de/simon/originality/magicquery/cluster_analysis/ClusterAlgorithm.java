@@ -39,7 +39,6 @@ public class ClusterAlgorithm {
      * @param allNeighborClusters Die vollständige, nach Relevanz sortierte Liste der Nachbarcluster (z.B. Top 250).
      * @param userVector          Der 1024D Vektor der ursprünglichen Nutzeranfrage.
      * @param numTopToExclude     Die Anzahl der zu ignorierenden Top-Treffer, um die "Serendipity-Zone" zu definieren.
-     * @param alpha               Der Steuerungsfaktor (0.0 bis 1.0), wie stark der userVector die Sonde beeinflusst.
      * @return Eine Liste von Cluster-IDs der serendipitischen Gewinner.
      */
     public static Map<String, Float> findSerendipitousClusters(
@@ -96,7 +95,9 @@ public class ClusterAlgorithm {
                 if (vectorObj instanceof List) {
                     @SuppressWarnings("unchecked")
                     List<Number> vectorAsList = (List<Number>) vectorObj;
-                    vectorsInBranch.add(Floats.toArray(vectorAsList));
+                    if (!vectorAsList.isEmpty()) { 
+                        vectorsInBranch.add(Floats.toArray(vectorAsList));
+                    } 
                 }
             }
             

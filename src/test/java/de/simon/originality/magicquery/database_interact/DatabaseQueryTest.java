@@ -2,6 +2,7 @@ package de.simon.originality.magicquery.database_interact;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -28,6 +29,11 @@ class DatabaseQueryTest {
 			fail("Database is empty or query went missing. Null was returned.");
 	}
 
+	@AfterEach
+	void shutdown() {
+		query.cleanup();
+	}
+	
 	@BeforeEach
 	void init() {
 		query = new DatabaseQuery(new LatexConverter(), new HtmlSanitizerService(), new KnowledgeGraphService(null));

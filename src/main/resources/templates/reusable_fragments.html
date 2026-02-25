@@ -96,7 +96,6 @@
 				</p>
 
 				<ul style="margin: 0; padding-left: 20px; list-style: none;">
-					<!-- KORREKTUR: Zurück zur Punkt-Notation für Java-Objekte -->
 					<li th:each="source : ${centroidData.payload.get('sorted_source_distribution')}">
 						<span th:text="|${source.name}: ${source.count}|"></span>
 					</li>

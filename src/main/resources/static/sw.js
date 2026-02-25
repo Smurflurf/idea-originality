@@ -1,20 +1,20 @@
-/* ===========================================================
-   SERVICE WORKER - ATOMIC VERSIONED CACHE
-   =========================================================== */
-
 const APP_VERSION = '@project.version@';
 const STATIC_CACHE_NAME = `idea-atlas-static-v${APP_VERSION}`;
 const JOB_CACHE_PREFIX = 'idea-atlas-job-';
 
-// Liste der Dateien, die wir unbedingt brauchen.
-// Wenn deine main.js jetzt alles enthält, brauchen wir menu.js hier nicht mehr.
-// Falls Vite doch splittet, ist es sicher, sie drin zu lassen, aber kein Muss, 
-// solange main.js sie importiert und der SW sie dann dynamisch cacht.
+// Dateien die direkt geladen werden.
+// Was hier nicht steht wird später nachgeladen, wenn es benötigt wird.
 const CORE_ASSETS = [
 	'/',
-	'/dist/main.css',
+
 	'/dist/main.js',
+	
+	'/dist/legal.css',
+	'/dist/main.css',
 	'/dist/menu.css',
+	'/dist/style.css',
+	'/dist/tooltips.css',
+	
 	'/vendor/fontawesome/css/all.min.css',
 	'/vendor/fontawesome/webfonts/fa-solid-900.woff2',
 	'/vendor/fontawesome/webfonts/fa-regular-400.woff2',
@@ -25,53 +25,43 @@ const CORE_ASSETS = [
 	'/vendor/tippy/tippy.css'
 ];
 
-// --- INSTALL: STRIKTE VERSIONIERUNG ---
+// --- INSTALL ---
 
 self.addEventListener('install', (event) => {
     self.skipWaiting();
+
     event.waitUntil(
         caches.open(STATIC_CACHE_NAME).then(async (cache) => {
-            // Wir bauen explizit Requests mit der Versionsnummer
+            console.log(`[SW] INSTALLING: Caching core assets for v${APP_VERSION}`);
+            
             const promises = CORE_ASSETS.map(async (assetPath) => {
-                // Der Key im Cache soll MIT Parameter sein: "/dist/main.js?v=4.1.179"
-                const versionedUrl = `${assetPath}${assetPath === '/' ? '' : '?v=' + APP_VERSION}`;
-                
+                const url = `${assetPath}${assetPath === '/' ? '' : '?v=' + APP_VERSION}`;
+                const request = new Request(url, { cache: 'reload' }); // Zwingt den Netzwerk-Request
+
                 try {
-                    // cache: 'reload' zwingt den Browser, das Netz zu nutzen
-                    const response = await fetch(versionedUrl, { cache: 'reload' });
-                    
-					if (!response.ok) throw new Error(`Status ${response.status}`);
-
-					// Wir speichern es unter der versionierten URL
-					await cache.put(versionedUrl, response);
-				} catch (error) {
-					console.error(`[SW INSTALL ERROR] Failed to fetch: ${url}`, error);
-					// Error reporting an Clients
-					const allClients = await self.clients.matchAll({ includeUncontrolled: true, type: 'window' });
-					for (const client of allClients) {
-						client.postMessage({
-							type: 'INSTALL_ERROR',
-							file: url,
-							status: error.message
-						});
-					}
-					throw error;
-				}
-
-
-
-				//} catch (e) {
-                //    console.error(`[SW INSTALL] Failed to cache ${versionedUrl}:`, e);
-                //    // Wir werfen keinen Fehler, damit der SW trotzdem installiert wird.
-                //    // Fehlende Dateien werden zur Laufzeit nachgeladen.
-                //}
+                    const response = await fetch(request);
+                    if (!response.ok) {
+                        throw new Error(`Network response was not ok for ${url}. Status: ${response.status}`);
+                    }
+                    await cache.put(request, response);
+                } catch (error) {
+                    console.error(`[SW INSTALL FAILED] Could not fetch/cache '${url}'.`, error);
+                    // Informiere alle offenen Tabs über den kritischen Fehler
+                    const allClients = await self.clients.matchAll({ includeUncontrolled: true });
+                    for (const client of allClients) {
+                        client.postMessage({ type: 'INSTALL_ERROR', file: url, status: error.message });
+                    }
+                    // Wir werfen den Fehler, damit der SW nicht installiert wird.
+                    throw error;
+                }
             });
+
             return Promise.all(promises);
         })
     );
 });
 
-// --- ACTIVATE: ALTE CACHES RIGOROS LÖSCHEN ---
+// --- ACTIVATE: ALTE CACHES LÖSCHEN ---
 
 self.addEventListener('activate', (event) => {
     event.waitUntil(self.clients.claim());
@@ -88,7 +78,7 @@ self.addEventListener('activate', (event) => {
     );
 });
 
-// --- HELPER ---
+// --- HELPER --- 
 
 /**
  * Entfernt gzip-Header, um NS_ERROR_CORRUPTED_CONTENT zu verhindern.
@@ -163,8 +153,7 @@ self.addEventListener('fetch', (event) => {
             }
 
             // B. STATIC ASSETS (Core Files)
-            // Hier liegt der Trick: Wir suchen im Cache IMMER nach der versionierten Datei!
-            
+           
             // Ist es eine unserer Core-Dateien?
             const cleanPath = url.pathname;
             if (CORE_ASSETS.includes(cleanPath)) {

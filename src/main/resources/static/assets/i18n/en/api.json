@@ -1,0 +1,183 @@
+{
+	"page_title": "API & AI Integration",
+	"intro": "The Ideenatlas provides a public, documented interface (API). It is specifically optimized to be used by both traditional applications and autonomously by AI agents (Large Language Models).",
+	"structure": [
+		{
+			"type": "section_title",
+			"text": "1. Available Endpoints"
+		},
+		{
+			"type": "subsection_title",
+			"text": "REST API (Recommended for Code & API Agents)"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "The primary search interface provides structured JSON responses. It includes direct search results, hierarchical paths within the knowledge graph, thematically similar clusters, and calculated serendipitous connections."
+				}
+			]
+		},
+		{
+			"type": "list",
+			"items": [
+				{
+					"label": "Method",
+					"text": "POST"
+				},
+				{
+					"label": "Endpoint",
+					"text": "/api/search"
+				},
+				{
+					"label": "Content-Type",
+					"text": "application/json"
+				},
+				{
+					"label": "Payload",
+					"text": "{ \"query\": \"The detailed, scientific search query\" }"
+				}
+			]
+		},
+		{
+			"type": "subsection_title",
+			"text": "Browsing API (For Web-Scraping LLMs)"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "For AI assistants in 'browsing mode' (e.g., ChatGPT Web, Claude, Perplexity) that cannot send POST requests, a GET wrapper is available. It performs the vector search and formats the JSON response into a minimal, easily machine-readable HTML structure."
+				}
+			]
+		},
+		{
+			"type": "list",
+			"items": [
+				{
+					"label": "Method",
+					"text": "GET"
+				},
+				{
+					"label": "Endpoint",
+					"text": "/api/search/view?q=Search+query+to+be+processed,+make+it+specific"
+				}
+			]
+		},
+		{
+			"type": "subsection_title",
+			"text": "AI Gateway (Browsing Interface)"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "For AI agents that cannot construct URLs manually, a minimalist HTML entry point is available. It contains a search form that redirects to the API view."
+				}
+			]
+		},
+		{
+			"type": "list",
+			"items": [
+				{
+					"label": "URL",
+					"text": "https://ideenatlas.eu/ai"
+				},
+				{
+					"label": "Action",
+					"text": "Submit query via form (parameter 'q')"
+				}
+			]
+		},
+		{
+			"type": "section_title",
+			"text": "2. Agent Discovery & Specifications"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "To ensure autonomous use by AI systems without human intervention, the Ideenatlas fully supports common machine discovery standards:"
+				}
+			]
+		},
+		{
+			"type": "list",
+			"items": [
+				{
+					"label": "OpenAPI 3.0",
+					"text": "The full technical description of all endpoints and schema definitions of the DTOs."
+				},
+				{
+					"label": "llms.txt",
+					"text": "Direct text instructions for LLMs on the correct use of the interfaces."
+				},
+				{
+					"label": "ai-plugin.json",
+					"text": "Metadata for direct integration as an OpenAI Plugin / Custom GPT."
+				}
+			]
+		},
+		{
+			"type": "lines_block",
+			"headline": "Direct Links to Resources",
+			"lines": [
+				[
+					{
+						"text": "OpenAPI Spec (JSON): "
+					},
+					{
+						"text": "/v3/api-docs/public-search-api",
+						"url": "/v3/api-docs/public-search-api"
+					}
+				],
+				[
+					{
+						"text": "Swagger UI (Interactive): "
+					},
+					{
+						"text": "/swagger-ui.html",
+						"url": "/swagger-ui.html"
+					}
+				],
+				[
+					{
+						"text": "LLM Instructions: "
+					},
+					{
+						"text": "/llms.txt",
+						"url": "/llms.txt"
+					}
+				],
+				[
+					{
+						"text": "AI Plugin Manifest: "
+					},
+					{
+						"text": "/.well-known/ai-plugin.json",
+						"url": "/.well-known/ai-plugin.json"
+					}
+				]
+			]
+		},
+		{
+			"type": "section_title",
+			"text": "3. Fair Use Policy"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "The API is open and currently does not require an API key. We ask you to refrain from massive automated scraping of the database and to adhere to rate limits of at most "
+				},
+				{
+					"text": "one request per second",
+					"bold": true
+				},
+				{
+					"text": ". Abusive use will lead to a temporary block of the calling IP address."
+				}
+			]
+		}
+	]
+}

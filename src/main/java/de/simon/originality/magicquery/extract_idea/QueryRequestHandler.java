@@ -80,7 +80,7 @@ public class QueryRequestHandler {
 		}
 	}
 
-	static String PERSONA = 
+	static final String PERSONA = 
 			"""
 			You are an idea-extracting engine. 
 			Your function is to extract the core ideas from unstructured data so it can be used in a semantic search system.
@@ -89,7 +89,7 @@ public class QueryRequestHandler {
 			You will formulate the "synthesised_idea" as if it was a fact, so you do not describe, neither summarize; you extract the idea and contain the original structure.
 			""";
 	
-	static String RULES = 
+	static final String RULES = 
 			"""
 			**RULES:**
 			    1.  "synthesised_idea" MUST be a single, raw text block.

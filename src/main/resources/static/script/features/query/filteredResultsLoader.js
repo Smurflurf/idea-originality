@@ -6,6 +6,7 @@ import { getCsrfToken } from '/script/core/security.js';
 import { applyGeneralTranslations, t } from '/script/core/localization.js';
 import { emit, EVENTS } from '/script/core/eventBus.js';
 import { initializeAbstractButtonsFor } from '/script/ui/interaction/toggleAbstractButton.js';
+import { registerCleanup } from '/script/core/lifecycleManager.js';
 
 function createSkeletonCardHTML() {
     const cardHTML = `
@@ -233,6 +234,12 @@ function initializeTopicTabs(paneId, colorMap, queryVector) {
             isLoading = false;
         }
     }
+
+	registerCleanup(() => {
+		observer.disconnect();
+		// Flag zurücksetzen, damit es beim Rückwärts-Navigieren neu initiiert werden kann
+		if (contentPane) contentPane.dataset.loaderInitialized = 'false';
+	});
 }
 
 export function initFilteredLoader() {

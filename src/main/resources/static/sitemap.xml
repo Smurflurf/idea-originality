@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
+    <!-- ========================================== -->
+    <!-- STARTSEITE -->
+    <!-- ========================================== -->
+    <url>
+        <loc>https://ideenatlas.eu/</loc>
+        <lastmod>2026-02-22</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>1.0</priority>
+        <xhtml:link rel="alternate" hreflang="de" href="https://ideenatlas.eu/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ideenatlas.eu/"/>
+    </url>
+
+    <!-- ========================================== -->
+    <!-- API & KI-SCHNITTSTELLE -->
+    <!-- ========================================== -->
+    <url>
+        <loc>https://ideenatlas.eu/api?lang=de</loc>
+        <lastmod>2026-02-22</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.9</priority>
+        <xhtml:link rel="alternate" hreflang="de" href="https://ideenatlas.eu/api?lang=de"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ideenatlas.eu/api?lang=en"/>
+    </url>
+    <url>
+        <loc>https://ideenatlas.eu/api?lang=en</loc>
+        <lastmod>2026-02-22</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.9</priority>
+        <xhtml:link rel="alternate" hreflang="de" href="https://ideenatlas.eu/api?lang=de"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ideenatlas.eu/api?lang=en"/>
+    </url>
+
+	<!-- HTML Schnittstelle fuer KIs -->
+    <url>
+        <loc>https://ideenatlas.eu/ai</loc>
+        <lastmod>2026-02-22</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    
+    <!-- API Spezifikation (Swagger) -->
+    <url>
+        <loc>https://ideenatlas.eu/v3/api-docs/public-search-api</loc>
+        <lastmod>2026-02-22</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+
+    <!-- ========================================== -->
+    <!-- RECHTLICHES (IMPRESSUM) -->
+    <!-- ========================================== -->
+    <url>
+        <loc>https://ideenatlas.eu/impressum?lang=de</loc>
+        <lastmod>2026-02-22</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.4</priority>
+        <xhtml:link rel="alternate" hreflang="de" href="https://ideenatlas.eu/impressum?lang=de"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ideenatlas.eu/impressum?lang=en"/>
+    </url>
+    <url>
+        <loc>https://ideenatlas.eu/impressum?lang=en</loc>
+        <lastmod>2026-02-22</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.4</priority>
+        <xhtml:link rel="alternate" hreflang="de" href="https://ideenatlas.eu/impressum?lang=de"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ideenatlas.eu/impressum?lang=en"/>
+    </url>
+
+    <!-- ========================================== -->
+    <!-- RECHTLICHES (DATENSCHUTZ) -->
+    <!-- ========================================== -->
+    <url>
+        <loc>https://ideenatlas.eu/privacy?lang=de</loc>
+        <lastmod>2026-02-22</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.4</priority>
+        <xhtml:link rel="alternate" hreflang="de" href="https://ideenatlas.eu/privacy?lang=de"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ideenatlas.eu/privacy?lang=en"/>
+    </url>
+    <url>
+        <loc>https://ideenatlas.eu/privacy?lang=en</loc>
+        <lastmod>2026-02-22</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.4</priority>
+        <xhtml:link rel="alternate" hreflang="de" href="https://ideenatlas.eu/privacy?lang=de"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ideenatlas.eu/privacy?lang=en"/>
+    </url>
+
+    <!-- ========================================== -->
+    <!-- RECHTLICHES (LIZENZEN) -->
+    <!-- ========================================== -->
+    <url>
+        <loc>https://ideenatlas.eu/licenses?lang=de</loc>
+        <lastmod>2026-02-22</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.4</priority>
+        <xhtml:link rel="alternate" hreflang="de" href="https://ideenatlas.eu/licenses?lang=de"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ideenatlas.eu/licenses?lang=en"/>
+    </url>
+    <url>
+        <loc>https://ideenatlas.eu/licenses?lang=en</loc>
+        <lastmod>2026-02-22</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.4</priority>
+        <xhtml:link rel="alternate" hreflang="de" href="https://ideenatlas.eu/licenses?lang=de"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ideenatlas.eu/licenses?lang=en"/>
+    </url>
+
+</urlset>

@@ -218,7 +218,6 @@
 .intent-btn:hover {
     background-color: var(--bg-element);
     border-color: var(--color-primary);
-    transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 

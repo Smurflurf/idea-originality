@@ -27,7 +27,8 @@
 	"footer": {
 		"impressum": "Impressum",
 		"privacy": "Datenschutz",
-		"licenses": "Lizenzen"
+		"licenses": "Lizenzen",
+		"api": "API"
 	},
 	"tts": {
 		"loading": "Lädt...",

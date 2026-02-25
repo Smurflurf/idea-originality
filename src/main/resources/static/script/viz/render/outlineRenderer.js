@@ -1,13 +1,7 @@
 import { getContext } from '/script/core/context.js';
+import { registerCleanup } from '/script/core/lifecycleManager.js';
+import { on, off } from '/script/core/eventBus.js';
 
-/**
- * Zeichnet die SVG-Pfade für die Outlines in einen <g>-Container.
- * Liest die Pfaddaten dynamisch aus context.
- * @param {SVGElement} gContainer - Der Ziel-Container.
- * @param {Set<string>} clusterIds - Die IDs der zu zeichnenden Cluster.
- * @param {object} colorMap - Die Farbkarte.
- * @param {boolean} isContext - Ob es sich um Kontext-Outlines handelt (grau).
- */
 function drawOutlines(gContainer, clusterIds, colorMap, isContext = false) {
 	if (!gContainer || !clusterIds || !colorMap) return;
 	gContainer.innerHTML = '';
@@ -35,23 +29,18 @@ function drawOutlines(gContainer, clusterIds, colorMap, isContext = false) {
 	}
 }
 
-/**
- * Initialisiert den Outline-Renderer.
- * @param {string} prefix - Das Präfix der Element-IDs ('own', 'nc', 'serendipity').
- */
 export function initializeOutlineRenderer(prefix) {
 	const svg = document.getElementById(`viz-layer-${prefix}-outlines-svg`);
-	const wrapper = document.getElementById(`zoom-pan-wrapper-${prefix}`);
+	const container = document.getElementById(`viz-stack-container-${prefix}`);
 	const ctx = getContext();
 
-	if (!svg || !wrapper || !ctx.embeddingBounds || !ctx.outlineData) {
+	if (!svg || !container || !ctx.embeddingBounds || !ctx.outlineData) {
 		console.warn(`OutlineRenderer für '${prefix}': Kritische Elemente oder Daten fehlen.`);
 		return;
 	}
 
 	const bounds = ctx.embeddingBounds;
 
-	// --- PRERENDERING-LOGIK ---
 	const dataWidth = bounds.xmax - bounds.xmin;
 	const dataHeight = bounds.ymax - bounds.ymin;
 	const aspectRatio = dataHeight / dataWidth;
@@ -70,33 +59,36 @@ export function initializeOutlineRenderer(prefix) {
 
 	let colorMap = {};
 	switch (prefix) {
-		case 'own':
-			colorMap = ctx.ownColorMap;
-			break;
-		case 'nc':
-			colorMap = ctx.neighborColorMap || {};
-			break;
-		case 'serendipity':
-			colorMap = ctx.serendipityColorMap || {};
-			break;
+		case 'own': colorMap = ctx.ownColorMap; break;
+		case 'nc': colorMap = ctx.neighborColorMap || {}; break;
+		case 'serendipity': colorMap = ctx.serendipityColorMap || {}; break;
 	}
 
-	// Prüfen ob Kontextdaten da sind, sonst leeres Array
 	const contextLabels = ctx.contextLabels;
 	const contextClusterIds = new Set(contextLabels.map(label => label.clusterId));
-
 	const mainClusterIds = new Set(Object.keys(colorMap));
 
 	drawOutlines(gMain, mainClusterIds, colorMap, false);
 	drawOutlines(gContext, contextClusterIds, {}, true);
 
-	const observer = new MutationObserver(() => {
-		const containerWidth = wrapper.parentElement.clientWidth;
-		if (containerWidth === 0) return;
-		const wrapperWidth = wrapper.getBoundingClientRect().width;
-		const currentZoom = wrapperWidth / containerWidth;
-		const dynamicStrokeInPixels = 1.0 * Math.sqrt(currentZoom);
-		svg.style.setProperty('--stroke-width-px', `${dynamicStrokeInPixels}px`);
+    let lastCalculatedStroke = null;
+
+    const updateOutlineStroke = (detail) => {
+        if (!detail || detail.prefix !== prefix) return;
+
+        const currentZoom = detail.zoom;
+        const dynamicStrokeInPixels = 1.0 * Math.sqrt(currentZoom);
+        
+        // PERFORMANCE FIX: Setzt den Style nur, wenn er sich signifikant ändert.
+        if (lastCalculatedStroke === null || Math.abs(lastCalculatedStroke - dynamicStrokeInPixels) > 0.01) {
+            svg.style.setProperty('--stroke-width-px', `${dynamicStrokeInPixels}px`);
+            lastCalculatedStroke = dynamicStrokeInPixels;
+        }
+    };
+
+    on('viz-transform', updateOutlineStroke);
+	
+	registerCleanup(() => {
+	    off('viz-transform', updateOutlineStroke);
 	});
-	observer.observe(wrapper, { attributes: true, attributeFilter: ['style'] });
 }

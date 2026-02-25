@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: ideenatlas-mcp-service
+  ai:
+    mcp:
+      server:
+        enabled: true
+        name: Ideenatlas-MCP
+        version: 1.0.0
+        transport: SSE
+        sse-endpoint: /sse
+        sse-message-endpoint: /mcp/message
+        
+        capabilities:
+          tool: true
+          resource: false
+          prompt: false
+          completion: false

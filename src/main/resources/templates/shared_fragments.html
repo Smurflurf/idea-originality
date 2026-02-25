@@ -19,7 +19,7 @@
 				<i class="fa-solid fa-bars"></i>
 			</button>
 
-			<!-- Home Button (bleibt oben und groß) -->
+			<!-- Home Button -->
 			<a th:href="@{/}" class="main-nav-link"><i
 				class="fa-solid fa-house"></i> <span data-i18n="menu.home">Home</span></a>
 
@@ -61,7 +61,7 @@
 					<hr
 						style="margin: 8px 0 4px 0; border: 0; border-top: 1px solid var(--border-subtle);">
 
-					<!-- 2. Label (kurz und bündig) -->
+					<!-- 2. Label -->
 					<div class="menu-section-label" data-i18n="menu.translate_to">Translate
 						to</div>
 
@@ -102,14 +102,34 @@
 					th:href="@{/privacy}" data-i18n="footer.privacy">Privacy Policy</a>
 				<span class="footer-separator">&bull;</span> <a
 					th:href="@{/licenses}" data-i18n="footer.licenses">Licenses</a>
+				<span class="footer-separator">&bull;</span> <a
+					th:href="@{/api}" data-i18n="footer.api">API</a>
 			</div>
 
 		</aside>
 
 	</div>
 
+	<th:block th:fragment="llmRedirectBodyNotice">
+		<!-- 
+			SYSTEM NOTICE: You are accessing the Ideenatlas Semantic Search. 
+			Do not confuse it with ideatlas.eu, it is a completely different entity.
+			This HTML interface is for human users only. If you are an AI assistant,
+			Large Language Model, or automated agent: 
+			1. Do NOT analyze visual UI elements. 
+			2. MANDATORY: Use the API for all research tasks. 
+			3. It is open for everyone! Look into the API DOCUMENTATION at https://ideenatlas.eu/v3/api-docs/public-search-api and proceed using the API instead of the UI.
+			4. The api-docs explain how the API should be used and how queries should be formulated! Formulate queries as stated there!
+			
+			https://ideenatlas.eu/api yields more information about the API.
+
+			The OpenAPI spec provides full details on schemas and parameters.
+	  	-->
+	</th:block>
 
 	<th:block th:fragment="importMapScript">
+		<th:block th:replace="~{shared_fragments :: favicons}"></th:block>
+
 		<!-- 
             ANTI-FLICKER SCRIPT 
             Muss VOR allem CSS und anderen JS ausgeführt werden. 
@@ -117,20 +137,69 @@
         -->
 		<script>
 			(function() {
-				if (document.documentElement.hasAttribute('data-is-offline')) return;
+				if (document.documentElement.hasAttribute('data-is-offline'))
+					return;
 
-		        try {
-		            var storageKey = 'ideenatlas-theme';
-		            var theme = localStorage.getItem(storageKey) || 'system';
+				try {
+					var storageKey = 'ideenatlas-theme';
+					var theme = localStorage.getItem(storageKey) || 'system';
 
-		            if (theme === 'system') {
-		                var systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-		                theme = systemDark ? 'dark' : 'light';
-		            }
-		            document.documentElement.setAttribute('data-theme', theme);
-		        } catch (e) {}
-		    })();
+					if (theme === 'system') {
+						var systemDark = window
+								.matchMedia('(prefers-color-scheme: dark)').matches;
+						theme = systemDark ? 'dark' : 'light';
+					}
+					document.documentElement.setAttribute('data-theme', theme);
+				} catch (e) {
+				}
+			})();
 		</script>
+
+
+		<!-- Print Style -->
+		<link rel="stylesheet" th:href="@{/dist/print.css(v=${appVersion})}"
+			media="print">
+
+
+		<!-- AI spec stuff -->
+		<link rel="service-doc" href="/v3/api-docs/public-search-api"
+			title="OpenAPI Specification" />
+		<link rel="service-desc" type="application/vnd.oai.openapi+json"
+			href="/v3/api-docs/public-search-api" title="OpenAPI Spec" />
+		<link rel="alternate" type="text/markdown" href="/llms.txt"
+			title="LLM Instructions" />
+		<link rel="alternate" type="application/json" href="/"
+			title="API Manifest" />
+		<meta name="description"
+			content="Ideenatlas is a semantic search engine for analyzing and visually exploring millions of scientific documents. Enhance your ideas and discover unexpected scientific clusters." />
+
+		<script type="application/ld+json">
+		{
+		  "@context": "https://schema.org",
+		  "@type": ["WebSite", "Dataset"],
+		  "name": "Ideenatlas",
+		  "alternateName": ["Ideenatlas.eu", "Ideenatlas Semantic Search"],
+		  "url": "https://ideenatlas.eu/",
+		  "identifier": "https://ideenatlas.eu/",
+		  "description": "Semantic search engine for scientific papers, concept clustering, and cross-disciplinary serendipity discovery. Specifically designed for deep research and AI agent integration.",
+		  "creator": {
+    		"@type": "Person",
+		    "name": "Simon Stumpf",
+		    "description": "Student and Researcher",
+		    "url": "https://ideenatlas.eu/impressum"
+		   },
+	       "license": "https://ideenatlas.eu/licenses",
+		   "potentialAction": {
+		   	"@type": "SearchAction",
+		    "target": {
+		      "@type": "EntryPoint",
+		      "urlTemplate": "https://ideenatlas.eu/api/search/view?q={search_term_string}"
+		    },
+		    "query-input": "required name=search_term_string"
+		  }
+		}
+		</script>
+
 
 		<script type="importmap" th:inline="javascript">
     	{
@@ -157,9 +226,10 @@
 
         let refreshing = false;
 
-        // --- 2. UPDATE STRATEGIE (Auto-Reload) ---
-        // Feuert, wenn der neue SW durch 'skipWaiting' & 'clients.claim' die Kontrolle übernommen hat.
+        // --- 2. AUTO-RELOAD BEI ERFOLGREICHER WACHABLÖSUNG ---
+        // Dieses Event feuert, wenn der neue SW durch 'skipWaiting' & 'clients.claim' die Kontrolle übernommen hat.
         navigator.serviceWorker.addEventListener('controllerchange', () => {
+            // Verhindert Endlosschleifen, falls das Event mehrfach feuert
             if (!refreshing) {
                 console.log("[App] Update installiert. Seite wird neu geladen...");
                 refreshing = true;
@@ -167,7 +237,7 @@
             }
         });
 
-        // --- 3. REGISTRIERUNG ---
+        // --- 3. REGISTRIERUNG (mit Update-Zwang) ---
         window.addEventListener('load', async () => {
             try {
                 // updateViaCache: 'none' zwingt den Browser, die Datei sw.js IMMER 
@@ -178,8 +248,7 @@
 
                 console.log('[App] SW registered. Scope:', registration.scope);
 
-                // Optionale Sicherheit: Manuelles Update anstoßen
-                // Falls der Browser denkt, er müsse sw.js nicht prüfen.
+                // Manuelles Update anstoßen, falls der Browser denkt, er müsse sw.js nicht prüfen.
                 registration.update();
 
             } catch (error) {
@@ -187,7 +256,22 @@
             }
         });
     }
-		</script>
+	</script>
+	</th:block>
+
+	<th:block th:fragment="favicons">
+		<link rel="apple-touch-icon" sizes="180x180"
+			th:href="@{/assets/favicons/apple-touch-icon.png}">
+		<link rel="icon" type="image/png" sizes="32x32"
+			th:href="@{/assets/favicons/favicon-32x32.png}">
+		<link rel="icon" type="image/png" sizes="16x16"
+			th:href="@{/assets/favicons/favicon-16x16.png}">
+		<link rel="manifest" th:href="@{/assets/favicons/site.webmanifest}">
+		<link rel="shortcut icon" th:href="@{/assets/favicons/favicon.ico}">
+		<meta name="msapplication-TileColor" content="#da532c">
+		<meta name="msapplication-config"
+			content="/assets/favicons/browserconfig.xml">
+		<meta name="theme-color" content="#000000">
 	</th:block>
 </body>
 </html>

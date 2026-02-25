@@ -178,7 +178,7 @@
     /* GLASS CONTAINER (query popup textcontainer) */
     --bg-popup-glass: rgba(255, 255, 255, 0.35);
     --border-subtle: rgba(0, 0, 0, 0.1); 
-    --blur-strength: 15px;
+    --blur-strength: 1px;
 
     /* WOLKEN: Die Dark-Mode Farben, aber ABGEDUNKELT */
     --cloud-rgb-1: 40, 70, 140; 

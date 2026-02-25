@@ -16,6 +16,16 @@ function getCurrentLang() {
 	return lang;
 }
 
+function setCookie(name, value, days) {
+    let expires = "";
+    if (days) {
+        const date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "") + expires + "; path=/";
+}
+
 /**
  * EXPORTIERTE FUNKTION FÜR SOFORTIGES LADEN
  * Diese Funktion muss so früh wie möglich aufgerufen werden (Inline Script im Head).
@@ -84,6 +94,7 @@ export async function setLanguage(newLang, files = ['common', 'index', 'results'
 		: newLang;
 
 	localStorage.setItem(STORAGE_KEY, newLang);
+	setCookie('lang', effectiveLang, 365);
 	document.documentElement.lang = effectiveLang;
 
 	// Beim manuellen Wechsel wollen wir meist frisch laden, Cache nutzen wir hier nicht primär

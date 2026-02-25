@@ -1,0 +1,164 @@
+@media print {
+    /* ============================================================
+       0. FARBEN & THEME ERZWINGEN
+       ============================================================ */
+    body {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    :root {
+        --bg-app: #ffffff !important;
+        --bg-surface: #ffffff !important; 
+        --bg-deep: #ffffff !important; 
+    }
+
+    /* ============================================================
+       1. RESET & ELEMENTE VERSTECKEN
+       ============================================================ */
+    html, body {
+        width: 100% !important; height: auto !important;
+        margin: 0 !important; padding: 0 !important;
+        overflow: visible !important; 
+        background-color: #ffffff !important;
+    }
+
+    #menu-trigger, .sidebar-menu, .menu-overlay,
+    .zoom-controls, .export-btn, .toggle-json-btn, .expand-button,
+    .download-btn-styled, .no-results-message, .swipe-shadow-overlay,
+    .recorder-overlay, .download-popup-overlay, #tts-floating-player,
+    .tippy-box, .viz-toggle-header, .toggle-hierarchy-btn { 
+        display: none !important;
+    }
+
+    /* ============================================================
+       2. ABSTÄNDE KORRIGIEREN (PADDING-FIX)
+       ============================================================ */
+    
+    .content-header-flex h1 {
+        margin-top: 0 !important;
+        margin-bottom: 10px !important;
+    }
+
+    .hierarchy-container {
+        margin-top: 20px !important;
+        margin-bottom: 25px !important;
+    }
+    
+    .hierarchy-item-box {
+        padding: 4px 10px !important;
+        border-width: 1px !important;
+        border-style: solid !important;
+    }
+
+    .viz-content-pane > h2 {
+        margin-top: 0 !important;
+		margin-bottom: 15px !important;
+	}
+
+	/* ============================================================
+       3. VISUALISIERUNG (KORRIGIERTER BLOCK)
+       ============================================================ */
+
+	/* 1. Haupt-Container Layout-Reset (wie beim letzten Mal) */
+    .viz-content-pane.active {
+        display: block !important;
+        position: static !important;
+        height: auto !important;
+        overflow: visible !important;
+        padding: 0 !important; margin: 0 !important;
+    }
+
+    .viz-stack-container {
+        position: relative !important;
+        display: block !important;
+        width: 100% !important;
+        max-width: 16cm !important; 
+        margin: 20px auto !important;
+        height: auto !important;
+        min-height: auto !important;
+        
+        border: 1px solid #ccc !important;
+        page-break-inside: avoid !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        overflow: hidden !important; 
+    }
+
+    .zoom-pan-wrapper, .dynamic-points-container {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        transform: none !important; 
+        display: block !important;
+    }
+	
+    /* Die Bilder müssen den Container exakt ausfüllen ohne Quetschen */
+    .viz-layer {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        /* 'fill' sorgt dafür, dass das Bild exakt dem Aspect-Ratio des Containers folgt */
+        object-fit: fill !important; 
+        transform: none !important;
+        display: block !important;
+    }
+
+    .viz-controls .ctrl-btn { 
+        box-shadow: none !important; 
+    }
+
+    /* ============================================================
+       4. RESULT CARDS (PADDING-FIX)
+       ============================================================ */
+
+    .result-card {
+        break-inside: avoid;
+        border: 1px solid #ccc !important;
+        box-shadow: none !important;
+        margin-bottom: 15px !important;
+        padding: 15px !important;
+    }
+
+    .result-header {
+        padding-bottom: 8px !important;
+        margin-bottom: 8px !important;
+    }
+
+    .result-summary h3 {
+        margin-top: 0 !important;
+        margin-bottom: 6px !important;
+    }
+    
+    .result-summary p {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* ============================================================
+       5. ALLGEMEINE DRUCK-STYLES
+       ============================================================ */
+    
+    .viz-content-pane.active {
+        display: block !important;
+        position: static !important;
+        height: auto !important;
+        overflow: visible !important;
+        padding: 0 !important; 
+        margin: 0 !important;
+    }
+
+    .result-payload, .expandable-abstract {
+        max-height: none !important;
+    }
+
+    .topic-tab.active {
+        background-color: var(--active-cluster-color, #2563eb) !important;
+        color: #fff !important;
+        border-color: var(--active-cluster-color, #2563eb) !important;
+    }
+}
