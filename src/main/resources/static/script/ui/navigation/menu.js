@@ -162,15 +162,6 @@ export function setupMenuInteractions() {
             }
         }
     }
-
-    if (window.visualViewport && !window.viewportResizeHandlerAttached) {
-        window.viewportResizeHandlerAttached = true;
-        window.visualViewport.addEventListener('resize', () => {
-            const keyboardHeight = window.innerHeight - window.visualViewport.height;
-            const sb = document.getElementById('sidebar-menu');
-            if (sb) sb.style.paddingBottom = keyboardHeight > 100 ? `${keyboardHeight}px` : '';
-        });
-    }
 }
 
 

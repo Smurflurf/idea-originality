@@ -6,21 +6,72 @@ let particles = [];
 let stagedParticles = [];
 let animationFrameId = null;
 let resizeObserver = null;
+let currentDpr = 1; // Für setTransform Reset
 
 const FRICTION = 0.9999;
 const FADE_SPEED = 0.005;
 const PHYSICS_THROTTLE_RATE = 5;
 
-// Das ist die "Old" resizeLogic, die robust funktioniert
+// --- GPU OPTIMIERUNG: Entfernung von { willReadFrequently: true } ---
+// Dadurch wird das Canvas im VRAM der Grafikkarte abgelegt, was das
+// Kopieren per drawImage ins Haupt-Canvas drastisch beschleunigt.
+const spriteSheetCanvas = document.createElement('canvas');
+spriteSheetCanvas.width = 1024; 
+spriteSheetCanvas.height = 512;
+const spriteCtx = spriteSheetCanvas.getContext('2d'); 
+let spriteX = 0;
+let spriteY = 0;
+const ROW_HEIGHT = 64; 
+const charCache = {};
+
+function getCachedCharSprite(char, font, color) {
+    const cacheKey = `${char}-${font}-${color}`;
+    if (charCache[cacheKey]) return charCache[cacheKey];
+
+    spriteCtx.font = font;
+    const width = Math.ceil(spriteCtx.measureText(char).width) + 8; // Extra padding
+    
+    // Zeilenumbruch auf dem Sprite-Sheet
+    if (spriteX + width > spriteSheetCanvas.width) {
+        spriteX = 0;
+        spriteY += ROW_HEIGHT;
+    }
+
+    spriteCtx.font = font;
+    spriteCtx.fillStyle = color;
+    spriteCtx.textAlign = 'center';
+    spriteCtx.textBaseline = 'middle';
+    
+    // Wir zeichnen exakt in die Mitte der reservierten "Zelle"
+    spriteCtx.fillText(char, spriteX + width / 2, spriteY + ROW_HEIGHT / 2);
+
+    const spriteInfo = {
+        x: spriteX,
+        y: spriteY,
+        w: width,
+        h: ROW_HEIGHT
+    };
+
+    spriteX += width;
+    charCache[cacheKey] = spriteInfo;
+    
+    return spriteInfo;
+}
+
 export function resizeAndScaleCanvas() {
     if (!canvas || !ctx) return;
-    const dpr = window.devicePixelRatio || 1;
+    
+    // --- HARTE OPTIMIERUNG: DPR CAPPING ---
+    currentDpr = Math.min(window.devicePixelRatio || 1, 1.25); 
     const rect = canvas.getBoundingClientRect();
     
-    if (canvas.width !== rect.width * dpr || canvas.height !== rect.height * dpr) {
-        canvas.width = rect.width * dpr;
-        canvas.height = rect.height * dpr;
-        ctx.scale(dpr, dpr);
+    const targetWidth = Math.floor(rect.width * currentDpr);
+    const targetHeight = Math.floor(rect.height * currentDpr);
+
+    if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+        ctx.scale(currentDpr, currentDpr);
     }
 }
 
@@ -60,16 +111,23 @@ export function prepareTextExplosion(element) {
     const currentY = elementRect.top;
 
     characters.forEach(char => {
+        if (char === ' ') {
+             currentX += ctx.measureText(char).width;
+             return;
+        }
+
         const metrics = ctx.measureText(char);
         const charWidth = metrics.width;
         
         const charCenterX = currentX + charWidth / 2;
         const charCenterY = currentY + elementRect.height / 2;
         
+        // Buchstaben sofort aufs Sprite Sheet schreiben
+        const cachedRender = getCachedCharSprite(char, elementStyle.font, elementStyle.color);
+
         particleData.push({
             text: char,
-            font: elementStyle.font,
-            color: elementStyle.color,
+            cachedRender: cachedRender, 
             initialX: charCenterX,
             initialY: charCenterY,
             offsetX: 0, offsetY: 0,
@@ -103,8 +161,7 @@ export function triggerPreparedExplosion(particleData, shockwaveOrigin) {
 function animate() {
     animationFrameId = requestAnimationFrame(animate);
 
-    // Frame Counting für Physik Throttling
-    animConfig.frameCount++; // Wichtig für animationConfig usage
+    animConfig.frameCount++;
 
     if (stagedParticles.length > 0) {
         particles.push(...stagedParticles);
@@ -114,11 +171,9 @@ function animate() {
     if (particles.length === 0) return;
 
     const rect = canvas.getBoundingClientRect();
-    ctx.clearRect(0, 0, rect.width, rect.height);
+    ctx.clearRect(0, 0, (rect.width + 1) | 0, (rect.height + 1) | 0);
 
     const physicsGroup = animConfig.frameCount % PHYSICS_THROTTLE_RATE;
-    
-    // Fallback DeltaTime falls nicht gesetzt (da wir masterAnimate entfernt haben)
     const dt = 1/60; 
     const timeFactor = 60 * dt * animConfig.speed;
     const throttledTimeFactor = timeFactor * PHYSICS_THROTTLE_RATE;
@@ -155,20 +210,33 @@ function animate() {
 
         if (currentX < -20 || currentX > rect.width + 20 || currentY < -20 || currentY > rect.height + 20) continue;
 
-        ctx.save();
+        // --- HARTE OPTIMIERUNG: Keine save()/restore() calls mehr! ---
         ctx.translate(currentX, currentY);
         ctx.rotate(p.rotation);
-        ctx.font = p.font;
-        ctx.fillStyle = p.color;
         ctx.globalAlpha = p.opacity;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(p.text, 0, 0);
-        ctx.restore();
+        
+        const cache = p.cachedRender;
+        // Rendern aus dem globalen Texture Atlas
+        ctx.drawImage(
+            spriteSheetCanvas, 
+            cache.x, cache.y, cache.w, cache.h, 
+            -cache.w / 2, -cache.h / 2, cache.w, cache.h
+        );
+        
+        // Reset via direkter Matrix-Zuweisung (viel schneller als ctx.restore)
+        ctx.setTransform(currentDpr, 0, 0, currentDpr, 0, 0); 
     }
+    ctx.globalAlpha = 1.0; // Sicherer Reset am Ende
     
     if (animConfig.frameCount % 180 === 0) {
-         particles = particles.filter(p => p.visible);
+         // GC FIX: In-Place Filterung, ohne ein neues Array zu erstellen!
+         let writeIdx = 0;
+         for (let j = 0; j < particles.length; j++) {
+             if (particles[j].visible) {
+                 particles[writeIdx++] = particles[j];
+             }
+         }
+         particles.length = writeIdx;
     }
 }
 

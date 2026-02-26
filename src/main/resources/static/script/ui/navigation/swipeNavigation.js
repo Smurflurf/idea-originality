@@ -1,6 +1,5 @@
 // ui/navigation/swipeNavigation.js
 
-// NEU: Import von getScrollYForTabIndex hinzugefügt
 import { availableTabs, getCurrentTabIndex, activateTabByIndex, getScrollYForTabIndex, syncHeaderStateForTab, syncAllTabsToHeaderState } from '/script/viz/core/visualizationToggle.js';
 import { triggerPositionUpdateForViz } from '/script/viz/core/zoomAndPan.js';
 
@@ -12,7 +11,7 @@ const CONFIG = {
 	rubberBandFactor: 0.4,
 	shadowDistanceDivisor: 100,
 	maxShadowOpacity: 0.6,
-	animDuration: 250, // Leicht erhöht für mehr Smoothness
+	animDuration: 250, 
 	headerFallbackHeight: 0
 };
 
@@ -30,15 +29,14 @@ let state = {
 	overlayEl: null,
 	leftShadow: null,
 	rightShadow: null,
-	didSwipe: false
-	// initialScrollY brauchen wir nicht mehr global, wir holen es pro Tab dynamisch
+	didSwipe: false,
+	cachedScrollYs: [] // <-- NEU: Cache für das Scroll-Layout
 };
 
 let cleanupTimer = null;
 let isAnimating = false;
 let tabHidingTimeoutId = null;
 let isInitialized = false;
-
 
 // --- INIT ---
 export function initializeSwipeNavigation() {
@@ -59,10 +57,7 @@ export function initializeSwipeNavigation() {
 	blockEvents.forEach(eventType => {
 		document.body.addEventListener(eventType, (e) => {
 			if (state.isDragging || state.didSwipe) {
-				// --- FIX 3: Wenn auf das Overlay geklickt wird, NICHT blockieren!
-				// Das erlaubt uns, die Animation durch Klick zu unterbrechen.
 				if (e.target.id === 'menu-overlay') return;
-
 				if (eventType === 'click' && !e.isTrusted) return;
 
 				e.preventDefault();
@@ -108,7 +103,6 @@ function handleStart(e) {
 
 	const ignoreSelector = 'input, textarea, .history-link, .topic-tabs-scroller, .attachments-container, .viz-stack-container.is-scroll-zoom-active, .tippy-box';
 	if (e.target.closest(ignoreSelector)) return;
-
 	
 	if (window.tippy) {
 		tippy.hideAll({ duration: 0 });
@@ -133,7 +127,6 @@ function handleStart(e) {
 	if (e.type === 'mousedown') {
 		if (e.button !== 0) return;
 
-		// Prüfen, ob das Menü bereits offen ist
 		const menuEl = document.getElementById('sidebar-menu');
 		const isMenuOpen = menuEl && menuEl.classList.contains('is-open');
 
@@ -149,8 +142,6 @@ function handleStart(e) {
 			maxTriggerWidth = Math.max(rect.left, CONFIG.edgeZone);
 		}
 
-		// --- FIX 1: Wenn das Menü OFFEN ist, erlauben wir mousedown überall (um es zuzuschieben)
-		// Wenn es ZU ist, bleibt es bei der edgeZone-Beschränkung.
 		if (!isMenuOpen && e.clientX > maxTriggerWidth) return;
 
 		clientX = e.clientX;
@@ -188,7 +179,8 @@ function handleStart(e) {
 		overlayEl: document.getElementById('menu-overlay'),
 		leftShadow: lShadow,
 		rightShadow: rShadow,
-		stylesPrepared: false
+		stylesPrepared: false,
+		cachedScrollYs: [] // Cache Reset
 	};
 }
 
@@ -310,7 +302,13 @@ function prepareAllTabs() {
 		state.resultsContainer.classList.add('is-swiping');
 	}
 
+	// PERFORMANCE FIX 1: Einmaliges Cachen der Y-Positionen für den gesamten Swipe!
+	state.cachedScrollYs = [];
+
 	availableTabs.forEach((t, i) => {
+		// Y Position cachen um DOM Reads im Loop zu vermeiden
+		state.cachedScrollYs[i] = getScrollYForTabIndex(i);
+		
 		const isNeighbor = Math.abs(i - state.activeTabIndex) <= 1;
 
 		if (!isNeighbor) {
@@ -362,12 +360,9 @@ function executeSwipe(deltaX) {
 
 			if (state.overlayEl) {
 				const rawProgress = 1 - (Math.abs(translate) / CONFIG.menuWidth);
-
-				// --- FIX: SOFORT sichtbar und klickbar machen ---
 				state.overlayEl.style.display = 'block';
 				state.overlayEl.style.visibility = 'visible';
-				state.overlayEl.style.pointerEvents = 'auto'; // Immer auf auto während der Interaktion
-
+				state.overlayEl.style.pointerEvents = 'auto'; 
 				state.overlayEl.style.opacity = Math.min(1, Math.max(0, rawProgress));
 			}
 		}
@@ -407,12 +402,9 @@ function executeSwipe(deltaX) {
 			const basePos = (i - idx) * width;
 			const finalX = basePos + effectiveDelta;
 
-			// HIER DIE REVOLUTION: 
-			// Wir holen die gespeicherte Scroll-Position für GENAU DIESEN Tab
-			const myScrollY = getScrollYForTabIndex(i);
+			// HARTE OPTIMIERUNG: Wert kommt aus dem Cache, kein Reflow/DOM-Read mehr!
+			const myScrollY = state.cachedScrollYs[i];
 
-			// Wir wenden X (für den Swipe) und Y (für den individuellen Scroll) gleichzeitig an
-			// translate3d ist wichtig für die GPU-Beschleunigung
 			tab.content.style.transform = `translate3d(${finalX}px, -${myScrollY}px, 0)`;
 		});
 	}
@@ -461,7 +453,6 @@ function handleEnd(e) {
 
 	if (!actionTaken) { cleanupStyles(); isAnimating = false; return; }
 
-	// Failsafe Timer: Nur nötig für Menü-Animationen, da Tabs eigene Logik haben
 	if (state.mode !== 'TABS') {
 		cleanupTimer = setTimeout(() => { cleanupStyles(); isAnimating = false; cleanupTimer = null; }, CONFIG.animDuration + 20);
 	}
@@ -486,21 +477,18 @@ function finalizeTabSwitch(newIndex) {
 
 	availableTabs.forEach((tab, i) => {
 		const finalPos = (i - newIndex) * width;
-		const myScrollY = getScrollYForTabIndex(i);
+		const myScrollY = state.cachedScrollYs[i]; // Auch hier den Cache nutzen
 		tab.content.style.transform = `translate(${finalPos}px, -${myScrollY}px)`;
 	});
 
 	tabHidingTimeoutId = setTimeout(() => {
 		cleanupStyles();
-
 		availableTabs.forEach((tab, i) => {
 			if (i !== newIndex) {
 				tab.content.style.display = 'none';
 			}
 		});
-
 		activateTabByIndex(newIndex, true);
-
 		tabHidingTimeoutId = null;
 		isAnimating = false;
 	}, CONFIG.animDuration);
@@ -512,20 +500,17 @@ function resetTabs() {
 
 	availableTabs.forEach((tab, i) => {
 		const finalPos = (i - idx) * width;
-		// Reset: Jeder Tab geht zurück auf SEIN Y
-		const myScrollY = getScrollYForTabIndex(i);
+		const myScrollY = state.cachedScrollYs[i]; // Cache nutzen
 		tab.content.style.transform = `translate(${finalPos}px, -${myScrollY}px)`;
 	});
 
 	tabHidingTimeoutId = setTimeout(() => {
 		cleanupStyles();
-
 		availableTabs.forEach((tab, i) => {
 			if (i !== idx) {
 				tab.content.style.display = 'none';
 			}
 		});
-
 		tabHidingTimeoutId = null;
 		isAnimating = false;
 	}, CONFIG.animDuration);
@@ -559,10 +544,8 @@ function cleanupStyles() {
 			t.content.style.top = '';
 			t.content.style.left = '';
 			t.content.style.width = '';
-
 			t.content.style.paddingTop = '';
 			t.content.style.height = '';
-
 			t.content.style.willChange = '';
 		});
 

@@ -78,19 +78,34 @@ function initializeTopicTabs(paneId, colorMap, queryVector) {
 		loadFilteredResults(clusterId);
 	};
 
-    const initializeView = () => {
-        if (!isFirstLoad) return;
-        isFirstLoad = false;
-        const firstTab = contentPane.querySelector('.topic-tab');
+	const initializeView = () => {
+		if (!isFirstLoad) return;
+		isFirstLoad = false;
+		const firstTab = contentPane.querySelector('.topic-tab');
 		if (firstTab) {
 			activateTabAndUpdateView(firstTab);
 		}
 	};
 
-	// Beobachtet, ob der Pane sichtbar wird (durch Swipe oder Klick)
+	// PERFORMANCE FIX: Speichere die letzten Werte
+	let lastDisplayState = contentPane.style.display;
+	let lastActiveState = contentPane.classList.contains('active');
+
 	const observer = new MutationObserver(() => {
-		// FIX: Prüfen, ob der Tab aktiv ODER durch Swipe sichtbar ist (display != none)
-		const isVisible = contentPane.classList.contains('active') || contentPane.style.display !== 'none';
+		const currentDisplay = contentPane.style.display;
+		const currentActive = contentPane.classList.contains('active');
+
+		// ABBRUCH: Wenn sich weder display noch die active-Klasse geändert haben,
+		// war es eine reine 'transform' Änderung durch das Scrollen.
+		// Das MUSS ignoriert werden, sonst triggern wir Layout-Berechnungen im Loop.
+		if (currentDisplay === lastDisplayState && currentActive === lastActiveState) {
+			return;
+		}
+
+		lastDisplayState = currentDisplay;
+		lastActiveState = currentActive;
+
+		const isVisible = currentActive || currentDisplay !== 'none';
 
 		if (isVisible) {
 			if (isFirstLoad) {
@@ -106,13 +121,11 @@ function initializeTopicTabs(paneId, colorMap, queryVector) {
 					contentPane.style.setProperty('--active-cluster-text-color', textColor);
 				}
 			}
-
-			// Buttons initialisieren
 			initializeAbstractButtonsFor(contentPane);
 		}
 	});
 
-	// FIX: Jetzt auch 'style' beobachten, damit wir display:block vom Swipe mitbekommen
+	// Wir beobachten weiterhin style/class, aber die Logik oben filtert das Scrollen raus.
 	observer.observe(contentPane, { attributes: true, attributeFilter: ['class', 'style'] });
 
 	if (contentPane.classList.contains('active')) initializeView();

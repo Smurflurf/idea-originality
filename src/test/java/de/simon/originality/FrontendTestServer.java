@@ -772,14 +772,18 @@ public class FrontendTestServer {
 
     private static void runSimulationSequence() {
         try {
-            Thread.sleep(200);
+            Thread.sleep(1000);
             sendEvent("EXTRACTING_COMPLETE", "Idee extrahiert.");
-            Thread.sleep(200);
+            Thread.sleep(1000);
             sendEvent("CLUSTERING_COMPLETE", "Cluster zugeordnet.");
-            Thread.sleep(200);
-            sendEvent("CREATING_OWN_VISUALIZATIONS", "Rendering...");
             Thread.sleep(600);
-            sendEvent("IMAGE_READY", "Bild fertig.");
+            sendEvent("CREATING_OWN_VISUALIZATIONS", "Rendering...");
+            
+            for(int i=0; i<4; i++) {
+	            Thread.sleep(1000);
+	            sendEvent("IMAGE_READY", "Bild fertig.");
+            }
+            
             Thread.sleep(300);
             sendEvent("COMPLETE", "Fertig.");
         } catch (Exception e) { sseClientStream = null; }

@@ -173,15 +173,22 @@ export function initializeDynamicPoints(containerId, resultsData, colorMap, cont
 	container.innerHTML = '';
 
 	resultsData.forEach(paper => {
-		if (paper.relativeX === undefined || paper.relativeY === undefined) return;
-		const hitbox = document.createElement('div');
-		hitbox.className = 'point-hitbox';
-		hitbox.dataset.relativeX = paper.relativeX;
-		hitbox.dataset.relativeY = paper.relativeY;
+	    if (paper.relativeX === undefined || paper.relativeY === undefined) return;
+	    const hitbox = document.createElement('div');
+	    hitbox.className = 'point-hitbox';
+	    hitbox.dataset.relativeX = paper.relativeX;
+	    hitbox.dataset.relativeY = paper.relativeY;
 
-		// NEU: Wir speichern die Rohdaten, um flexibel zu suchen
-		hitbox.dataset.paperId = paper.id;
-		hitbox.dataset.contextPrefix = contextPrefix;
+	    // NEUE PERFORMANCE OPTIMIERUNG:
+	    // Wir setzen die Position einmalig in Prozent. CSS berechnet beim Zoomen
+	    // des Containers dann automatisch und blitzschnell die neuen Pixel-Positionen!
+	    hitbox.style.left = `${paper.relativeX * 100}%`;
+	    hitbox.style.top = `${paper.relativeY * 100}%`;
+	    hitbox.style.transform = 'translate(-50%, -50%)'; // Zentriert die Hitbox exakt auf dem Punkt
+
+	    // NEU: Wir speichern die Rohdaten, um flexibel zu suchen
+	    hitbox.dataset.paperId = paper.id;
+	    hitbox.dataset.contextPrefix = contextPrefix;
 
 		// Legacy ID für Debugging
 		hitbox.dataset.targetCardId = `${contextPrefix}-result-card-${paper.id}`;

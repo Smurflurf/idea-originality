@@ -15,6 +15,14 @@ const HEADER_HEIGHT = 90;
 let lastScrollY = 0;
 let overlayWantsOpen = false;
 
+let headerDomCache = {
+    visible: null,
+    pos: null,
+    transform: null,
+    transition: null,
+    manualClass: null
+};
+
 // =========================================================================
 // HELPER & REGISTRY
 // =========================================================================
@@ -47,53 +55,22 @@ export function getScrollYForTabIndex(index) {
 }
 
 // =========================================================================
-// PERFORMANCE SCROLL SYNC LOGIC (OPTIMIZED)
+// SCROLL SYNC LOGIC
 // =========================================================================
 
 let currentSyncTarget = null;
-let isRenderPending = false;
-let currentScrollY = window.scrollY;
-let scrollTimeout = null;
 
-// EINZIGER Scroll-Listener für alles (Pane + Header)
-function onNativeScroll() {
-    if (isSwitchingTab || document.body.classList.contains('is-swiping-active')) return;
-    
-    currentScrollY = window.scrollY;
-
-    // Perfekter Scroll-Loop: requestAnimationFrame wird nur 1x pro Frame gefeuert
-    if (!isRenderPending) {
-        isRenderPending = true;
-        window.requestAnimationFrame(renderScrollFrame);
-    }
-
-    // Scroll-Hover-Sperre: Verbessert Performance über schweren DOM-Elementen drastisch
-    if (!document.body.classList.contains('is-actively-scrolling')) {
-        document.body.classList.add('is-actively-scrolling');
-    }
-    clearTimeout(scrollTimeout);
-    scrollTimeout = setTimeout(() => {
-        document.body.classList.remove('is-actively-scrolling');
-    }, 150); // 150ms nach dem letzten Scroll-Event wird Hover wieder aktiviert
-}
-
-function renderScrollFrame() {
-    isRenderPending = false;
-
-    // 1. GPU Transform anwenden (Höchste Priorität)
-    if (currentSyncTarget) {
-        currentSyncTarget.style.transform = `translate3d(0, -${currentScrollY}px, 0)`;
-    }
-
-    // 2. Header synchronisieren (Nur wenn Nötig!)
-    const diff = currentScrollY - lastScrollY;
-    
-    // Puffer gegen Micro-Scrolls beim reinen Antippen
-    if (Math.abs(diff) >= 5 || currentScrollY === 0) {
-        const isScrollingUp = diff < 0;
-        updateHeaderForScrollY(currentScrollY, isScrollingUp);
-        lastScrollY = currentScrollY;
-    }
+let ticking = false;
+function syncPaneScroll() {
+	if (!ticking && !isSwitchingTab && !document.body.classList.contains('is-swiping-active')) {
+		window.requestAnimationFrame(() => {
+			if (currentSyncTarget) {
+				currentSyncTarget.style.transform = `translate3d(0, -${window.scrollY}px, 0)`;
+			}
+			ticking = false;
+		});
+		ticking = true;
+	}
 }
 
 function setupScrollSyncFor(pane, fromSwipe = false) {
@@ -103,22 +80,27 @@ function setupScrollSyncFor(pane, fromSwipe = false) {
     isSwitchingTab = true; 
 
     if (currentResizeObserver) currentResizeObserver.disconnect();
-    window.removeEventListener('scroll', onNativeScroll);
+    window.removeEventListener('scroll', syncPaneScroll);
     
     currentSyncTarget = pane;
 
-    // Wir lesen VORHER die Höhe, um Layout-Thrashing zu vermeiden
+    // 1. Layout lesen (Teuer, aber nur 1x beim Tab-Wechsel)
     const targetHeight = pane.scrollHeight;
+    
+    // 2. Layout schreiben
     scrollProxy.style.height = `${targetHeight}px`;
 
     const targetY = getCompensatedScroll(pane.id);
 
+    // Header Cache resetten, damit beim Tab-Wechsel sicher neu gezeichnet wird
+    headerDomCache = { visible: null, pos: null, transform: null, transition: null, manualClass: null };
+    
     updateHeaderForScrollY(targetY, null, true, fromSwipe);
 
     window.scrollTo({
         top: targetY,
         left: 0,
-        behavior: 'instant' 
+        behavior: 'instant'
     });
 
     pane.style.transform = `translate3d(0, -${targetY}px, 0)`;
@@ -126,19 +108,14 @@ function setupScrollSyncFor(pane, fromSwipe = false) {
     requestAnimationFrame(() => {
         requestAnimationFrame(() => {
             isSwitchingTab = false;
+            window.addEventListener('scroll', syncPaneScroll, { passive: true });
             
-            // Registriere den EINZIGEN, passiven Scroll-Listener
-            window.addEventListener('scroll', onNativeScroll, { passive: true });
-            
-            // ResizeObserver optimiert: Führt Updates nur in rAF aus und vermeidet ständige Reflows
             currentResizeObserver = new ResizeObserver((entries) => {
-                requestAnimationFrame(() => {
-                    const newHeight = entries[0].target.scrollHeight;
-                    // Nur updaten wenn wirklich nötig
-                    if (scrollProxy.style.height !== `${newHeight}px`) {
-                        scrollProxy.style.height = `${newHeight}px`;
-                    }
-                });
+                // OPTIMIERUNG: Nur schreiben wenn sich wirklich was ändert
+                const newHeight = entries[0].target.scrollHeight;
+                if (scrollProxy.style.height !== `${newHeight}px`) {
+                    scrollProxy.style.height = `${newHeight}px`;
+                }
             });
             currentResizeObserver.observe(pane);
         });
@@ -146,17 +123,8 @@ function setupScrollSyncFor(pane, fromSwipe = false) {
 }
 
 // =========================================================================
-// HEADER LOGIC (FIXED & CACHED)
+// HEADER LOGIC (FIXED)
 // =========================================================================
-
-// CACHE: Speichert den letzten DOM-Zustand, um unsinnige CSS-Writes zu vermeiden
-let headerDomCache = {
-    isVisible: null,
-    pos: null,
-    transform: null,
-    transition: null,
-    isManualScroll: null
-};
 
 export function updateHeaderForScrollY(currentY, isScrollingUp = false, forceUpdate = false, fromSwipe = false) {
     const root = document.body;
@@ -169,16 +137,27 @@ export function updateHeaderForScrollY(currentY, isScrollingUp = false, forceUpd
     const isZone1 = currentY <= HEADER_HEIGHT;
     const isOverscroll = currentY < 0;
 
+    // Intent (Absicht) berechnen: Will der User das Overlay sehen?
     if (forceUpdate) {
+        // FIX: Wir messen die VISUELLE Sichtbarkeit des alten Tabs!
+        // lastScrollY beinhaltet hier noch exakt die Scroll-Position des Tabs, den wir verlassen.
         let wasVisuallyOpen = overlayWantsOpen; 
+        
+        // Wenn der Nutzer ganz oben war, hat er den Header zu 100% gesehen (egal was der interne Intent sagt)
         if (lastScrollY < (HEADER_HEIGHT / 2)) {
             wasVisuallyOpen = true; 
         }
+        
+        // Wir übernehmen die visuelle Wahrheit als neuen Intent
         overlayWantsOpen = wasVisuallyOpen;
+
+        // Ausnahme: Wenn wir auf dem neuen Tab EXAKT oben (Y=0) landen, zwingen wir den Intent 
+        // auf false, damit der Header beim Runterscrollen wieder ganz normal natürlich mitscrollt.
         if (currentY === 0) {
             overlayWantsOpen = false;
         }
     } else {
+        // Normales Scroll-Verhalten
         if (isOverscroll || currentY === 0) {
             overlayWantsOpen = false;
         } else if (!isZone1 && isScrollingUp !== null) {
@@ -198,66 +177,81 @@ export function updateHeaderForScrollY(currentY, isScrollingUp = false, forceUpd
     } else if (isZone1) {
         isVisible = true;
         if (overlayWantsOpen) {
+            // Wenn der Intent "Offen" ist, halten wir ihn fixed fest, damit er nicht rausscrollt
             pos = 'fixed';
-            useTransition = !forceUpdate; 
+            useTransition = !forceUpdate; // Keine Animation beim Tab-Wechsel, nur beim Scrollen
         } else {
             pos = 'absolute';
             useTransition = false;
         }
     } else {
+        // Zone 2 (> 90px)
         isVisible = overlayWantsOpen;
         pos = 'fixed';
-        const crossingDownwards = (lastScrollY <= HEADER_HEIGHT && currentY > HEADER_HEIGHT && !forceUpdate);
-        useTransition = !(forceUpdate || crossingDownwards);
+
+        // Animation ausschalten bei Tab-Wechsel oder wenn wir nach unten in Zone 2 eintreten
+        //const crossingDownwards = (lastScrollY <= HEADER_HEIGHT && currentY > HEADER_HEIGHT && !forceUpdate);
+        //useTransition = !(forceUpdate || crossingDownwards);
+		useTransition = !forceUpdate;
     }
 
-    // === SCHRITT 3: DOM UPDATES (CACHED - Nur bei Änderung schreiben!) ===
-    
-    // Sichtbarkeit
-    if (headerDomCache.isVisible !== isVisible) {
-        if (isVisible) root.classList.remove('is-header-hidden');
-        else root.classList.add('is-header-hidden');
-        headerDomCache.isVisible = isVisible;
-    }
+	// === SCHRITT 3: DOM UPDATES (Nur hier!) ===
 
-    // Position
-    if (headerDomCache.pos !== pos) {
-        header.style.position = pos;
-        if (menuBtn && window.innerWidth <= 768) menuBtn.style.setProperty('position', pos, 'important');
-        headerDomCache.pos = pos;
-    }
+	// Wir schreiben nur in den DOM, wenn sich der Wert geändert hat.
 
-    // Transform (Overscroll)
-    const newTransform = isOverscroll ? 'translateY(0)' : '';
-    if (headerDomCache.transform !== newTransform) {
-        header.style.transform = newTransform;
-        if (menuBtn && window.innerWidth <= 768) menuBtn.style.transform = newTransform;
-        headerDomCache.transform = newTransform;
-    }
+	// 1. Sichtbarkeit (Class auf Body)
+	if (headerDomCache.visible !== isVisible) {
+		if (isVisible) root.classList.remove('is-header-hidden');
+		else root.classList.add('is-header-hidden');
+		headerDomCache.visible = isVisible;
+	}
 
-    // Transition
-    const newTransition = useTransition ? '' : 'none';
-    if (headerDomCache.transition !== newTransition) {
-        header.style.transition = newTransition;
-        if (menuBtn && window.innerWidth <= 768) menuBtn.style.transition = newTransition;
-        headerDomCache.transition = newTransition;
-    }
+	// 2. Position
+	if (headerDomCache.pos !== pos) {
+		header.style.position = pos;
+		header.style.top = '0'; // Statisch, kaum Kosten
+		if (menuBtn && window.innerWidth <= 768) {
+			menuBtn.style.setProperty('position', pos, 'important');
+			menuBtn.style.top = '12px';
+		}
+		headerDomCache.pos = pos;
+	}
 
-    // Manual Scroll Class
-    const newIsManual = (pos === 'absolute' || isOverscroll);
-    if (headerDomCache.isManualScroll !== newIsManual) {
-        if (newIsManual) header.classList.add('is-manual-scroll');
-        else header.classList.remove('is-manual-scroll');
-        headerDomCache.isManualScroll = newIsManual;
-    }
+	// 3. Transform (Overscroll Fix)
+	const transformVal = isOverscroll ? 'translateY(0)' : '';
+	if (headerDomCache.transform !== transformVal) {
+		header.style.transform = transformVal;
+		if (menuBtn && window.innerWidth <= 768) menuBtn.style.transform = transformVal;
+		headerDomCache.transform = transformVal;
+	}
+
+	// 4. Transition
+	const transitionVal = useTransition ? '' : 'none';
+	if (headerDomCache.transition !== transitionVal) {
+		header.style.transition = transitionVal;
+		if (menuBtn && window.innerWidth <= 768) menuBtn.style.transition = transitionVal;
+		headerDomCache.transition = transitionVal;
+	}
+
+	// 5. Manual Scroll Class
+	const manualClassVal = (pos === 'absolute' || isOverscroll);
+	if (headerDomCache.manualClass !== manualClassVal) {
+		if (manualClassVal) header.classList.add('is-manual-scroll');
+		else header.classList.remove('is-manual-scroll');
+		headerDomCache.manualClass = manualClassVal;
+	}
 }
 
+// Wird beim Swipen gerufen
 export function syncHeaderStateForTab(newScrollY) {
     lastScrollY = newScrollY;
+    // Wir tun so, als wäre es ein "forceUpdate" (Tab Wechsel)
     updateHeaderForScrollY(newScrollY, null, true, true);
 }
 
 export function syncAllTabsToHeaderState() {
+    // Diese Funktion dient nur der Vorbereitung des Swipes (damit Tabs nicht springen)
+    // Sie ändert NICHT den sichtbaren Header-Zustand.
     const root = document.body;
     const currentY = window.scrollY;
     const isHeaderHidden = root.classList.contains('is-header-hidden');
@@ -286,7 +280,27 @@ export function syncAllTabsToHeaderState() {
     });
 }
 
-// Entfernt: initializeScrollHiding() existiert nicht mehr, Logik ist jetzt in onNativeScroll
+function initializeScrollHiding() {
+    const root = document.body;
+    lastScrollY = window.scrollY;
+
+    window.addEventListener('scroll', () => {
+        if (isSwitchingTab || document.body.classList.contains('is-swiping-active')) {
+            lastScrollY = window.scrollY; // Trotzdem Position für später merken
+            return;
+        }
+        
+        const currentY = window.scrollY;
+        const diff = currentY - lastScrollY;
+        
+        // --- FIX 1: Puffer gegen Micro-Scrolls beim reinen Antippen ---
+        if (Math.abs(diff) < 5 && currentY > 0) return;
+
+        const isScrollingUp = diff < 0;
+        updateHeaderForScrollY(currentY, isScrollingUp);
+        lastScrollY = currentY;
+    }, { passive: true });
+}
 
 // =========================================================================
 // VIEW ACTIVATION
@@ -322,7 +336,7 @@ function activateView(btnToActivate, contentToActivate, fromSwipe = false) {
 }
 
 // =========================================================================
-// INITIALIZATION
+// INITIALIZATION (MIT WIEDERHERGESTELLTEN BUTTONS)
 // =========================================================================
 
 export function initializeVisualizationToggles() {
@@ -353,22 +367,28 @@ export function initializeVisualizationToggles() {
         });
     });
 
+    // --- BUTTON TOGGLES (WIEDERHERGESTELLT) ---
     ['own', 'nc', 'serendipity'].forEach(prefix => { 
+        
+        // 1. Einfache Toggles (Ein Button -> Ein Ziel)
         const setup = (id, targetId, startActive = true) => {
             const btn = document.getElementById(id);
             const target = document.getElementById(targetId);
-            if (!btn) return; 
+            if (!btn) return; // Button existiert nicht im DOM -> Überspringen
             
+            // Initialer Zustand
             btn.classList.toggle('active', startActive);
             if(target) target.style.display = startActive ? 'block' : 'none';
             
             btn.onclick = (e) => {
+                // Verhindert Bubbling (wichtig für Zoom/Pan)
                 e.stopPropagation(); 
                 const isActive = btn.classList.toggle('active');
                 if(target) target.style.display = isActive ? 'block' : 'none';
             };
         };
 
+        // 2. Gruppen Toggles (Ein Button -> Mehrere Ziele, z.B. Context Outline + Context Label)
         const setupGroup = (id, targetIds, startActive = false) => {
             const btn = document.getElementById(id);
             if (!btn) return;
@@ -384,12 +404,23 @@ export function initializeVisualizationToggles() {
                 targets.forEach(t => t.style.display = isActive ? 'block' : 'none');
             };
         };
+
+        // --- KONFIGURATION DER BUTTONS ---
         
+        // Crosshair, Points, Outlines (Standard: AN)
         setup(`viz-toggle-${prefix}-crosshair`, `viz-layer-${prefix}-crosshair-canvas`, true);
         setup(`viz-toggle-${prefix}-points`, `viz-layer-${prefix}-points`, true);
         setup(`viz-toggle-${prefix}-outlines`, `g-outlines-${prefix}-main`, true);
+        
+        // Labels (Standard: AUS, zu unruhig)
         setup(`viz-toggle-${prefix}-labels`, `g-labels-${prefix}-main`, false);
+
+        // Neighbors (Div Container) - Nur bei 'own' standardmäßig an, sonst aus
         setup(`viz-toggle-${prefix}-neighbors`, `dynamic-points-${prefix}-neighbors`, (prefix === 'own'));
+
+        // Context (Gruppe aus Outline + Labels) - Standard: AUS
         setupGroup(`viz-toggle-${prefix}-context`, [`g-outlines-${prefix}-context`, `g-labels-${prefix}-context`], false);
     });
+
+    initializeScrollHiding();
 }

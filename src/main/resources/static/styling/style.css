@@ -481,7 +481,7 @@ textarea::-webkit-scrollbar-thumb:hover {
 /* =================================================================== */
 
 /* Wenn die Klasse aktiv ist (während des Swipes), ignorieren wir ALLES. */
-body.is-swiping-active, body.is-swiping-active *, html.is-swiping-active
+body.is-swiping-active, html.is-swiping-active
 	{
 	pointer-events: none !important;
 	user-select: none !important;
@@ -506,6 +506,17 @@ body.is-swiping-active #menu-overlay {
 /* =================================================================== */
 /* ==       PERFORMANCE: HOVER-SPERRE BEIM SCHNELLEN SCROLLEN       == */
 /* =================================================================== */
-body.is-actively-scrolling {
+/* Sobald gescrollt wird, werden ALLE Pointer-Events auf der Visualisierung deaktiviert */
+body.is-actively-scrolling,
+body.is-actively-scrolling .viz-stack-container,
+body.is-actively-scrolling svg,
+body.is-actively-scrolling .point-hitbox,
+body.is-actively-scrolling .tippy-box {
     pointer-events: none !important;
+}
+
+/* Optional: Auch Selektionen verhindern */
+body.is-actively-scrolling {
+    user-select: none !important;
+    -webkit-user-select: none !important;
 }

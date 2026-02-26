@@ -1,19 +1,15 @@
 import { spinnerConfig, animConfig, REFERENCE_WIDTH } from '/script/animation/animationConfig.js';
 
 let mainCanvas = null;
-let cloudStampCanvas = null;
 const preRenderedClouds = {}; 
-let cloudBuffer = null;
-let cloudBufferCtx = null;
+
+// --- TRICK: SPRITE BUCKETING ---
+// Vermeidet teure drawImage Skalierung zur Laufzeit. 
+// Wir rendern die Wolken in festen Größen vor.
+const SIZE_BUCKETS = [96, 160, 224, 288, 384]; 
 
 const POOL_SIZE = animConfig.maxCloudParticles || 100; 
 const cloudPool = [];
-
-// Performance Settings
-const DOWNSCALE_FACTOR = 0.5; 
-let logicalWidth = 0;
-let logicalHeight = 0;
-let devicePixelRatio = 1;
 
 function getCssColor(varName) {
     if (typeof getComputedStyle === 'function') {
@@ -38,46 +34,36 @@ function getCurrentCloudColors() {
     return spinnerConfig.cloudColors;
 }
 
-function createCloudStamp() {
-    const stampSize = 128; 
-
-    cloudStampCanvas = document.createElement('canvas');
-    cloudStampCanvas.width = stampSize;
-    cloudStampCanvas.height = stampSize;
-    
-    const stampCtx = cloudStampCanvas.getContext('2d');
-    const center = stampSize / 2;
-    const radius = stampSize / 2;
-
-    const gradient = stampCtx.createRadialGradient(center, center, 0, center, center, radius);
-    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.5)');
-	gradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.15)');
-	gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-	
-	stampCtx.fillStyle = gradient;
-    stampCtx.beginPath();
-    stampCtx.arc(center, center, radius, 0, Math.PI * 2);
-    stampCtx.fill();
-}
-
-function createPreRenderedClouds(colors) {
-    if (!cloudStampCanvas) return;
-    const stampSize = cloudStampCanvas.width; 
-
+function createPreRenderedCloudBuckets(colors) {
     for (const colorTemplate of colors) {
-        if (!preRenderedClouds[colorTemplate]) {
-            const cloudCanvas = document.createElement('canvas');
-            cloudCanvas.width = stampSize;
-            cloudCanvas.height = stampSize;
-            const pCtx = cloudCanvas.getContext('2d');
+        if (preRenderedClouds[colorTemplate]) continue;
+        
+        preRenderedClouds[colorTemplate] = [];
+        const baseColor = colorTemplate.replace('OPACITY', '1.0');
+
+        // Für jeden Bucket (Größe) ein eigenes Canvas erstellen
+        for (const size of SIZE_BUCKETS) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d', { alpha: true });
+            const center = size / 2;
+
+            // 1. Basis-Farbe zeichnen
+            ctx.fillStyle = baseColor;
+            ctx.fillRect(0, 0, size, size);
+
+            // 2. Alpha-Maske via Radial Gradient ausstanzen (destination-in)
+            ctx.globalCompositeOperation = 'destination-in';
+            const gradient = ctx.createRadialGradient(center, center, 0, center, center, center);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.5)');
+            gradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.15)');
+            gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
             
-            pCtx.fillStyle = colorTemplate.replace('OPACITY', '1.0');
-            pCtx.fillRect(0, 0, stampSize, stampSize);
-            
-            pCtx.globalCompositeOperation = 'destination-in';
-            pCtx.drawImage(cloudStampCanvas, 0, 0);
-            
-            preRenderedClouds[colorTemplate] = cloudCanvas;
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+
+            preRenderedClouds[colorTemplate].push(canvas);
         }
     }
 }
@@ -94,35 +80,16 @@ function initPool() {
 
 export function initCloudSimulator(canvas) {
     mainCanvas = canvas;
-    cloudBuffer = document.createElement('canvas');
-    // FIX: 'desynchronized' entfernt, da es in Firefox Probleme macht.
-    // 'willReadFrequently' hilft manchmal bei Software-Fallback.
-    cloudBufferCtx = cloudBuffer.getContext('2d', { alpha: true });
-
-    if (!cloudStampCanvas) createCloudStamp();
     initPool();
-}
-
-export function resizeCloudLayers(widthCss, heightCss) {
-    if (!cloudBuffer) return;
     
-    logicalWidth = widthCss;
-    logicalHeight = heightCss;
-    devicePixelRatio = window.devicePixelRatio || 1;
-
-    // Integer Values erzwingen (| 0)
-    cloudBuffer.width = (logicalWidth * devicePixelRatio * DOWNSCALE_FACTOR) | 0;
-    cloudBuffer.height = (logicalHeight * devicePixelRatio * DOWNSCALE_FACTOR) | 0;
-
-    const scale = devicePixelRatio * DOWNSCALE_FACTOR;
-    cloudBufferCtx.scale(scale, scale);
+    const currentColors = getCurrentCloudColors();
+    createPreRenderedCloudBuckets(currentColors);
 }
 
 export function triggerCloudExplosion(x, y) {
     const currentColors = getCurrentCloudColors();
-    createPreRenderedClouds(currentColors);
 
-    const effectiveWidth = logicalWidth || REFERENCE_WIDTH;
+    const effectiveWidth = mainCanvas ? mainCanvas.clientWidth : REFERENCE_WIDTH;
     const scaleFactor = effectiveWidth / REFERENCE_WIDTH;
 
     const currentTime = Date.now();
@@ -159,23 +126,14 @@ export function triggerCloudExplosion(x, y) {
 }
 
 export function drawClouds(mainCtx) {
-    if (!cloudBufferCtx || !mainCanvas || !cloudBuffer) return;
+    if (!mainCanvas) return;
 
     const currentTime = Date.now();
     const timeFactor = 60 * animConfig.deltaTime * animConfig.speed;
 
-    cloudBufferCtx.globalCompositeOperation = 'source-over';
-    
-    // FIX: Explizite Integer-Werte für clearRect helfen Firefox beim Compositing
-    cloudBufferCtx.clearRect(0, 0, (logicalWidth + 1) | 0, (logicalHeight + 1) | 0);
-
-    let activeCount = 0;
-
     for (let i = 0; i < cloudPool.length; i++) {
         const p = cloudPool[i];
         if (!p.active) continue;
-
-        activeCount++;
 
         const frictionFactor = Math.pow(spinnerConfig.cloudParticleFriction, timeFactor);
         p.vx *= frictionFactor;
@@ -201,29 +159,33 @@ export function drawClouds(mainCtx) {
             continue;
         }
 
-        const preRenderedImage = preRenderedClouds[p.color];
-        
-        if (preRenderedImage) {
-            cloudBufferCtx.globalAlpha = finalOpacity;
-            const drawSize = p.size | 0;
-            const drawX = (p.x - (drawSize / 2)) | 0;
-            const drawY = (p.y - (drawSize / 2)) | 0;
-            cloudBufferCtx.drawImage(preRenderedImage, drawX, drawY, drawSize, drawSize);
+        const buckets = preRenderedClouds[p.color];
+        if (buckets) {
+            // --- HARTE OPTIMIERUNG ---
+            mainCtx.globalAlpha = finalOpacity;
+            
+            // Bucket Selection: Finde die passendste vorgenerierte Größe
+            let targetSize = p.size;
+            let bucketIndex = 0;
+            for(let b = 0; b < SIZE_BUCKETS.length; b++) {
+                bucketIndex = b;
+                if (targetSize <= SIZE_BUCKETS[b]) break;
+            }
+            
+            const renderImg = buckets[bucketIndex];
+            const actualSize = SIZE_BUCKETS[bucketIndex];
+            
+            // Bitwise OR 0 schneidet Kommastellen extrem schnell ab (verhindert Sub-Pixel Anti-Aliasing)
+            const drawX = (p.x - (actualSize / 2)) | 0;
+            const drawY = (p.y - (actualSize / 2)) | 0;
+            
+            // Zeichnen OHNE Skalierungsparameter! (Wahnsinniger Speed-Boost)
+            mainCtx.drawImage(renderImg, drawX, drawY);
         }
     }
-
-    if (activeCount > 0) {
-        mainCtx.save();
-        mainCtx.setTransform(1, 0, 0, 1, 0, 0); 
-        mainCtx.globalAlpha = 1.0;
-        
-        mainCtx.drawImage(
-            cloudBuffer, 
-            0, 0, cloudBuffer.width, cloudBuffer.height, 
-            0, 0, mainCanvas.width, mainCanvas.height    
-        );
-        mainCtx.restore();
-    }
+    
+    // Alpha am Ende wieder auf 1.0 setzen
+    mainCtx.globalAlpha = 1.0; 
 }
 
 export function reset() {

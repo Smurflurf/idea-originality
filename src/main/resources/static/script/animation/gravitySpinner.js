@@ -5,39 +5,23 @@ import * as cloudSimulator from '/script/animation/cloudSimulator.js';
 const mainParticlePool = [];
 const tntParticlePool = [];
 
-// --- CACHING: TNT ---
-const tntCache = {}; 
-const CACHE_SIZE = 32;   
-const CACHE_RADIUS = 14;
-
-function preRenderTntParticles() {
-    spinnerConfig.tntColors.forEach(colorTemplate => {
-        const color = colorTemplate.replace('OPACITY', '1.0');
-        if (tntCache[color]) return;
-        const c = document.createElement('canvas');
-        c.width = CACHE_SIZE; c.height = CACHE_SIZE;
-        const ctx = c.getContext('2d');
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.arc(CACHE_SIZE/2, CACHE_SIZE/2, CACHE_RADIUS, 0, Math.PI * 2);
-        ctx.fill();
-        tntCache[color] = c;
-    });
-}
-
-// --- CACHING: BLACK HOLE (NEU FÜR FIREFOX) ---
 let blackHoleCache = null;
-const HOLE_CACHE_SIZE = 100; // Ausreichend für den Glow
+const HOLE_CACHE_SIZE = 100; 
+
+// --- GC & DOM FIX: Cached Colors ---
+// Verhindert getComputedStyle-Aufrufe und String-Manipulationen im Render-Loop
+let cachedRingBgColor = "rgba(204, 224, 255, 0.2)";
+let cachedRingFgColor = "#cce0ff";
+let cachedSupernovaBaseColor = "#ffffff";
 
 function preRenderBlackHole() {
     if (blackHoleCache) return;
     blackHoleCache = document.createElement('canvas');
     blackHoleCache.width = HOLE_CACHE_SIZE;
     blackHoleCache.height = HOLE_CACHE_SIZE;
-    const ctx = blackHoleCache.getContext('2d');
+    const ctx = blackHoleCache.getContext('2d', { alpha: true });
     
     const center = HOLE_CACHE_SIZE / 2;
-    // Radius etwas kleiner als Max, damit Glow Platz hat
     const radius = (HOLE_CACHE_SIZE / 2) - 2; 
     
     const gradient = ctx.createRadialGradient(center, center, radius * 0.7, center, center, radius);
@@ -50,14 +34,37 @@ function preRenderBlackHole() {
     ctx.fill();
 }
 
-// --- Core Variables ---
+let supernovaFlashCache = null;
+const FLASH_CACHE_SIZE = 100;
+
+function preRenderSupernovaFlash() {
+    if (supernovaFlashCache) return;
+    supernovaFlashCache = document.createElement('canvas');
+    supernovaFlashCache.width = FLASH_CACHE_SIZE;
+    supernovaFlashCache.height = FLASH_CACHE_SIZE;
+    const ctx = supernovaFlashCache.getContext('2d', { alpha: true });
+    
+    const center = FLASH_CACHE_SIZE / 2;
+    const radius = FLASH_CACHE_SIZE / 2;
+    
+    const gradient = ctx.createRadialGradient(center, center, 0, center, center, radius);
+    gradient.addColorStop(0, `rgba(255, 255, 255, 1)`); 
+    gradient.addColorStop(1, `rgba(255, 255, 255, 0)`);
+    
+    ctx.fillStyle = gradient; 
+    ctx.beginPath(); 
+    ctx.arc(center, center, radius, 0, Math.PI * 2); 
+    ctx.fill();
+}
+
+
 let canvas, ctx;
 let animationFrameId = null;
 let gravityCenter = { x: 0, y: 0 };
 let layoutWidth = 0, layoutHeight = 0;
+let currentDpr = 1;
 let isLayoutInitialized = false;
 
-// State Variables
 let supernovaParticlesCreated = false;
 let supernovaCenterX = 0, supernovaCenterY = 0;
 let onSupernovaCallback = null;
@@ -69,7 +76,6 @@ let ringProgress = 0;
 
 const PHYSICS_THROTTLE_RATE = 3;
 
-// --- POOL INIT ---
 function initPools() {
     if (mainParticlePool.length === 0) {
         for (let i = 0; i < spinnerConfig.maxMainParticles; i++) {
@@ -81,6 +87,20 @@ function initPools() {
             tntParticlePool.push({ active: false, x: 0, y: 0, vx: 0, vy: 0, size: 0, baseColor: '', creationTime: 0, maxLifetime: 0 });
         }
     }
+}
+
+function getCssColor(varName, defaultColor) {
+    if (typeof getComputedStyle === 'function') { const val = getComputedStyle(document.body).getPropertyValue(varName); return val ? val.trim() : defaultColor; }
+    return defaultColor;
+}
+
+function cacheGlobalColors() {
+    // Wird nur 1x beim Start aufgerufen statt in jedem Frame!
+    cachedRingBgColor = getCssColor('--color-spinner-bg', "rgba(204, 224, 255, 0.2)");
+    cachedRingFgColor = getCssColor('--color-spinner', spinnerConfig.spinnerRingColor);
+    
+    // Berechne die Supernova-Basis-Farbe ohne OPACITY-Platzhalter vor
+    cachedSupernovaBaseColor = spinnerConfig.supernovaColor.replace(/,\s*OPACITY\s*\)/, ')').replace('rgba', 'rgb');
 }
 
 function spawnMainParticle(forceX, forceY) {
@@ -108,7 +128,7 @@ function spawnTntExplosion(centerX, centerY, currentTime) {
         p.active = true; p.x = centerX; p.y = centerY;
         p.vx = Math.cos(angle) * speed; p.vy = Math.sin(angle) * speed;
         
-        p.size = 1.5 + Math.random() * 3.0; // Variable Größe
+        p.size = 1.5 + Math.random() * 3.0; 
         const rawColor = spinnerConfig.tntColors[Math.floor(Math.random() * spinnerConfig.tntColors.length)];
         p.baseColor = rawColor.replace('OPACITY', '1.0');
         p.creationTime = currentTime; 
@@ -117,12 +137,9 @@ function spawnTntExplosion(centerX, centerY, currentTime) {
     }
 }
 
-// --- RENDER LOOP ---
-
 function animate() {
     animationFrameId = requestAnimationFrame(animate);
     
-    // --- ZEIT ---
     const currentTime = Date.now();
     if (!animConfig.lastFrameTime) animConfig.lastFrameTime = currentTime;
     let dt = (currentTime - animConfig.lastFrameTime) / 1000.0;
@@ -131,7 +148,6 @@ function animate() {
     animConfig.lastFrameTime = currentTime;
     animConfig.frameCount++;
     
-    // --- LAYOUT ---
     const currentWidth = canvas.clientWidth;
     const currentHeight = canvas.clientHeight;
 
@@ -141,57 +157,57 @@ function animate() {
         layoutWidth = currentWidth;
         layoutHeight = currentHeight;
         
-        const dpr = window.devicePixelRatio || 1;
-        canvas.width = layoutWidth * dpr;
-        canvas.height = layoutHeight * dpr;
-        ctx.scale(dpr, dpr);
-        
-        cloudSimulator.resizeCloudLayers(layoutWidth, layoutHeight);
+        currentDpr = Math.min(window.devicePixelRatio || 1, 1.25);
+        canvas.width = Math.floor(layoutWidth * currentDpr);
+        canvas.height = Math.floor(layoutHeight * currentDpr);
         
         gravityCenter.x = layoutWidth / 2;
         gravityCenter.y = layoutHeight / 2;
-    }
-
-    // Gravity Center Tracking
-    const modal = canvas.closest('.recorder-modal');
-    const header = modal?.querySelector('.recorder-header');
-    const contentArea = modal?.querySelector('.popup-content-area');
-    
-    if (modal && header && contentArea) {
-        const headerRect = header.getBoundingClientRect();
-        const contentRect = contentArea.getBoundingClientRect();
-        const modalRect = modal.getBoundingClientRect();
+        isLayoutInitialized = true;
         
-        const availableHeight = contentRect.top - headerRect.bottom;
+        const modal = canvas.closest('.recorder-modal');
+        const header = modal?.querySelector('.recorder-header');
+        const contentArea = modal?.querySelector('.popup-content-area');
         
-        if (availableHeight > 20) {
-            const animationDiameter = Math.min(layoutWidth, availableHeight);
-            const finalRadius = (animationDiameter / 2) * 0.6;
-            spinnerConfig.supernovaMaxRadius = finalRadius;
-            spinnerConfig.ringRadius = finalRadius;
+        if (modal && header && contentArea) {
+            const headerRect = header.getBoundingClientRect();
+            const contentRect = contentArea.getBoundingClientRect();
+            const modalRect = modal.getBoundingClientRect();
+            
+            const availableHeight = contentRect.top - headerRect.bottom;
+            
+            if (availableHeight > 20) {
+                const animationDiameter = Math.min(layoutWidth, availableHeight);
+                const finalRadius = (animationDiameter / 2) * 0.6;
+                spinnerConfig.supernovaMaxRadius = finalRadius;
+                spinnerConfig.ringRadius = finalRadius;
 
-            const headerBottomInCanvas = headerRect.bottom - modalRect.top;
-            gravityCenter.y = headerBottomInCanvas + (availableHeight / 2) - 24; 
-            gravityCenter.x = layoutWidth / 2;
+                const headerBottomInCanvas = headerRect.bottom - modalRect.top;
+                gravityCenter.y = headerBottomInCanvas + (availableHeight / 2) - 24; 
+                gravityCenter.x = layoutWidth / 2;
+            }
         }
     }
     
-    const activeCount = mainParticlePool.filter(p => p.active).length;
+    // GC FIX: Statt `.filter().length` zählen wir manuell in einem for-Loop!
+    let activeCount = 0;
+    for (let i = 0; i < spinnerConfig.maxMainParticles; i++) {
+        if (mainParticlePool[i].active) activeCount++;
+    }
+    
     if (activeCount === 0 && layoutWidth > 0) {
         for (let i = 0; i < spinnerConfig.initialParticleCount; i++) {
             spawnMainParticle();
         }
     }
     
-    // FIX: Ganzzahlen für clearRect
-    ctx.clearRect(0, 0, (layoutWidth + 1) | 0, (layoutHeight + 1) | 0);
+    ctx.setTransform(currentDpr, 0, 0, currentDpr, 0, 0);
+    ctx.clearRect(0, 0, layoutWidth, layoutHeight);
 
     updateGravityCenter();
     updateAndDrawState(currentTime);
     updateAndDrawParticles(currentTime);
 }
-
-// ... Update & Draw Funktionen ...
 
 function updateGravityCenter() { gravityCenter.x += (Math.random() - 0.5) * spinnerConfig.centerWander * animConfig.speed; }
 
@@ -274,8 +290,9 @@ function updateAndDrawParticles(currentTime) {
                 const dampingFactor = Math.pow(spinnerConfig.orbitalDamping, timeFactor);
                 p.vx *= dampingFactor; p.vy *= dampingFactor;
                 const dx = centerX - p.x; const dy = centerY - p.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist > spinnerConfig.repulsionRadius) {
+                const distSq = dx * dx + dy * dy;
+                if (distSq > spinnerConfig.repulsionRadius * spinnerConfig.repulsionRadius) {
+                    const dist = Math.sqrt(distSq);
                     p.vx += (dx / dist) * spinnerConfig.orbitalGravity * timeFactor;
                     p.vy += (dy / dist) * spinnerConfig.orbitalGravity * timeFactor;
                 }
@@ -285,9 +302,9 @@ function updateAndDrawParticles(currentTime) {
                         const p2 = mainParticlePool[j];
                         if (!p2.active) continue;
                         const dx2 = p2.x - p.x; const dy2 = p2.y - p.y;
-                        let distSq = dx2 * dx2 + dy2 * dy2; if (distSq < 10) distSq = 10;
-                        const dist2 = Math.sqrt(distSq);
-                        const force = (spinnerConfig.particleGravity / distSq) * PHYSICS_THROTTLE_RATE;
+                        let distSq2 = dx2 * dx2 + dy2 * dy2; if (distSq2 < 10) distSq2 = 10;
+                        const dist2 = Math.sqrt(distSq2);
+                        const force = (spinnerConfig.particleGravity / distSq2) * PHYSICS_THROTTLE_RATE;
                         p.vx += (dx2 / dist2) * force * timeFactor;
                         p.vy += (dy2 / dist2) * force * timeFactor;
                     }
@@ -299,8 +316,15 @@ function updateAndDrawParticles(currentTime) {
             }
         }
         if (currentTime - p.createdAt > p.maxLife) { p.active = false; continue; }
-        const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
-        if (speed > spinnerConfig.maxSpeed) { p.vx = (p.vx / speed) * spinnerConfig.maxSpeed; p.vy = (p.vy / speed) * spinnerConfig.maxSpeed; }
+        
+        const speedSq = p.vx * p.vx + p.vy * p.vy;
+        const maxSpdSq = spinnerConfig.maxSpeed * spinnerConfig.maxSpeed;
+        if (speedSq > maxSpdSq) { 
+            const speed = Math.sqrt(speedSq);
+            p.vx = (p.vx / speed) * spinnerConfig.maxSpeed; 
+            p.vy = (p.vy / speed) * spinnerConfig.maxSpeed; 
+        }
+        
         if (!p.isSwallowed) { p.x += p.vx * timeFactor; p.y += p.vy * timeFactor; } 
         else { const dxCenter = gravityCenter.x - p.x; const dyCenter = gravityCenter.y - p.y; p.x += dxCenter * 0.05 * timeFactor; p.y += dyCenter * 0.05 * timeFactor; }
         p.z += p.vz * timeFactor; if (p.z < -50 || p.z > 50) p.vz *= -0.9;
@@ -330,69 +354,62 @@ function updateAndDrawTntParticles(currentTime) {
         const opacity = 1.0 - (age / p.maxLifetime);
         if (opacity < 0.01) continue;
 
-        const cachedImg = tntCache[p.baseColor];
-        if (cachedImg) {
-            ctx.globalAlpha = opacity;
-            const diameter = p.size * 2;
-            ctx.drawImage(cachedImg, p.x - p.size, p.y - p.size, diameter, diameter);
-            ctx.globalAlpha = 1.0;
-        } else {
-            ctx.fillStyle = p.baseColor;
-            ctx.globalAlpha = opacity;
-            ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
-            ctx.globalAlpha = 1.0;
-        }
+        ctx.fillStyle = p.baseColor;
+        ctx.globalAlpha = opacity;
+        ctx.beginPath(); 
+        ctx.arc(p.x | 0, p.y | 0, p.size, 0, Math.PI * 2); 
+        ctx.fill();
     }
+    ctx.globalAlpha = 1.0; 
 }
 
-// --- OPTIMIERTER BLACK HOLE RENDERER ---
 function drawBlackHole(x, y, radius) {
     if (!blackHoleCache) return;
     
-    // Um das schwarze Loch auf den gewünschten Radius zu bringen,
-    // müssen wir das Cache-Bild skalieren.
-    // Das Cache-Bild repräsentiert einen Kreis mit Radius = (HOLE_CACHE_SIZE / 2) - 2
-    // Wir wollen Ziel-Radius 'radius'.
-    
     const baseRadius = (HOLE_CACHE_SIZE / 2) - 2;
     const scale = radius / baseRadius;
-    
     const size = HOLE_CACHE_SIZE * scale;
     
-    ctx.drawImage(blackHoleCache, x - size/2, y - size/2, size, size);
+    ctx.drawImage(blackHoleCache, (x - size/2) | 0, (y - size/2) | 0, size | 0, size | 0);
 }
 
-function getCssColor(varName, defaultColor) {
-    if (typeof getComputedStyle === 'function') { const val = getComputedStyle(document.body).getPropertyValue(varName); return val ? val.trim() : defaultColor; }
-    return defaultColor;
-}
 function drawProgressRing(x, y, radius, progress) {
     if (radius <= 0 || progress <= 0) return;
-    const ringBgColor = getCssColor('--color-spinner-bg', "rgba(204, 224, 255, 0.2)");
-    const ringFgColor = getCssColor('--color-spinner', spinnerConfig.spinnerRingColor);
-    ctx.beginPath(); ctx.arc(x, y, radius, -Math.PI / 2, -Math.PI / 2 + progress * Math.PI * 2);
-    ctx.strokeStyle = ringBgColor; ctx.lineWidth = 12; ctx.lineCap = "round"; ctx.stroke();
-    ctx.beginPath(); ctx.arc(x, y, radius, -Math.PI / 2, -Math.PI / 2 + progress * Math.PI * 2);
-    ctx.strokeStyle = ringFgColor; ctx.lineWidth = 8; ctx.lineCap = "round"; ctx.stroke();
+    // GC & DOM FIX: Wir greifen auf die initial ge-cachten Strings zurück statt DOM-Aufrufe zu machen
+    ctx.beginPath(); ctx.arc(x | 0, y | 0, radius | 0, -Math.PI / 2, -Math.PI / 2 + progress * Math.PI * 2);
+    ctx.strokeStyle = cachedRingBgColor; ctx.lineWidth = 12; ctx.lineCap = "round"; ctx.stroke();
+    
+    ctx.beginPath(); ctx.arc(x | 0, y | 0, radius | 0, -Math.PI / 2, -Math.PI / 2 + progress * Math.PI * 2);
+    ctx.strokeStyle = cachedRingFgColor; ctx.lineWidth = 8; ctx.lineCap = "round"; ctx.stroke();
 }
+
 function drawSupernovaRings(x, y, progress) {
     const easeOutQuint = 1 - Math.pow(1 - progress, 5);
     const opacity = 1 - progress;
-    const flashRadius = 20;
+    
+    const flashRadius = 40; 
     const flashOpacity = (1 - progress) * (1 - progress);
     
-    // Flash ist auch ein Gradient, hier könnten wir auch cachen, 
-    // aber es ist nur kurz sichtbar.
-    const gradient = ctx.createRadialGradient(x, y, 0, x, y, flashRadius);
-    gradient.addColorStop(0, `rgba(255, 255, 255, ${flashOpacity.toFixed(2)})`); gradient.addColorStop(1, `rgba(255, 255, 255, 0)`);
-    ctx.fillStyle = gradient; ctx.beginPath(); ctx.arc(x, y, flashRadius, 0, Math.PI * 2); ctx.fill();
+    if (supernovaFlashCache && flashOpacity > 0.01) {
+        ctx.globalAlpha = flashOpacity;
+        const scale = (flashRadius * 2) / FLASH_CACHE_SIZE;
+        const size = FLASH_CACHE_SIZE * scale;
+        ctx.drawImage(supernovaFlashCache, (x - size/2) | 0, (y - size/2) | 0, size | 0, size | 0);
+        ctx.globalAlpha = 1.0; 
+    }
     
     const waveRadius = easeOutQuint * spinnerConfig.supernovaMaxRadius;
     const waveWidth = Math.max(0.1, 8 * opacity);
-    ctx.beginPath(); ctx.arc(x, y, waveRadius, 0, Math.PI * 2);
-    ctx.strokeStyle = spinnerConfig.supernovaColor.replace('OPACITY', opacity.toFixed(2));
-    ctx.lineWidth = waveWidth; ctx.stroke();
+    
+    // GC FIX: Wir setzen den Alpha-Wert nativ über Canvas statt aufwändige String-Replacements pro Frame
+    ctx.globalAlpha = Math.max(0, opacity);
+    ctx.beginPath(); ctx.arc(x | 0, y | 0, waveRadius | 0, 0, Math.PI * 2);
+    ctx.strokeStyle = cachedSupernovaBaseColor; 
+    ctx.lineWidth = waveWidth; 
+    ctx.stroke();
+    ctx.globalAlpha = 1.0; 
 }
+
 function drawParticle(p, currentTime) {
     const age = currentTime - p.createdAt;
     const lifeProgress = age / p.maxLife;
@@ -407,11 +424,15 @@ function drawParticle(p, currentTime) {
     const finalOpacity = baseOpacity * fadeOpacity;
     if (finalOpacity <= 0.01) return;
     const radius = spinnerConfig.baseRadius * scale;
-    ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(0, radius), 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(138, 180, 248, ${Math.max(0, finalOpacity)})`; ctx.fill();
+    
+    // GC FIX: Wir setzen den Alpha-Wert nativ statt jedes Mal neue RGBA-Strings zu interpolieren!
+    ctx.globalAlpha = Math.max(0, finalOpacity);
+    ctx.beginPath(); ctx.arc(p.x | 0, p.y | 0, Math.max(0, radius), 0, Math.PI * 2);
+    ctx.fillStyle = '#8ab4f8'; 
+    ctx.fill();
+    ctx.globalAlpha = 1.0;
 }
 
-// --- INIT ---
 export function init(canvasElement, onSupernova) {
     if (!canvasElement) return;
 	if (animationFrameId) {
@@ -423,8 +444,9 @@ export function init(canvasElement, onSupernova) {
 	ctx = canvas.getContext('2d');
     
     initPools();
-    preRenderTntParticles(); // TNT Cache
-    preRenderBlackHole();    // Black Hole Cache (NEU)
+    preRenderBlackHole();    
+    preRenderSupernovaFlash(); 
+    cacheGlobalColors(); // Einmal CSS auslesen statt 60 mal pro Sekunde!
     
     cloudSimulator.initCloudSimulator(canvas);
     cloudSimulator.reset(); 
@@ -457,7 +479,11 @@ export function triggerBlackHoleExplosion() {
     supernovaParticlesCreated = false; currentState = STATE.GROWING; growthStartTime = Date.now();
 }
 export function addParticle() {
-    const activeCount = mainParticlePool.filter(p => p.active).length;
+    // GC FIX: Vermeide Array.filter() für einfache Zählungen
+    let activeCount = 0;
+    for (let i = 0; i < mainParticlePool.length; i++) {
+        if (mainParticlePool[i].active) activeCount++;
+    }
     if (!canvas || activeCount >= spinnerConfig.maxParticles) return;
     if (currentState === STATE.ORBITING || currentState === STATE.GROWING) spawnMainParticle();
 }

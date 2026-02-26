@@ -32,6 +32,7 @@ import { setupMenuInteractions, renderHistoryList, initGlobalMenuListeners } fro
 import { initializeTranslator } from '/script/features/accessibility/translate.js';
 import { initTTS } from '/script/features/accessibility/tts.js';
 import { initializeSelectionMode } from '/script/ui/interaction/selectionMode.js';
+import { initViewportManager } from '/script/ui/base/handleViewport.js';
 
 // ===================================================================
 // 3. FEATURE IMPORTS (Queries, Media, Viz, Export)
@@ -178,7 +179,8 @@ async function handlePageChange(container) {
 
 	// D. GLOBAL INIT
 	initializeTippy();
-
+	initViewportManager();
+	
 	initGlobalMenuListeners(); // Singleton: Startet SoftNav & Swipe einmalig
 	setupMenuInteractions();   // DOM: Bindet #menu-trigger auf der neuen Seite
 

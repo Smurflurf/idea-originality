@@ -4,12 +4,13 @@ import { getContext, getJobTitle } from '/script/core/context.js';
 import { emit } from '/script/core/eventBus.js';
 
 // ==========================================
-// ⚙️ ZOOM EINSTELLUNGEN
+// ZOOM EINSTELLUNGEN
 // ==========================================
 export const ZOOM_CONFIG = {
-	ANIMATION_SPEED: 0.32,  
-	BUTTON_ZOOM_STEP: 1.6, 
-	WHEEL_ZOOM_STEP: 1.15
+	ANIMATION_SPEED: 0.035,  
+	BUTTON_ZOOM_STEP: 1.4, 
+	WHEEL_ZOOM_STEP: 1.15,
+	ANIMATION_SPEED_WHEEL: 0.3,  
 };
 
 const MIN_ZOOM = 1.0;
@@ -121,6 +122,8 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 	let latestPanY = 0;
 	let lastMouseEvent = null;
 
+	let zoomInAnimation = false;
+	
 	let initialPinchDistance = null;
 	let initialPinchZoom = null;
 
@@ -164,13 +167,20 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 
 	function renderLoop() {
 		let needsMoreFrames = false;
-
+		let zoomSpeed = 0;
+		
+		if(!zoomInAnimation) {
+			zoomSpeed = ZOOM_CONFIG.ANIMATION_SPEED_WHEEL;
+		} else {
+			zoomSpeed = ZOOM_CONFIG.ANIMATION_SPEED;
+		}
+		
 		const prevZoom = state.zoom;
 		// Smooth wie früher, aber durch Speed 0.35 viel crisper
-		state.zoom = lerp(state.zoom, targetState.zoom, ZOOM_CONFIG.ANIMATION_SPEED);
+		state.zoom = lerp(state.zoom, targetState.zoom, zoomSpeed);
 
 		// Höherer Threshold (0.002 statt 0.001) kappt die mikroskopischen letzten Reste sofort ab
-		if (Math.abs(state.zoom - targetState.zoom) > 0.002) {
+		if (Math.abs(state.zoom - targetState.zoom) > 0.0001) {
 			needsMoreFrames = true;
 		} else {
 			state.zoom = targetState.zoom;
@@ -186,8 +196,8 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 			const targetScreenX = (0.5 - targetState.centerX) * targetState.zoom;
 			const targetScreenY = (0.5 - targetState.centerY) * targetState.zoom;
 
-			const nextScreenX = lerp(currentScreenX, targetScreenX, ZOOM_CONFIG.ANIMATION_SPEED);
-			const nextScreenY = lerp(currentScreenY, targetScreenY, ZOOM_CONFIG.ANIMATION_SPEED);
+			const nextScreenX = lerp(currentScreenX, targetScreenX, zoomSpeed);
+			const nextScreenY = lerp(currentScreenY, targetScreenY, zoomSpeed);
 
 			// Zurück in Bildkoordinaten übersetzen
 			state.centerX = 0.5 - (nextScreenX / state.zoom);
@@ -211,6 +221,7 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 			animFrameId = requestAnimationFrame(renderLoop);
 		} else {
 			animFrameId = null;
+			zoomInAnimation = false;
 		}
 	}
 
@@ -258,22 +269,17 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 	}
 
 	function updateDynamicPositions(wrapperLeft, wrapperTop, wrapperWidth, wrapperHeight) {
-		const pointsContainer = document.getElementById(pointsContainerId);
-		if (!pointsContainer || wrapperWidth <= 0) return;
+	        const pointsContainer = document.getElementById(pointsContainerId);
+	        if (!pointsContainer || wrapperWidth <= 0) return;
 
-		const hitboxes = pointsContainer.getElementsByClassName('point-hitbox');
-		const hitboxSize = 30;
-
-		for (let i = 0; i < hitboxes.length; i++) {
-			const hitbox = hitboxes[i];
-			const relX = parseFloat(hitbox.dataset.relativeX);
-			const relY = parseFloat(hitbox.dataset.relativeY);
-
-			hitbox.style.left = '0px';
-			hitbox.style.top = '0px';
-			hitbox.style.transform = `translate(${wrapperLeft + (relX * wrapperWidth) - (hitboxSize / 2)}px, ${wrapperTop + (relY * wrapperHeight) - (hitboxSize / 2)}px)`;
-		}
-	}
+	        // MASSIVER PERFORMANCE BOOST:
+	        // Die teure for-Schleife über alle "hitboxes" wurde komplett entfernt!
+	        // Stattdessen skalieren wir nur diesen EINEN Container. Da die Hitboxen jetzt
+	        // %-Werte nutzen, wandern sie völlig ohne JavaScript-Berechnung an die richtige Stelle.
+	        pointsContainer.style.width = `${wrapperWidth}px`;
+	        pointsContainer.style.height = `${wrapperHeight}px`;
+	        pointsContainer.style.transform = `translate(${wrapperLeft}px, ${wrapperTop}px)`;
+	    }
 
 	function updateDebugInfo(event = lastMouseEvent) {
 		if (!debugOverlay || debugOverlay.style.display === 'none') return;
@@ -307,6 +313,7 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 	}
 
 	function zoomToTarget(isZoomingIn, forceCrosshair = false, pointerX = null, pointerY = null, isWheel = false) {
+		zoomInAnimation = false;
 		const oldZoom = targetState.zoom;
 		const stepFactor = isWheel ? ZOOM_CONFIG.WHEEL_ZOOM_STEP : ZOOM_CONFIG.BUTTON_ZOOM_STEP;
 		let newZoom = oldZoom * (isZoomingIn ? stepFactor : 1 / stepFactor);
@@ -565,6 +572,8 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 		const clientX = e.touches ? e.touches[0].clientX : e.clientX;
 		const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
+		menu.style.visibility = 'hidden';
+		
 		menu.style.top = `${clientY}px`;
 		menu.style.left = `${clientX}px`;
 
@@ -580,16 +589,33 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 			},
 			{
 				label: 'Zoom in', action: () => {
-					const center = getCenterAnchor();
-					targetState.centerX = center.x;
-					targetState.centerY = center.y;
-					targetState.zoom = MAX_ZOOM;
+					hasPannedFromCenter = true;
+					zoomInAnimation = true;
+					
+					const rect = container.getBoundingClientRect();
+					let anchorX = 0.5;
+					let anchorY = 0.5;
+
+					if (clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom) {
+						anchorX = (clientX - rect.left) / rect.width;
+						anchorY = (clientY - rect.top) / rect.height;
+					}
+
+					const oldZoom = targetState.zoom;
+					const newZoom = MAX_ZOOM;
+
+					// Exakt selbe Mathematik wie beim Mausrad für reibungsloses Anker-Zoomen
+					targetState.centerX += (anchorX - 0.5) * (1 / oldZoom - 1 / newZoom);
+					targetState.centerY += (anchorY - 0.5) * (1 / oldZoom - 1 / newZoom);
+					targetState.zoom = newZoom;
+
 					clampTargetState();
 					requestPhysicsUpdate();
 				}
 			},
 			{
 				label: 'Zoom out', action: () => {
+					zoomInAnimation = false;
 					targetState.zoom = MIN_ZOOM;
 					const center = getCenterAnchor();
 					targetState.centerX = center.x;
@@ -621,6 +647,21 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 		});
 
 		document.body.appendChild(menu);
+		const menuRect = menu.getBoundingClientRect();
+		let finalLeft = clientX;
+		let finalTop = clientY;
+
+		if (finalLeft + menuRect.width > window.innerWidth) {
+			finalLeft = window.innerWidth - menuRect.width - 5;
+		}
+		if (finalTop + menuRect.height > window.innerHeight) {
+			finalTop = window.innerHeight - menuRect.height - 5;
+		}
+
+		menu.style.left = `${finalLeft}px`;
+		menu.style.top = `${finalTop}px`;
+		menu.style.visibility = 'visible'; 
+		
 		setTimeout(() => window.addEventListener('click', () => menu.remove(), { once: true }), 0);
 	}
 

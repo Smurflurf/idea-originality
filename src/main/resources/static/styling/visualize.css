@@ -2,9 +2,10 @@
 
 .viz-stack-container {
     position: relative;
-    overflow: hidden;
-    cursor: default;
-    transition: box-shadow 0.3s ease-in-out;
+    width: 100%;
+    background-color: var(--bg-deep); 
+    border-radius: 8px;
+    contain: strict; 
 }
 
 .viz-stack-container.is-scroll-zoom-active {
@@ -37,7 +38,11 @@
 
 .zoom-pan-wrapper {
     position: absolute;
-    /*transition: width 0.1s ease-out, height 0.1s ease-out, top 0.1s ease-out, left 0.1s ease-out;*/
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transform-origin: 0 0; 
 }
 
 .zoom-pan-wrapper.is-panning {
@@ -71,7 +76,6 @@
 
 .zoom-controls button:hover {
     background-color: var(--bg-element-hover);
-    /* War: #8f9194 -> text-quaternary */
     border-color: var(--text-quaternary);
 }
 
@@ -93,31 +97,26 @@
     width: 30px; 
     height: 30px;
     border-radius: 50%;
-    /* transform: translate(-50%, -50%); */
     cursor: pointer;
     display: flex;
     justify-content: center;
     align-items: center;
-    will-change: left, top;
+    will-change: transform;
 }
 
 .neighbor-point {
     width: 14px; 
     height: 14px;
     border-radius: 50%;
-    /* War: rgba(0, 0, 0, 0.9) */
     border: 2px solid rgba(var(--bg-black-rgb), 0.9);
-    /* War: rgba(255, 255, 255, 0.8) -> Nimmt jetzt Primary Text Color (Weiß im Dark Mode) */
     box-shadow: 0 0 0 2px rgba(var(--text-primary-rgb), 0.8);
     background-clip: content-box;
     transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
     pointer-events: none;
-    will-change: transform, box-shadow;
 }
 
 .point-hitbox:hover .neighbor-point {
-    transform: scale(1.8) !important; /* !important, um JS-Skalierung beim Hovern zu überschreiben */
-    /* War: rgba(255, 255, 255, 0.6) */
+    transform: scale(1.8) !important;
     box-shadow: 0 0 10px rgba(var(--text-primary-rgb), 0.6);
 }
 
@@ -126,28 +125,11 @@
     box-shadow: 0 0 10px rgba(var(--text-primary-rgb), 0.6);
 }
 
-
 /* =================================================================== */
 /* PERFORMANCE OPTIMIERUNGEN FÜR VIZ CONTAINER                         */
 /* =================================================================== */
 
-/* 1. GPU Compositing erzwingen: Sagt dem Browser, dass sich diese 
-      Elemente bewegen/skalieren werden. Sie werden als Textur auf der GPU gespeichert. */
-.viz-wrapper,
-.image-canvas,
-.labels-canvas,
-.rendered-canvas,
-.hover-canvas,
-.outlines-svg {
-    will-change: transform;
-    transform: translateZ(0);
+.viz-stack-container {
+    transform: translateZ(0); 
     backface-visibility: hidden;
-}
-
-/* 2. Richtiges Verstecken: opacity: 0 reicht nicht! 
-      visibility: hidden nimmt das Canvas komplett aus der Render-Pipeline des Browsers */
-.is-hidden {
-    opacity: 0 !important;
-    visibility: hidden !important; 
-    pointer-events: none !important;
 }

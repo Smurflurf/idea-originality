@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>de.simon</groupId>
 	<artifactId>originality</artifactId>
-	<version>4.1.267</version>
+	<version>4.1.277</version>
 	<name>originality</name>
 	<description>A tool to find relevant and unexpected papers.</description>
 	<url />

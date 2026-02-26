@@ -545,6 +545,9 @@ h2 {
     background-color: var(--bg-surface);
     border: 1px solid var(--border-main);
     border-radius: 12px;
+    
+    contain: layout paint;
+    position: relative;
 }
 
 .viz-controls {
@@ -591,10 +594,11 @@ h2 {
 
 .viz-stack-container {
     position: relative;
+	overflow: hidden;
     width: 100%;
-    /* War #0e0e0f -> extra definierte Deep Farbe */
     background-color: var(--bg-deep); 
     border-radius: 8px;
+    pointer-events: auto;
 }
 
 .export-btn {
