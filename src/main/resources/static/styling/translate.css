@@ -41,6 +41,8 @@ body.translate-mode-active, body.translate-mode-active * {
 	cursor: none !important;
 	-webkit-box-decoration-break: clone;
 	box-decoration-break: clone;
+	position: relative !important;
+	z-index: 100 !important;
 }
 
 /* Loading State: Während der Übersetzung */
@@ -68,9 +70,9 @@ body.translate-mode-active, body.translate-mode-active * {
    Nutzt box-shadow statt border, um Layout-Shifts zu vermeiden.
 */
 body.translate-mode-active :is(p, h1, h2, h3, h4, h5, h6, li, blockquote,
-	.expandable-abstract):not(.is-translating):not(.is-reading) {
+	.expandable-abstract, span):not(.is-translating):not(.is-reading):not(.expand-button span):not(.toggle-hierarchy-btn span):not(.toggle-json-btn span)
+	{
 	position: relative;
-	border-radius: 4px;
 	transition: box-shadow 0.2s ease;
 	box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.4);
 }
@@ -78,7 +80,6 @@ body.translate-mode-active :is(p, h1, h2, h3, h4, h5, h6, li, blockquote,
 .is-reading {
 	outline: 2px solid var(--color-primary) !important;
 	background-color: rgba(var(--color-primary-rgb), 0.1) !important;
-	border-radius: 4px;
 	-webkit-box-decoration-break: clone;
 	box-decoration-break: clone;
 	/* Die Animation: Pulsiert */
@@ -323,7 +324,7 @@ body.translate-mode-active :is(p, h1, h2, h3, h4, h5, h6, li, blockquote,
 
 .language-search-wrapper .search-icon {
 	position: absolute;
-	left: 18px;
+	left: 12px;
 	top: 50%;
 	transform: translateY(-50%);
 	font-size: 0.8rem;

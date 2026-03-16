@@ -1,0 +1,779 @@
+{
+	"page_title": "Häufig gestellte Fragen (FAQ)",
+	"intro": "Hier finden Sie Antworten zur Philosophie, Technologie und Nutzung des Ideenatlas.",
+	"structure": [
+		{
+			"type": "faq_search",
+			"placeholder": "Nach Themen, Funktionen oder Problemen suchen..."
+		},
+		{
+			"type": "cascade_block",
+			"title": "Einführung & Grundlagen",
+			"items": [
+				{
+					"id": "faq_what_is",
+					"question": "Was genau ist der Ideenatlas und wie hilft er?",
+					"answer": [
+						"Der Ideenatlas ist eine 'Ideen-Kurations-Engine'. Er löst ein grundlegendes Problem: Um etwas zu finden, muss man normalerweise wissen, wie es heißt und wonach man sucht. Bei vielen Ideen fehlt das passende Fachvokabular oder Fachwissen, um sie weiter auszuarbeiten und zu verfolgen; hat man sich dieses angeeignet, ist die Idee oft schon vergessen oder scheint irrelevant.",
+						"Der Atlas hilft dabei, diese unausgereiften Ideen zu verorten, Forschungslücken aufzudecken und Gedanken im Kontext von Millionen wissenschaftlicher Arbeiten zu validieren."
+					],
+					"keywords": [
+						"wofür seite gut",
+						"was macht ideenatlas",
+						"wie funktioniert",
+						"nutzen tool",
+						"wobei hilft seite",
+						"sinn des ganzen",
+						"erklärung ideenatlas",
+						"was machen"
+					],
+					"relevant_on": [
+						"about",
+						"index",
+						"faq"
+					]
+				},
+				{
+					"id": "faq_diff_google",
+					"question": "Wie unterscheidet sich der Ideenatlas von Google oder Semantic Scholar?",
+					"answer": [
+						"Klassische Suchmaschinen wie Google basieren auf Keywords. Ohne den exakten Begriff bleiben relevante Ergebnisse oft verborgen. Akademische Alternativen wie Semantic Scholar nutzen häufig Zitationsgraphen, was bereits populäre Arbeiten bevorzugt und Nischenthemen benachteiligt.",
+						"Der Ideenatlas nutzt stattdessen einen semantischen Vektorraum. Die Bewertung erfolgt nicht durch SEO, Popularität oder Zitationszahlen, sondern rein durch die mathematische Nähe des Inhalts. Es zählt die semantische Ähnlichkeit, unabhängig vom exakten Wortlaut."
+					],
+					"keywords": [
+						"warum nicht google",
+						"besser als google",
+						"unterschied normale suchmaschinen",
+						"vorteil semantic scholar",
+						"anders herkömmliche suchen",
+						"unterschied vektorsuche keyword-suche",
+						"wie google scholar",
+						"scite",
+						"scite.ai",
+						"research rabbit",
+						"research rabit",
+						"zeta alpha",
+						"consensus",
+						"elicit",
+						"connected papers"
+					],
+					"relevant_on": [
+						"about",
+						"faq"
+					]
+				},
+				{
+					"id": "faq_cost",
+					"question": "Fallen für die Nutzung Kosten an?",
+					"answer": [
+						"Nein. Der Ideenatlas wird als offener Forschungsprototyp betrieben. Ziel ist es, wissenschaftliche Recherche transparent und ohne Paywalls oder Werbung zugänglich zu machen."
+					],
+					"keywords": [
+						"ist kostenlos",
+						"dafür bezahlen",
+						"gibt abo",
+						"was kostet",
+						"seite gratis",
+						"kreditkarte",
+						"versteckte kosten",
+						"premium",
+						"preise"
+					],
+					"relevant_on": [
+						"*"
+					]
+				}
+			]
+		},
+		{
+			"type": "cascade_block",
+			"title": "Suche & Eingabe",
+			"items": [
+				{
+					"id": "faq_no_idea",
+					"question": "Wonach kann gesucht werden, wenn keine fertige These existiert?",
+					"answer": [
+						"Dies ist der ideale Anwendungsfall. Der Atlas übersetzt Alltagssprache in den wissenschaftlichen Kontext. Möglich sind grobe Brainstormings zur Ideenextraktion, naive Fragen, das Zusammenfassen komplexer Texte oder die einfache Suche nach Begriffen."
+					],
+					"keywords": [
+						"keine ahnung",
+						"nicht wissen wonach suchen",
+						"wonach suchen",
+						"keine idee",
+						"wie anfangen",
+						"was in suchfeld eingeben",
+						"hilfe beim start",
+						"nur ein stichwort",
+						"einfach brainstormen"
+					],
+					"ui_mockup": [
+						".popup-intent-selection"
+					],
+					"faq_select": [
+						".custom-editor"
+					],
+					"relevant_on": [
+						"index"
+					]
+				},
+				{
+					"type": "cascade_block",
+					"title": "Die Ziel-Buttons",
+					"items": [
+						{
+							"id": "faq_buttons_general",
+							"question": "Wieso gibt es vier verschiedene Ziel-Buttons?",
+							"answer": [
+								"Die Eingaben in das Textfeld werden (bevor sie lokal weiterverarbeitet werden) von einer KI optimiert, um den Nutzen der Antworten zu maximieren.",
+								"Damit die KI den Text passend formuliert, muss sie wissen, was du erwartest. Je nach Button passt sie ihren Fokus an. Dieser reicht vom reinen Zusammenfassen bis hin zum Anreichern deiner Idee mit wissenschaftlichen Fachbegriffen."
+							],
+							"keywords": [
+								"was machen buttons",
+								"wofür verschiedene knöpfe",
+								"welchen button klicken",
+								"unterschied ziel-buttons",
+								"warum ziel auswählen",
+								"wie entscheiden button",
+								"bedeutung optionen suchfeld"
+							],
+							"ui_mockup": [
+								".popup-intent-selection"
+							],
+							"faq_select": [
+								".run-button"
+							],
+							"relevant_on": [
+								"index"
+							]
+						},
+						{
+							"id": "faq_btn_question",
+							"question": "Was bewirkt 'Ich brauche Antworten'?",
+							"answer": [
+								"Wähle dies, wenn du eine konkrete Frage hast oder dir bei einem Thema noch unsicher bist.",
+								"Die KI wird angewiesen, deine Lücken mit einem soliden wissenschaftlichen Fundament zu untermauern und fachliche Antworten zu generieren, die sich perfekt für die anschließende Themensuche eignen."
+							],
+							"keywords": [
+								"wann ich brauche antworten",
+								"was passiert bei antworten",
+								"frage stellen",
+								"thema unsicher",
+								"antworten auf fragen",
+								"knopf fragen"
+							],
+							"ui_mockup": [
+								".intent-btn[data-intent='question']"
+							],
+							"relevant_on": [
+								"index"
+							]
+						},
+						{
+							"id": "faq_btn_idea",
+							"question": "Was bewirkt 'Idee extrahieren'?",
+							"answer": [
+								"Perfekt für unstrukturiertes Brainstorming oder grobe Gedankengänge.",
+								"Die KI filtert deine Kernideen heraus, formuliert daraus eine klare Hypothese und ergänzt (falls nötig) passende wissenschaftliche Fachbegriffe oder Methodenlehren, um deine Idee auffindbar zu machen."
+							],
+							"keywords": [
+								"wann idee extrahieren",
+								"was macht extrahieren",
+								"brainstorming button",
+								"gedanken ordnen",
+								"hypothese formulieren",
+								"text idee machen"
+							],
+							"ui_mockup": [
+								".intent-btn[data-intent='idea']"
+							],
+							"relevant_on": [
+								"index"
+							]
+						},
+						{
+							"id": "faq_btn_summarize",
+							"question": "Was bewirkt 'Dokumente Zusammenfassen'?",
+							"answer": [
+								"Gedacht für große Textmengen oder hochgeladene Dokumente (wie PDFs).",
+								"Die KI analysiert den Text, extrahiert die zentralen Aussagen und Methodiken und verdichtet sie zu einer präzisen Zusammenfassung. So kannst du prüfen, ob es bereits ähnliche Forschungsarbeiten gibt."
+							],
+							"keywords": [
+								"wann dokumente zusammenfassen",
+								"pdf hochladen zusammenfassen",
+								"langen text kürzen",
+								"zusammenfassung generieren",
+								"was macht zusammenfassen",
+								"text zusammenfassen"
+							],
+							"ui_mockup": [
+								".intent-btn[data-intent='summarize']"
+							],
+							"relevant_on": [
+								"index"
+							]
+						},
+						{
+							"id": "faq_btn_none",
+							"question": "Was bewirkt 'Keine spezielle Behandlung'?",
+							"answer": [
+								"Verwende dies, wenn du bereits einen sehr präzisen, fertigen Text hast und keine weitere Interpretation durch die KI wünschst.",
+								"Die Eingabe wird strikt objektiv, ohne Hinzufügen von neuem Kontext oder Erklärungen, in eine maschinenlesbare Form für die Vektorsuche übersetzt."
+							],
+							"keywords": [
+								"wann keine spezielle behandlung",
+								"text direkt suchen",
+								"ki ignorieren",
+								"maschinenlesbare übersetzung",
+								"fertigen text abschicken",
+								"was passiert wenn keine"
+							],
+							"ui_mockup": [
+								".intent-btn[data-intent='none']"
+							],
+							"relevant_on": [
+								"index"
+							]
+						}
+					]
+				},
+				{
+					"id": "faq_input_formats",
+					"question": "Welche Eingabeformate werden unterstützt?",
+					"answer": [
+						"Der Ideenatlas ist multimodal und verarbeitet verschiedene Eingabeformate. Neben der offensichtlichen Texteingabe lassen sich direkt in einem eingebauten Rekorder Audios aufnehmen und absenden. Außerdem können PDFs, Bilder, Videos oder jede Form von Textdateien hochgeladen werden. Durch die Ideenextraktion mithilfe des LLMs und der Angabe des Ziels der Abfrage können die passenden Informationen als Text weiterverarbeitet werden."
+					],
+					"keywords": [
+						"pdfs hochladen",
+						"bilder fotos",
+						"sprachnachricht aufnehmen",
+						"audio eingabe mikrofon",
+						"welche dateien verwenden",
+						"videos unterstützt",
+						"dokument hochladen",
+						"formate dateiformate"
+					],
+					"ui_mockup": [
+						".textarea-wrapper",
+						".media-menu"
+					],
+					"highlight_mockup": [
+						".media-button-label",
+						".media-menu li"
+					],
+					"faq_select": [
+						".media-button-label",
+						".media-menu li"
+					],
+					"relevant_on": [
+						"index"
+					]
+				}
+			]
+		},
+		{
+			"type": "cascade_block",
+			"title": "Resultate verstehen",
+			"items": [
+				{
+					"id": "faq_tabs_meaning",
+					"question": "Was bedeuten die drei Tabs: 'Deine Idee', 'Ähnliche Themen', 'Serendipität'?",
+					"answer": [
+						"Die Tabs bieten verschiedene Perspektiven auf die Eingabe. Jeder Tab beantwortet dabei eine etwas andere Frage, von sehr spezifisch zu weit gefasst.",
+						"'Deine Idee' zeigt die direkte Analyse der Idee. Die dortige cluster-Hierarchie zeigt, in welchen Bereich die Idee eingeordnet werden würde. Die Ergebnisse geben die direkt relevantesten wissenschaftlichen Arbeiten zurück. Hier findet man die direkte Antwort auf eine Frage.",
+						"'Ähnliche Themen' geht in die Vogelperspektive und führt zu den nächsten benachbarten Forschungsfeldern. Statt nach einzelnen wissenschaftlichen Artikeln werden hier ganze Themengebiete gesucht und die Ergebnisse nach jenen gefiltert ausgegeben.",
+						"'Serendipität' zeigt inhaltlich entfernte, aber strukturell ähnliche Themen, um das Silo-Denken aufzubrechen und Lösungen aus anderen Fachbereichen sichtbar zu machen. Nicht alle Ergebnisse hier sind passend, aber wenn etwas passt dann oftmals unerwartet und gut."
+					],
+					"keywords": [
+						"was ist serendipität",
+						"unterschied drei tabs",
+						"ähnliche themen",
+						"reiter lesen",
+						"direkte antworten finden",
+						"verschiedene ansichten ergebnisse",
+						"bedeutung deine idee"
+					],
+					"ui_mockup": [
+						".viz-toggle-header"
+					],
+					"relevant_on": [
+						"results"
+					]
+				},
+				{
+					"id": "faq_hierarchy",
+					"question": "Wie ist die 'Cluster-Hierarchie' zu interpretieren?",
+					"answer": [
+						"Die Hierarchie fungiert wie der Zoom auf einer Landkarte, vom Kontinent über das Land bis zur Stadt. Sie verdeutlicht, wie die Eingabe thematisch eingeordnet wurde, vom Allgemeinen zum Speziellen."
+					],
+					"keywords": [
+						"cluster hierarchie",
+						"ordnerstruktur lesen",
+						"thematische einordnung",
+						"verschiedene ebenen bedeutung",
+						"zoom landkarte",
+						"liste über ergebnissen"
+					],
+					"ui_mockup": [
+						".hierarchy-list"
+					],
+					"relevant_on": [
+						"results"
+					]
+				},
+				{
+					"id": "faq_scores",
+					"question": "Was bedeuten 'Score', 'Konfidenz' und 'Relevanz'?",
+					"answer": [
+						"TLDR: Die Zahlen gehen von 0 bis 1 und je höher, desto besser.",
+						"Der Score stellt kein Qualitätsurteil dar. Er misst lediglich die mathematische Nähe im Vektorraum. Ein hoher Wert bedeutet eine starke inhaltliche Übereinstimmung mit der Anfrage. Er misst mit demselben Maß wie 'Relevanz', der Kosinus-Ähnlichkeit.",
+						"'Konfidenz' beschreibt wie sicher sich der Algorithmus bei der Einordnung der Idee (oder auch der wissenschaftlichen Arbeit) in das Themenfeld war. Ist er sich nicht absolut sicher (Konfidenz <1.0), dann ist die Idee wahrscheinlich Fachübergreifend oder die Einordnung ungenau.",
+						"'Relevanz' ist eine Eigenheit von 'Ähnliche Themen' und 'Serendipität', sie ist die Kosinus-Ähnlichkeit zwischen dem Eingabevektor und des Zentroiden des jeweiligen Themengebiets. Ein höherer Wert bedeutet hier eine größere Ähnlichkeit und somit vielversprechendere Resultate."
+					],
+					"keywords": [
+						"prozentzahlen verstehen",
+						"guter score",
+						"bedeutung konfidenz",
+						"relevanz",
+						"ranking berechnet",
+						"zahlenwerte ergebnisse",
+						"wert neben ergebnis"
+					],
+					"ui_mockup": [
+						".result-score",
+						"#own-viz-content .hierarchy-list li:first-child .hierarchy-item-box",
+						"#neighbor-viz-content .hierarchy-list li:first-child .hierarchy-item-box"
+					],
+					"highlight_mockup": [
+						".result-score",
+						".hierarchy-item-confidence"
+					],
+					"faq_select": [
+						".result-score",
+						".hierarchy-item-confidence"
+					],
+					"relevant_on": [
+						"results"
+					]
+				},
+				{
+					"type": "cascade_block",
+					"title": "Die Visualisierung im Detail",
+					"items": [
+						{
+							"id": "faq_viz_map",
+							"question": "Warum wird eine Karte verwendet?",
+							"answer": [
+								"Listen sind eindimensional und verstecken Zusammenhänge. Eine Karte offenbart Muster, die in einer Textliste untergehen würden, wie dichte Cluster oder isolierte Ausreißer... und all das auf nur einen Blick."
+							],
+							"keywords": [
+								"wieso keine liste",
+								"was bringt karte",
+								"vorteil visualisierung",
+								"landschaft sehen",
+								"sinn grafische darstellung",
+								"warum bild"
+							],
+							"relevant_on": [
+								"results"
+							]
+						},
+						{
+							"id": "faq_viz_colors",
+							"question": "Wie ist die 'Landschaft' der Karte zu lesen?",
+							"answer": [
+								"Die Karte fungiert als Atlas des Wissens. Farbige Cluster repräsentieren thematisch verwandte Gebiete, Leerräume zeigen fehlende inhaltliche Überlappung. Dicht gedrängte Punkte weisen auf ein gut erforschtes Feld hin, während verstreute Punkte auf interdisziplinäre Verbindungen hindeuten."
+							],
+							"keywords": [
+								"farben auf karte",
+								"cluster interpretieren",
+								"lücken auf karte",
+								"punkte eng beieinander",
+								"farbige bereiche verstehen",
+								"karte richtig lesen"
+							],
+							"ui_mockup": [
+								"cache:own_base",
+								"cache:serendipity_points"
+							],
+							"ui_mockup_stack": true,
+							"relevant_on": [
+								"results"
+							]
+						},
+						{
+							"id": "faq_viz_nav",
+							"question": "Wie funktioniert die Navigation in der Visualisierung?",
+							"answer": [
+								"Die Navigation erfolgt intuitiv per Mausrad oder der +/- Taste zum Zoomen sowie Klicken und Ziehen zum Verschieben. Um mit der Karte zu interagieren muss sie aktiv sein, das heißt sie braucht die blaue Umrandung. Man aktiviert sie durch einmaliges klicken auf die Karte."
+							],
+							"keywords": [
+								"karte zoomen",
+								"karte verschieben",
+								"karte nicht bewegen",
+								"karte aktivieren",
+								"blaue umrandung",
+								"bild bedienen",
+								"navigation karte"
+							],
+							"ui_mockup": [
+								".zoom-controls"
+							],
+							"relevant_on": [
+								"results"
+							]
+						},
+						{
+							"type": "cascade_block",
+							"title": "Die Analyse-Ebenen (Toggle-Buttons)",
+							"items": [
+								{
+									"id": "faq_viz_toggle_crosshair",
+									"question": "Was bewirkt 'Deine Idee' / Das Fadenkreuz?",
+									"answer": [
+										"Dieser Schalter blendet das Fadenkreuz ein, welches die exakte Position deiner Eingabe im 2D-Wissensuniversum markiert.",
+										"Es dient primär zur Orientierung: wo befindet sich die Idee? Durch das Zusammenspiel mit den anderen Visualisierungsebenen lassen sich jedoch weitere Zusammenhänge schlussfolgern."
+									],
+									"keywords": [
+										"idee auf karte",
+										"bedeutung fadenkreuz",
+										"eingabe lokalisieren",
+										"position finden",
+										"kreuz in mitte"
+									],
+									"ui_mockup": [
+										".viz-controls"
+									],
+									"highlight_mockup": [
+										"#viz-toggle-own-crosshair"
+									],
+									"faq_select": [
+										"#viz-toggle-own-crosshair",
+										"#viz-toggle-nc-crosshair",
+										"#viz-toggle-serendipity-crosshair"
+									],
+									"relevant_on": [
+										"results"
+									]
+								},
+								{
+									"id": "faq_viz_toggle_points",
+									"question": "Was macht der 'Punkte'-Button?",
+									"answer": [
+										"Dieser Schalter hebt die relevanten Themengebiete farbig hervor.",
+										"Durch den hohen Kontrast kann direkt erkannt werden, wo sich die Themengebiete befinden, wie groß (spezifisch) sie sind und wie sie in Verbindung zueinander stehen."
+									],
+									"keywords": [
+										"farbige punkte",
+										"themengebiete hervorheben",
+										"punkte ansicht",
+										"punkte schalter",
+										"flecken ansicht"
+									],
+									"ui_mockup": [
+										".viz-controls"
+									],
+									"highlight_mockup": [
+										"#viz-toggle-own-points"
+									],
+									"faq_select": [
+										"#viz-toggle-own-points",
+										"#viz-toggle-nc-points",
+										"#viz-toggle-serendipity-points"
+									],
+									"relevant_on": [
+										"results"
+									]
+								},
+								{
+									"id": "faq_viz_toggle_outlines",
+									"question": "Wofür ist der 'Umrisse'-Button?",
+									"answer": [
+										"Er schaltet die farbigen Umrisse der aktiven Themengebiete ein und aus. ",
+										"Dies hilft, die Grenzen von Themengebieten visuell besser abzugrenzen, besonders auf Karten mit vielen überlappenden Farben. Es erinnert an Höhenlinien auf einer Landkarte und macht die Struktur besser greifbar."
+									],
+									"keywords": [
+										"höhenlinien karte",
+										"grenzen themengebiete",
+										"umrisse schalter",
+										"überlappende farben unterscheiden",
+										"umrandungen einschalten"
+									],
+									"ui_mockup": [
+										".viz-controls"
+									],
+									"highlight_mockup": [
+										"#viz-toggle-own-outlines"
+									],
+									"faq_select": [
+										"#viz-toggle-own-outlines",
+										"#viz-toggle-nc-outlines",
+										"#viz-toggle-serendipity-outlines"
+									],
+									"relevant_on": [
+										"results"
+									]
+								},
+								{
+									"id": "faq_viz_toggle_context",
+									"question": "Was zeigt der 'Kontext'-Button an?",
+									"answer": [
+										"Dieser Schalter blendet die Namen und Umrisse der übergeordneten, großen Themengebiete ein.",
+										"Man kann es sich vorstellen wie das Einblenden der Kontinente auf einer Weltkarte, um eine grobe Orientierung im Vektorraum zu bekommen."
+									],
+									"keywords": [
+										"namen große gebiete",
+										"übergeordnete themen",
+										"grobe orientierung",
+										"kontinente einblenden",
+										"kontext schalter"
+									],
+									"ui_mockup": [
+										".viz-controls"
+									],
+									"highlight_mockup": [
+										"#viz-toggle-own-context"
+									],
+									"faq_select": [
+										"#viz-toggle-own-context",
+										"#viz-toggle-nc-context",
+										"#viz-toggle-serendipity-context"
+									],
+									"relevant_on": [
+										"results"
+									]
+								},
+								{
+									"id": "faq_viz_toggle_labels",
+									"question": "Was bewirkt der 'Labels'-Button?",
+									"answer": [
+										"Er zeigt die Namen der Themengebiete auf der Karte an.",
+										"Das ist nützlich, um schnell die genauen Bezeichnungen der Gebiete zu erfassen.",
+										"Vor allem bei kleinen, eng beieinanderliegenden Gebieten kann dies jedoch störend und unübersichtlich sein, deswegen ist er standardmäßig deaktiviert. Kann man ein Themengebiet jedoch nicht auf einen Blick finden, da es zu klein oder unscheinbar ist, lohnt es sich, die Labels kurz zu aktivieren, da sie stark hervorstechen."
+									],
+									"keywords": [
+										"namen themengebiete",
+										"namen auf karte",
+										"keine beschriftung",
+										"labels einschalten",
+										"text auf karte"
+									],
+									"ui_mockup": [
+										".viz-controls"
+									],
+									"highlight_mockup": [
+										"#viz-toggle-own-labels"
+									],
+									"faq_select": [
+										"#viz-toggle-own-labels",
+										"#viz-toggle-nc-labels",
+										"#viz-toggle-serendipity-labels"
+									],
+									"relevant_on": [
+										"results"
+									]
+								},
+								{
+									"id": "faq_viz_toggle_neighbors",
+									"question": "Was zeigt der 'Nachbarn'-Button?",
+									"answer": [
+										"Er markiert die Positionen der gefundenen wissenschaftlichen Artikel (die in der Ergebnisliste unten erscheinen) als kleine, interaktive Punkte direkt auf der Karte.",
+										"So ist auf einen Blick ersichtlich, wo sich die konkreten Treffer befinden. Ihre Positionen lassen direkt mehrere Schlüsse zu:",
+										"Der dichte Fleck: Liegen alle Ergebnisse eng beieinander? Dann ist die Idee fest in einem etablierten Feld verortet.",
+										"Die Streuung: Verteilen sich die Ergebnisse über die ganze Karte? Das deutet auf einen interdisziplinären Ansatz hin, der verschiedene 'Wissenskontinente' verbindet.",
+										"Der Ausreißer: Ein einzelner Nachbar ist extrem weit von allem anderen entfernt? Hier könnte eine interdisziplinäre Querverbindung vorliegen, die es wert ist, genauer untersucht zu werden.",
+										"Und in Verbindung mit dem Fadenkreuz: In der Regel sollten die Ergebnisse des 'Deine Idee' Tabs direkt beim Fadenkreuz liegen. Sind sie jedoch weit von ihm entfernt, kann das darauf hindeuten, dass sich in der Datenbank keine passenden Ergebnisse befinden. In diesem Fall kann es Sinn ergeben, die Recherche auf andere Plattformen auszuweiten. Es lohnt sich in diesem spezifischen Fall jedoch besonders die Ergebnisse genau zu studieren, da sie neue Erkenntnisse und Facetten zur Suche liefern können."
+									],
+									"keywords": [
+										"suchergebnisse auf karte",
+										"artikel auf karte",
+										"kleine punkte",
+										"dichter fleck ausreißer",
+										"ergebnisse lokalisieren",
+										"nachbarn schalter"
+									],
+									"ui_mockup": [
+										".viz-controls"
+									],
+									"highlight_mockup": [
+										"#viz-toggle-own-neighbors"
+									],
+									"faq_select": [
+										"#viz-toggle-own-neighbors",
+										"#viz-toggle-nc-neighbors",
+										"#viz-toggle-serendipity-neighbors"
+									],
+									"relevant_on": [
+										"results"
+									]
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"type": "cascade_block",
+			"title": "Technologie & Daten",
+			"items": [
+				{
+					"id": "faq_tech_rag",
+					"question": "Wie funktioniert die Technologie dahinter?",
+					"answer": [
+						"Der Ideenatlas ist kein einfacher ChatGPT-Wrapper oder RAG. Zwischen Datensammeln und der fertigen Seite passieren ein paar Schritte zur Datenaufbereitung.",
+						"Sind die Rohdaten gesammelt und gesäubert, werden sie mithilfe eines Sentence Embedders in einen Vektor umgewandelt (Titel + Abstract -> Vektor) und in eine Vektordatenbank geschrieben.",
+						"Ist dies beendet wird ein UMAP-Modell erstellt um die Vektoren von 1024 auf eine geringere Dimension (10) zu reduzieren. Man kann sich diesen Prozess wie ein Bild schießen vorstellen: die Kamera verwandelt die 3D Welt in ein 2D Bild. So können wir im Folgenden den Fluch der Dimensionalität umgehen.",
+						"Nun wird geclustert. Rekursiv werden HDBSCAN-Modelle auf Basis der niedrigdimensionalen Vektoren erstellt. Zunächst wird der gesamte Vektorraum geclustert. Anschließend werden die gefundenen Cluster geclustert. Es ist als würden wir im ersten Schritt Kontinente auf der Landkarte einzeichnen, dann Länder, Bundesländer, Städte und Stadtteile.",
+						"Im letzten Schritt werden die Cluster für die spätere Nutzung aufbereitet. Zunächst werden die Cluster Zentroiden in Originaldimension berechnet und in eine neue Vektordatenbank geschrieben. Dann werden für alle Cluster Namen und Beschreibungen generiert. Dabei wird sich nicht einfach nur auf ein LLM verlassen: Es bekommt alle wichtigen Informationen wie TF-IDF Keywords, Clustergröße, Cluster Hierarchie, die Keywords der umherliegenden Cluster und aussagekräftige Titel + Abstracts von Papern aus dem Cluster.",
+						"Zuletzt wird das wohl wichtigste generiert: Die Karte des Atlas. Mit UMAP eine 2d Abbildung des Vektorraums generiert ist ein no-brainer. Um sie besser navigierbar zu machen werden die Cluster-Outlines generiert. Um das rechentechnisch möglich und visuell ansprechend zu machen werden konvexe Hüllen um eine mit DBSCAN entrauschte zufällige Auswahl an 2d-Vektoren eines Clusters gespannt.",
+						"Bei jeder Nutzer-Anfrage werden nun all diese Schritte auf den Text des Nutzers angewandt."
+					],
+					"keywords": [
+						"wie funktioniert technisch",
+						"was passiert im hintergrund",
+						"welcher algorithmus",
+						"erklärung vektorsuche",
+						"technologie webseite",
+						"ki modell"
+					],
+					"relevant_on": [
+						"*"
+					]
+				},
+				{
+					"id": "faq_data_sources",
+					"question": "Aus welchen Quellen stammen die Daten?",
+					"answer": [
+						"Die Daten stammen aus etablierten Open-Access-Repositories wie beispielsweise arXiv, PubMed Central oder RePEc."
+					],
+					"keywords": [
+						"woher kommen artikel",
+						"welche datenbank",
+						"wissenschaftliche quellen",
+						"arxiv pubmed",
+						"datenherkunft",
+						"quellen"
+					],
+					"relevant_on": [
+						"about"
+					]
+				},
+				{
+					"id": "faq_data_update",
+					"question": "Wie aktuell sind die Daten?",
+					"answer": [
+						"Die Datenbank und die Datenverarbeitungsalgorithmen werden in regelmäßigen Abständen aktualisiert. Da in den letzten Monaten jedoch das frontend im Vordergrund stand und ich mich neu für das bwUniCluster 3.0 bewerben muss ist der derzeitige Stand der Datenbasis August/September 2025."
+					],
+					"keywords": [
+						"alter artikel",
+						"neue studien",
+						"wie alt datenbank",
+						"datenstand",
+						"aktualität ergebnisse",
+						"updates"
+					],
+					"relevant_on": [
+						"about"
+					]
+				}
+			]
+		},
+		{
+			"type": "cascade_block",
+			"title": "Daten, Export & Sicherheit",
+			"items": [
+				{
+					"id": "faq_privacy_input",
+					"question": "Was passiert mit eingegebenen Ideen?",
+					"answer": [
+						"Eingaben werden temporär verarbeitet, um die Vektoranalyse durchzuführen. Eine dauerhafte Speicherung auf dem Server findet nicht statt. Hochgeladene Dateien werden nach Abschluss der Analyse sofort gelöscht."
+					],
+					"keywords": [
+						"idee sicher",
+						"eingaben gespeichert",
+						"hochgeladene dateien",
+						"datenschutz texte",
+						"text gelöscht",
+						"privatsphäre"
+					],
+					"relevant_on": [
+						"privacy"
+					]
+				},
+				{
+					"id": "faq_ai_training",
+					"question": "Werden Daten zum KI-Training verwendet?",
+					"answer": [
+						"Nein. Für die Textoptimierung genutzte externe APIs unterliegen strengen Datenschutzvorgaben, die ein Training mit Nutzerdaten ausschließen. Die eigentliche Vektorsuche erfolgt lokal auf dem Server."
+					],
+					"keywords": [
+						"ki lernen daten",
+						"modelle trainieren",
+						"daten openai",
+						"datenschutz ki",
+						"ki training"
+					],
+					"relevant_on": [
+						"privacy"
+					]
+				},
+				{
+					"id": "faq_export",
+					"question": "Können Ergebnisse exportiert werden?",
+					"answer": [
+						"Ja, Datensouveränität ist gewährleistet. Ergebnisse lassen sich als interaktives HTML zur Offline-Nutzung oder als JSON-Rohdaten zur Weiterverarbeitung exportieren."
+					],
+					"keywords": [
+						"karte speichern",
+						"ergebnisse herunterladen",
+						"exportieren",
+						"html json download",
+						"offline nutzen"
+					],
+					"ui_mockup": [
+						".download-btn-styled",
+						".download-popup-modal"
+					],
+					"highlight_mockup": [
+						".download-btn-styled",
+						".download-html-choice-btn",
+						".download-json-choice-btn"
+					],
+					"faq_select": [
+						".download-btn-styled",
+						".download-html-choice-btn",
+						".download-json-choice-btn"
+					],
+					"relevant_on": [
+						"results"
+					]
+				},
+				{
+					"id": "faq_history",
+					"question": "Wird der Verlauf gespeichert?",
+					"answer": [
+						"Der Verlauf wird ausschließlich lokal im Browser (IndexedDB) gespeichert und verlässt das Gerät nicht. Ein Löschen der Browserdaten entfernt auch den Verlauf."
+					],
+					"keywords": [
+						"alte suchen",
+						"verlauf löschen",
+						"historie speichern",
+						"alte ergebnisse",
+						"suchverlauf ansehen"
+					],
+					"ui_mockup": [
+						"#menu-trigger",
+						"#history-fixed-label"
+					],
+					"highlight_mockup": [
+						"#history-fixed-label"
+					],
+					"faq_select": [],
+					"relevant_on": [
+						"*"
+					]
+				}
+			]
+		}
+	]
+}

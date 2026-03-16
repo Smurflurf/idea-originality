@@ -1,0 +1,27 @@
+{
+	"sse": {
+		"EXTRACTING_IDEA": "Extracting idea with Gemini...",
+		"EXTRACTING_COMPLETE": "Idea extraction complete...",
+		"EMBEDDING_IDEA": "Embedding idea into vectorspace...",
+		"EMBEDDING_COMPLETE": "Embedding complete.",
+		"REDUCING_GLOBAL": "Reducing dimension for global clustering...",
+		"REDUCING_LOCAL": "Reducing dimension for local clustering...",
+		"REDUCING_2": "Reducing vector to 2 dimensions...",
+		"REDUCING_COMPLETE": "All low dim reductions are complete.",
+		"CLUSTERING_IDEA": "Clustering idea...",
+		"STILL_CLUSTERING": "Discovering topic areas...",
+		"CLUSTERING_COMPLETE": "Clustering complete.",
+		"QUERYING_VECTOR_DATABASE": "Querying database for similar papers...",
+		"QUERYING_VECTORS_COMPLETE": "Database query for similar papers complete.",
+		"QUERYING_CLUSTER_DATABASE": "Querying for similar topic clusters...",
+		"QUERYING_CLUSTERS_COMPLETE": "Database queries complete.",
+		"ANALYZING_SERENDIPITY": "Finding serendipitous connections...",
+		"SERENDIPITY_ANALYSIS_COMPLETE": "Serendipitous connections discovered.",
+		"CREATING_OWN_VISUALIZATIONS": "Creating visualization layers for idea...",
+		"OWN_VISUALIZATIONS_COMPLETE": "Visualizations for idea created.",
+		"CREATING_NEIGHBOR_VISUALIZATIONS": "Creating visualization layers for neighbors...",
+		"NEIGHBOR_VISUALIZATIONS_COMPLETE": "Visualizations for neighbors created.",
+		"IMAGE_READY": "Images generated.",
+		"COMPLETE": "Process finished."
+	}
+}

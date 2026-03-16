@@ -55,6 +55,6 @@ export const spinnerConfig = {
 	cloudColors: ["rgba(80, 100, 180, OPACITY)", "rgba(140, 90, 180, OPACITY)", "rgba(180, 100, 140, OPACITY)"],
 	spinnerRingColor: "#cce0ff",
 	maxParticles: 10,
-	particleMinLife: 25000,
-	particleMaxLife: 55000
+	particleMinLife: 35000,
+	particleMaxLife: 115000
 };

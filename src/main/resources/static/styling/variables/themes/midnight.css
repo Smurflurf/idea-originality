@@ -23,6 +23,9 @@
     --bg-deep-blue: #050508;
     --bg-deep-blue-rgb: 5, 5, 8;
 
+    /* Inverse of --bg-app */
+    --bg-inverse: #ffffff;
+    --bg-inverse-rgb: 255, 255, 255;
 
     /* =========================================
        INTERACTIVE ELEMENTS
@@ -130,9 +133,6 @@
     /* =========================================
        Visualization elements 
        ========================================= */
-    
-	/* Visualization Image Filter (Standard: Original) */
-    --viz-base-filter: none;
     
     /* FADENKREUZ: Hellgelb mit Transparenz */
     --color-crosshair: #ffffff;

@@ -34,11 +34,13 @@
     --bg-deep-rgb: 14, 14, 15;
     
     /* Spezial: Dunkles Blau-Grau (Recorder Linse) */
-    /* Origin: #121920 */
     --bg-deep-blue: #121920;
     --bg-deep-blue-rgb: 18, 25, 32;
-
-
+    
+    /* Inverse of --bg-app */
+    --bg-inverse: #dfdedb;
+    --bg-inverse-rgb: 223, 222, 219;
+    
     /* =========================================
        INTERACTIVE ELEMENTS (Buttons, Inputs)
        ========================================= */
@@ -212,9 +214,6 @@
     /* =========================================
        Visualization elements 
        ========================================= */
-    
-	/* Visualization Image Filter (Standard: Original) */
-    --viz-base-filter: none;
     
     /* FADENKREUZ: Hellgelb mit Transparenz */
     --color-crosshair: rgba(255, 255, 0, 0.7);

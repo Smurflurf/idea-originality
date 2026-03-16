@@ -14,6 +14,7 @@ export default defineConfig({
 		style: 'src/main/resources/static/styling/style.css',
 		tooltips: 'src/main/resources/static/styling/tooltips.css',
 		legal: 'src/main/resources/static/styling/legal.css',
+		faq: 'src/main/resources/static/styling/faq.css',
 		menu: 'src/main/resources/static/styling/menu.css',
 		print: 'src/main/resources/static/styling/variables/themes/print.css',
       },

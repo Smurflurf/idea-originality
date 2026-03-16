@@ -87,7 +87,7 @@ export function colorizeElementsInContainer(container, colorMap) {
 }
 
 /**
- * **WIEDERHERGESTELLT:** Färbt die '>' Indikatoren in Hierarchien (wird von Tooltips benötigt).
+ * Färbt die '>' Indikatoren in Hierarchien (wird von Tooltips benötigt).
  * @param {HTMLElement} container - Der Container mit der Hierarchie (z.B. der Tooltip-Inhalt).
  * @param {object} colorMap - Die Farbkarte.
  */

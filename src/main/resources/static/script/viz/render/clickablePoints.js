@@ -1,6 +1,7 @@
 import { getContext } from '/script/core/context.js';
 import { initializeZoomAndPan, triggerPositionUpdateForViz } from '/script/viz/core/zoomAndPan.js';
 import { colorizeElementsInContainer, colorizeIndicators } from '/script/ui/base/colorCoder.js';
+import { getTemplate, renderTemplate } from '/script/core/templateManager.js';
 
 const flashObserver = new IntersectionObserver((entries) => {
 	entries.forEach(entry => {
@@ -15,36 +16,24 @@ const flashObserver = new IntersectionObserver((entries) => {
 
 /**
  * Findet die Zielkarte robust, auch wenn Präfixe abweichen.
- * Strategie: 
- * 1. Exakte ID (z.B. nc-result-card-123)
- * 2. Generische ID (z.B. result-card-123)
- * 3. Suche im aktiven Tab nach Endung (z.B. ...-123)
  */
 function findTargetCard(paperId, contextPrefix) {
 	if (!paperId) return null;
 
-	// 1. Versuch: Exakte ID (wie vom Skript erwartet)
 	const exactId = `${contextPrefix}-result-card-${paperId}`;
 	let card = document.getElementById(exactId);
 	if (card) return card;
 
-	// 2. Versuch: Ohne Context-Präfix (falls Loader generische IDs nutzt)
 	const genericId = `result-card-${paperId}`;
 	card = document.getElementById(genericId);
 
-	// Check: Ist diese Karte im richtigen Container? 
-	// Wenn wir 'nc' suchen, aber 'own' finden (weil gleiche ID), ist das falsch.
 	if (card) {
 		const pane = card.closest('.viz-content-pane');
-		// Wenn Karte in einem sichtbaren Pane ist oder kein Pane gefunden wurde, nehmen wir sie.
-		// Falls sie im falschen (versteckten) Pane ist, suchen wir weiter.
 		if (pane && pane.style.display !== 'none') {
 			return card;
 		}
 	}
 
-	// 3. Versuch: Suffix-Suche im AKTIVEN Container
-	// Wir suchen den Container, der zum Prefix gehört
 	let containerSelector = '';
 	if (contextPrefix === 'own') containerSelector = '#own-viz-content';
 	else if (contextPrefix === 'nc') containerSelector = '#neighbor-viz-content';
@@ -52,7 +41,6 @@ function findTargetCard(paperId, contextPrefix) {
 
 	const activeContainer = document.querySelector(containerSelector);
 	if (activeContainer) {
-		// Suche irgendeine Karte, die auf die ID endet
 		return activeContainer.querySelector(`[id$="result-card-${paperId}"]`);
 	}
 
@@ -74,8 +62,6 @@ function smoothScrollToElement(targetElement) {
 			behavior: 'smooth'
 		});
 
-		// Fallback: Resolve das Promise nach einer angemessenen Zeit für den Scrollvorgang,
-		// damit die Flash-Animation der Karte korrekt startet.
 		setTimeout(resolve, 400);
 	});
 }
@@ -92,7 +78,10 @@ function scrollToAndFlash(paperId, contextPrefix) {
 	});
 }
 
-function initializeInteractiveTooltips(selector, colorMap) {
+function initializeInteractiveTooltips(containerId, colorMap) {
+	const container = document.getElementById(containerId);
+	if (!container) return;
+
 	const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 	const isSmallScreen = window.innerWidth <= 768;
 
@@ -103,25 +92,30 @@ function initializeInteractiveTooltips(selector, colorMap) {
 		theme: 'custom-card',
 		animation: 'shift-away',
 		placement: isSmallScreen ? 'bottom' : 'right-start',
+        // Die Delay/Trigger Konfigurationen wandern in die Instanz
+		trigger: isTouchDevice ? 'click' : 'mouseenter focus',
+		delay: isTouchDevice ? [0, 100] : [250, 200],
 
 		onShow(instance) {
+			if (document.body.classList.contains('faq-selection-active')) return false;
+
 			tippy.hideAll({ exclude: instance });
+			if (instance.reference) instance.reference.classList.add('is-hovered-from-tooltip');
 		},
-
 		onHide(instance) {
-			if (instance.reference) {
-				instance.reference.classList.remove('is-hovered-from-tooltip');
-			}
+			if (instance.reference) instance.reference.classList.remove('is-hovered-from-tooltip');
 		},
-
-
 		content(reference) {
 			const paperId = reference.dataset.paperId;
 			const contextPrefix = reference.dataset.contextPrefix;
-
 			const originalCard = findTargetCard(paperId, contextPrefix);
 
-			if (!originalCard) return '<div style="padding:10px;">Information not found (ID mismatch).</div>';
+			if (!originalCard) {
+				const fallback = document.createElement('div');
+				fallback.style.padding = '10px';
+				fallback.textContent = 'Information not found (ID mismatch).';
+				return fallback;
+			}
 
 			const clonedCard = originalCard.cloneNode(true);
 			clonedCard.removeAttribute('id');
@@ -129,23 +123,24 @@ function initializeInteractiveTooltips(selector, colorMap) {
 			clonedCard.querySelector('.toggle-json-btn')?.remove();
 			clonedCard.querySelector('.result-payload')?.remove();
 
+			// Entfernt die Umrandung, falls das Original gerade markiert war.
+			clonedCard.classList.remove('faq-context-highlight', 'is-highlighted');
+			clonedCard.querySelectorAll('.faq-context-highlight, .is-highlighted').forEach(el => {
+				el.classList.remove('faq-context-highlight', 'is-highlighted');
+				delete el.dataset.faqId;
+			});
+
 			const abstractWrapper = clonedCard.querySelector('.abstract-wrapper');
 			if (abstractWrapper) abstractWrapper.classList.add('expanded');
 
 			return clonedCard;
 		},
 		onMount(instance) {
-			const pointHitbox = instance.reference;
 			const tooltipContent = instance.popper;
-
-			tooltipContent.addEventListener('mouseenter', () => pointHitbox.classList.add('is-hovered-from-tooltip'));
-			tooltipContent.addEventListener('mouseleave', () => pointHitbox.classList.remove('is-hovered-from-tooltip'));
-
 			if (tooltipContent && colorMap) {
 				colorizeElementsInContainer(tooltipContent, colorMap);
 				colorizeIndicators(tooltipContent, colorMap);
 			}
-
 			const clickableArea = tooltipContent.querySelector('.result-summary');
 			if (clickableArea) {
 				clickableArea.addEventListener('click', () => {
@@ -158,11 +153,31 @@ function initializeInteractiveTooltips(selector, colorMap) {
 		}
 	};
 
-	tippy(selector, {
-		...tippyConfig,
-		trigger: isTouchDevice ? 'click' : 'mouseenter focus',
-		delay: isTouchDevice ? [0, 100] : [250, 200],
-	});
+	// NEU: Ein einziger globaler Listener für den GANZEN Container
+	const initEvent = isTouchDevice ? 'touchstart' : 'mouseover';
+	
+	container.addEventListener(initEvent, (e) => {
+		const hitbox = e.target.closest('.point-hitbox');
+		if (!hitbox || hitbox._tippy) return; // Falls schon initialisiert, nichts tun
+		
+		// 1. Instanz erstellen (ohne sie sofort zu zeigen)
+		tippy(hitbox, tippyConfig);
+		
+		// 2. Ersten Aufruf mit Verzögerung simulieren
+		if (!isTouchDevice) {
+			const enterDelay = tippyConfig.delay[0]; // Das sind die 250ms
+			
+			setTimeout(() => {
+				// WICHTIG: Nur zeigen, wenn die Maus nach 250ms noch immer über der Hitbox ist!
+				if (hitbox.matches(':hover')) {
+					hitbox._tippy.show();
+				}
+			}, enterDelay);
+		} else {
+			// Auf Touch-Geräten (Click) darf es sofort kommen
+			hitbox._tippy.show();
+		}
+	}, { passive: true });
 }
 
 export function initializeDynamicPoints(containerId, resultsData, colorMap, contextPrefix) {
@@ -170,42 +185,44 @@ export function initializeDynamicPoints(containerId, resultsData, colorMap, cont
 	const container = document.getElementById(containerId);
 	if (!container) return;
 
+	container.__pointsDataCache = resultsData;
 	container.innerHTML = '';
+
+	//  Ein Fragment im Arbeitsspeicher erstellen
+	const fragment = document.createDocumentFragment();
 
 	resultsData.forEach(paper => {
 	    if (paper.relativeX === undefined || paper.relativeY === undefined) return;
 	    const hitbox = document.createElement('div');
 	    hitbox.className = 'point-hitbox';
-	    hitbox.dataset.relativeX = paper.relativeX;
-	    hitbox.dataset.relativeY = paper.relativeY;
-
-	    // NEUE PERFORMANCE OPTIMIERUNG:
-	    // Wir setzen die Position einmalig in Prozent. CSS berechnet beim Zoomen
-	    // des Containers dann automatisch und blitzschnell die neuen Pixel-Positionen!
 	    hitbox.style.left = `${paper.relativeX * 100}%`;
 	    hitbox.style.top = `${paper.relativeY * 100}%`;
-	    hitbox.style.transform = 'translate(-50%, -50%)'; // Zentriert die Hitbox exakt auf dem Punkt
+	    hitbox.style.transform = 'translate(-50%, -50%)'; 
 
-	    // NEU: Wir speichern die Rohdaten, um flexibel zu suchen
 	    hitbox.dataset.paperId = paper.id;
 	    hitbox.dataset.contextPrefix = contextPrefix;
-
-		// Legacy ID für Debugging
 		hitbox.dataset.targetCardId = `${contextPrefix}-result-card-${paper.id}`;
 
 		const visiblePoint = document.createElement('div');
 		visiblePoint.className = 'neighbor-point';
 		visiblePoint.style.backgroundColor = colorMap[paper.clusterId] || '#bdc1c6';
 		hitbox.appendChild(visiblePoint);
-		container.appendChild(hitbox);
+		
+		// Ans Fragment hängen (NICHT ans live DOM!)
+		fragment.appendChild(hitbox);
 	});
 
-	initializeInteractiveTooltips(`#${containerId} .point-hitbox`, colorMap);
+	// Alles auf einmal ins DOM feuern
+	container.appendChild(fragment);
+
+	initializeInteractiveTooltips(containerId, colorMap);
+
 
 	const parentVizContainerId = container.closest('.viz-stack-container')?.id;
 	if (parentVizContainerId) {
 		const observer = new MutationObserver((mutations) => {
 			for (const mutation of mutations) {
+				if (window.isSwiping) return;
 				if (mutation.attributeName === 'style') {
 					if (container.style.display !== 'none') {
 						triggerPositionUpdateForViz(parentVizContainerId);
@@ -216,7 +233,6 @@ export function initializeDynamicPoints(containerId, resultsData, colorMap, cont
 		observer.observe(container, { attributes: true });
 	}
 
-	// Click Handler für Desktop (Touch macht Tippy)
 	const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 	if (!isTouchDevice) {
 		container.addEventListener('click', (event) => {

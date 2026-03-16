@@ -80,7 +80,15 @@ public class QueryProcessingService {
 		if (files != null && !files.isEmpty()) {
 			for (MultipartFile file : files) {
 				try {
-					fileDataList.add(new FileData(file.getOriginalFilename(), file.getContentType(), file.getBytes()));
+					String contentType = file.getContentType();
+
+					// Mimetype anpassen: Wenn es JSON ist oder der Browser den Typ nicht kennt, machen wir Text daraus
+					if (contentType == null || contentType.equals("application/json")
+							|| contentType.equals("application/octet-stream")) {
+						contentType = "text/plain";
+					}
+
+					fileDataList.add(new FileData(file.getOriginalFilename(), contentType, file.getBytes()));
 				} catch (IOException e) {
 					throw new RuntimeException("Error reading bytes for file: " + file.getOriginalFilename(), e);
 				}
@@ -125,7 +133,7 @@ public class QueryProcessingService {
 			sseService.sendEvent(jobId, "REDUCING_LOCAL", "Reducing dimension for local clustering...");
 			float[] localVector = vectorizer.reduceDimension(vector, "local");
 
-			sseService.sendEvent(jobId, "REDUCING_2", "Reducing vector from 768 to 2 dimensions...");
+			sseService.sendEvent(jobId, "REDUCING_2", "Reducing vector from 1024 to 2 dimensions...");
 			float[] vector2d = vectorizer.reduceDimension(vector, "2d");
 			sseService.sendEvent(jobId, "REDUCING_COMPLETE", "All low dim reductions are complete.");
 

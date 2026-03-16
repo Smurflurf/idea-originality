@@ -21,11 +21,12 @@ export function initializeTippy() {
         // 3. SWIPE-GUARD
         // Diese Funktion wird direkt vor dem Anzeigen des Tooltips ausgeführt.
         onShow(instance) {
-            // Wenn der Body die Klasse vom Swipe-Skript hat, wird die Anzeige abgebrochen.
-            if (document.body.classList.contains('is-swiping-active')) {
-                return false; // Verhindert die Anzeige
-            }
-            
+			// Wenn der Body die Klasse vom Swipe-Skript ODER vom FAQ-Modus hat, abbrechen.
+			if (document.body.classList.contains('is-swiping-active') ||
+				document.body.classList.contains('faq-selection-active')) {
+				return false; // Verhindert die Anzeige komplett
+			}
+			
             // Inhalt aktualisieren (falls sich das Attribut geändert hat)
             const content = instance.reference.getAttribute('data-tippy-content');
             if (content) {

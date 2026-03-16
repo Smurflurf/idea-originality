@@ -97,13 +97,16 @@
 
 			<!-- 2. Footer Bereich: Klein, unten, ohne Icons -->
 			<div class="sidebar-footer">
-				<a th:href="@{/impressum}" data-i18n="footer.impressum">Imprint</a>
-				<span class="footer-separator">&bull;</span> <a
-					th:href="@{/privacy}" data-i18n="footer.privacy">Privacy Policy</a>
-				<span class="footer-separator">&bull;</span> <a
-					th:href="@{/licenses}" data-i18n="footer.licenses">Licenses</a>
-				<span class="footer-separator">&bull;</span> <a
-					th:href="@{/api}" data-i18n="footer.api">API</a>
+				<a th:href="@{/about}" data-i18n="footer.about">About</a> <span
+					class="footer-separator">&bull;</span> <a th:href="@{/licenses}"
+					data-i18n="footer.licenses">Licenses</a> <span
+					class="footer-separator">&bull;</span> <a th:href="@{/impressum}"
+					data-i18n="footer.impressum">Imprint</a> <span
+					class="footer-separator">&bull;</span> <a th:href="@{/privacy}"
+					data-i18n="footer.privacy">Privacy Policy</a> <span
+					class="footer-separator">&bull;</span> <a th:href="@{/faq}"
+					data-i18n="footer.faq">FAQ</a> <span class="footer-separator">&bull;</span>
+				<a th:href="@{/api}" data-i18n="footer.api">API</a>
 			</div>
 
 		</aside>
@@ -260,17 +263,12 @@
 	</th:block>
 
 	<th:block th:fragment="favicons">
-		<link rel="apple-touch-icon" sizes="180x180"
-			th:href="@{/assets/favicons/apple-touch-icon.png}">
 		<link rel="icon" type="image/png" sizes="32x32"
 			th:href="@{/assets/favicons/favicon-32x32.png}">
 		<link rel="icon" type="image/png" sizes="16x16"
 			th:href="@{/assets/favicons/favicon-16x16.png}">
-		<link rel="manifest" th:href="@{/assets/favicons/site.webmanifest}">
 		<link rel="shortcut icon" th:href="@{/assets/favicons/favicon.ico}">
 		<meta name="msapplication-TileColor" content="#da532c">
-		<meta name="msapplication-config"
-			content="/assets/favicons/browserconfig.xml">
 		<meta name="theme-color" content="#000000">
 	</th:block>
 </body>

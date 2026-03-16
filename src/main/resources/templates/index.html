@@ -5,10 +5,9 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title data-i18n="page_title">Ideenatlas</title>
-    <th:block th:replace="~{shared_fragments :: importMapScript}"></th:block>
+    <th:block th:replace="~{collected_imports :: generalHeadImports}"></th:block>
 
     <link rel="stylesheet" th:href="@{/dist/menu.css(v=${appVersion})}">
-	<link rel="stylesheet" th:href="@{/dist/main.css(v=${appVersion})}">
 	<link rel="stylesheet" th:href="@{/vendor/fontawesome/css/all.min.css(v=${appVersion})}">
 	<link rel="stylesheet" th:href="@{/vendor/fonts/roboto.css(v=${appVersion})}">
     <link rel="stylesheet"
@@ -21,17 +20,34 @@
 
     
 <body class="is-centered-content" data-features="search">
-    <th:block th:replace="~{shared_fragments :: llmRedirectBodyNotice}"></th:block>	
-	<div th:replace="~{shared_fragments :: sideMenu}"></div>
+    <th:block th:replace="~{collected_imports :: generalBodyImports}"></th:block>
 
 	<form class="idea-form" th:action="@{/query}" method="post">
-		<div class="textarea-wrapper">
-			<textarea name="idea-text" placeholder="New version available, reload page."
-				data-i18n="search.placeholder" autofocus></textarea>
+		<div class="textarea-wrapper" id="textarea-wrapper">
+			
+            <!-- Verstecktes Input-Feld für das Form-Submit -->
+            <input type="hidden" name="idea-text" id="idea-text-hidden">
+
+            <!-- Unabhängiger Platzhalter, absolut über dem gesamten Editor fixiert -->
+            <div class="editor-placeholder" id="editor-placeholder" 
+                 data-i18n="search.placeholder">New version available, reload page.</div>
+
+            <!-- Der Custom-Editor Bereich ist nun der Scroll-Container -->
+            <div class="custom-editor" id="custom-editor">
+                
+                <!-- NEW: Der dynamische Spacer! Drückt den Stempel nach unten -->
+                <div id="editor-float-spacer" class="editor-float-spacer"></div>
+
+                <!-- Der physische Stempel (jetzt statisch & 250px) -->
+                <div class="editor-shape-exclusion" id="editor-shape-exclusion"></div>
+                
+                <!-- Die eigentliche Schreibfläche, wächst natürlich mit dem Text mit -->
+                <div contenteditable="true" class="editor-content" id="editor-content"></div>
+            </div>
 
 			<button type="submit" class="run-button"
 				data-tippy-content="start idea analysis"
-				data-i18n="search.tooltip_start" disabled>
+				data-i18n="search.tooltip_start">
 				<span data-i18n="search.btn_query">Query</span>
 			</button>
 
@@ -53,11 +69,11 @@
 			</div>
 		</div>
 		<div class="attachments-container-wrapper">
-            <div id="attachments-container" class="attachments-container">
-            </div>
-        </div>
+			<div id="attachments-container" class="attachments-container">
+			</div>
+		</div>
 	</form>
-	
+
 	<script type="module" th:src="@{/dist/main.js(v=${appVersion})}" defer></script>
 </body>
 

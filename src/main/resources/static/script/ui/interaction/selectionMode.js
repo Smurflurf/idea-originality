@@ -1,6 +1,7 @@
 import { closeSidebar } from '/script/ui/navigation/menu.js';
 import * as Translate from '/script/features/accessibility/translate.js';
 import * as TTS from '/script/features/accessibility/tts.js';
+import { getTemplate, renderTemplate } from '/script/core/templateManager.js';
 
 // --- STATE ---
 let activeMode = null; // null, 'translate', 'read'
@@ -8,8 +9,17 @@ let currentHoveredElement = null;
 let cursorElement = null;
 
 // --- CONFIG ---
-const VALID_TAGS = ['DIV', 'SECTION', 'MAIN', 'ARTICLE', 'HEADER', 'FOOTER', 'UL', 'LI', 'P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'SPAN', 'A'];
-const FORBIDDEN_SELECTORS = ['.sidebar-menu', '.menu-overlay', '.download-popup-overlay', '.recorder-overlay', '.is-translating'];
+const VALID_TAGS = ['DIV', 'SECTION', 'MAIN', 'ARTICLE', 'HEADER', 'FOOTER', 'UL', 'LI', 'P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'SPAN', 'A', 'LABEL'];
+const FORBIDDEN_SELECTORS = [
+	'.sidebar-menu', 
+	'.menu-overlay', 
+	'.download-popup-overlay', 
+	'.recorder-overlay', 
+	'.is-translating', 
+	'.expand-button',
+	'.toggle-hierarchy-btn',
+	'.toggle-json-btn',
+];
 
 export const isSelectionModeActive = () => activeMode !== null;
 
@@ -137,30 +147,50 @@ export function stopMode() {
 
 // --- UI UPDATES ---
 function updateUI(mode) {
-    const translateBtn = document.getElementById('translate-mode-btn');
-    const readBtn = document.getElementById('read-text-mode-btn');
-    const menuTrigger = document.getElementById('menu-trigger');
-    
-    const tIndicator = document.getElementById('translate-active-indicator');
-    const rIndicator = document.getElementById('read-active-indicator');
+	const translateBtn = document.getElementById('translate-mode-btn');
+	const readBtn = document.getElementById('read-text-mode-btn');
+	const menuTrigger = document.getElementById('menu-trigger');
 
-    if (mode === 'translate') {
-        cursorElement.innerHTML = '<i class="fa-solid fa-language"></i>';
-        if (translateBtn) translateBtn.classList.add('is-active-mode');
-        if (readBtn) readBtn.classList.remove('is-active-mode');
-        if (tIndicator) tIndicator.style.opacity = '1';
-        if (rIndicator) rIndicator.style.opacity = '0';
-        if (menuTrigger) menuTrigger.innerHTML = '<i class="fa-solid fa-language"></i>';
-    } else {
-        cursorElement.innerHTML = '<i class="fa-solid fa-volume-high"></i>';
-        if (readBtn) readBtn.classList.add('is-active-mode');
-        if (translateBtn) translateBtn.classList.remove('is-active-mode');
-        if (rIndicator) rIndicator.style.opacity = '1';
-        if (tIndicator) tIndicator.style.opacity = '0';
-        if (menuTrigger) menuTrigger.innerHTML = '<i class="fa-solid fa-volume-high"></i>';
-    }
-    
-    if (menuTrigger) menuTrigger.classList.add('is-translate-active');
+	const tIndicator = document.getElementById('translate-active-indicator');
+	const rIndicator = document.getElementById('read-active-indicator');
+
+	if (mode === 'translate') {
+		cursorElement.textContent = '';
+		const icon = document.createElement('i');
+		icon.className = 'fa-solid fa-language';
+		cursorElement.appendChild(icon);
+
+		if (translateBtn) translateBtn.classList.add('is-active-mode');
+		if (readBtn) readBtn.classList.remove('is-active-mode');
+		if (tIndicator) tIndicator.style.opacity = '1';
+		if (rIndicator) rIndicator.style.opacity = '0';
+
+		if (menuTrigger) {
+			menuTrigger.textContent = '';
+			const mIcon = document.createElement('i');
+			mIcon.className = 'fa-solid fa-language';
+			menuTrigger.appendChild(mIcon);
+		}
+	} else {
+		cursorElement.textContent = '';
+		const icon = document.createElement('i');
+		icon.className = 'fa-solid fa-volume-high';
+		cursorElement.appendChild(icon);
+
+		if (readBtn) readBtn.classList.add('is-active-mode');
+		if (translateBtn) translateBtn.classList.remove('is-active-mode');
+		if (rIndicator) rIndicator.style.opacity = '1';
+		if (tIndicator) tIndicator.style.opacity = '0';
+
+		if (menuTrigger) {
+			menuTrigger.textContent = '';
+			const mIcon = document.createElement('i');
+			mIcon.className = 'fa-solid fa-volume-high';
+			menuTrigger.appendChild(mIcon);
+		}
+	}
+
+	if (menuTrigger) menuTrigger.classList.add('is-translate-active');
 }
 
 
@@ -185,8 +215,10 @@ function isValidTarget(element) {
     }
     const tagName = element.tagName;
     if (!VALID_TAGS.includes(tagName)) return false;
+	
     const textContent = element.textContent.trim();
     if (textContent.length === 0) return false;
+	
     if (['DIV', 'SECTION', 'MAIN', 'ARTICLE', 'HEADER', 'FOOTER', 'UL', 'LI'].includes(tagName)) {
         const hasDirectText = Array.from(element.childNodes).some(node => 
             node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0

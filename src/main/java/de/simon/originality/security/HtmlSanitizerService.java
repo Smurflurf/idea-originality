@@ -1,4 +1,4 @@
-package de.simon.originality;
+package de.simon.originality.security;
 
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;

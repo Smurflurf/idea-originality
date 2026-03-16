@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page_title">Privacy Policy</title>
-    <th:block th:replace="~{shared_fragments :: importMapScript}"></th:block>
+    <th:block th:replace="~{collected_imports :: generalHeadImports}"></th:block>
     
     <!-- CSS -->
     <link rel="stylesheet" th:href="@{/vendor/fonts/roboto.css(v=${appVersion})}">
@@ -18,9 +18,8 @@
     
 </head>
 <body data-features="legal-content">
-    <th:block th:replace="~{shared_fragments :: llmRedirectBodyNotice}"></th:block>	
-    <div th:replace="~{shared_fragments :: sideMenu}"></div>
-
+    <th:block th:replace="~{collected_imports :: generalBodyImports}"></th:block>
+    
 	<div id="privacy-content" class="legal-content-wrapper">
 		<!-- 1. Fallback für Bots/Curl (Server-Side Rendered) -->
 		<th:block th:if="${fallbackHtml}">

@@ -64,6 +64,7 @@ let gravityCenter = { x: 0, y: 0 };
 let layoutWidth = 0, layoutHeight = 0;
 let currentDpr = 1;
 let isLayoutInitialized = false;
+let initialParticlesSpawned = false; // FIX: Verhindert Race Condition beim Spawnen
 
 let supernovaParticlesCreated = false;
 let supernovaCenterX = 0, supernovaCenterY = 0;
@@ -189,16 +190,13 @@ function animate() {
         }
     }
     
-    // GC FIX: Statt `.filter().length` zählen wir manuell in einem for-Loop!
-    let activeCount = 0;
-    for (let i = 0; i < spinnerConfig.maxMainParticles; i++) {
-        if (mainParticlePool[i].active) activeCount++;
-    }
-    
-    if (activeCount === 0 && layoutWidth > 0) {
+    // Unabhängig davon, ob vorher schon durch SSE-Events Partikel eingefügt wurden, 
+    // zwingen wir das System, beim Start genau initialParticleCount hinzuzufügen.
+    if (!initialParticlesSpawned && layoutWidth > 0) {
         for (let i = 0; i < spinnerConfig.initialParticleCount; i++) {
             spawnMainParticle();
         }
+        initialParticlesSpawned = true;
     }
     
     ctx.setTransform(currentDpr, 0, 0, currentDpr, 0, 0);
@@ -209,7 +207,11 @@ function animate() {
     updateAndDrawParticles(currentTime);
 }
 
-function updateGravityCenter() { gravityCenter.x += (Math.random() - 0.5) * spinnerConfig.centerWander * animConfig.speed; }
+function updateGravityCenter() { 
+    // FIX 1: Wiggling entfernt. 
+    // Der Code hier hat den Mittelpunkt leicht in X-Richtung wackeln lassen.
+    // gravityCenter.x += (Math.random() - 0.5) * spinnerConfig.centerWander * animConfig.speed; 
+}
 
 function updateAndDrawState(currentTime) {
     const centerX = gravityCenter.x;
@@ -357,7 +359,9 @@ function updateAndDrawTntParticles(currentTime) {
         ctx.fillStyle = p.baseColor;
         ctx.globalAlpha = opacity;
         ctx.beginPath(); 
-        ctx.arc(p.x | 0, p.y | 0, p.size, 0, Math.PI * 2); 
+        
+        // FIX 2: Auch bei der Explosion `| 0` entfernt für butterweiches Fliegen
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); 
         ctx.fill();
     }
     ctx.globalAlpha = 1.0; 
@@ -370,16 +374,18 @@ function drawBlackHole(x, y, radius) {
     const scale = radius / baseRadius;
     const size = HOLE_CACHE_SIZE * scale;
     
-    ctx.drawImage(blackHoleCache, (x - size/2) | 0, (y - size/2) | 0, size | 0, size | 0);
+    // FIX 2b: Auch hier Sub-Pixel-Werte zulassen
+    ctx.drawImage(blackHoleCache, x - size/2, y - size/2, size, size);
 }
 
 function drawProgressRing(x, y, radius, progress) {
     if (radius <= 0 || progress <= 0) return;
-    // GC & DOM FIX: Wir greifen auf die initial ge-cachten Strings zurück statt DOM-Aufrufe zu machen
-    ctx.beginPath(); ctx.arc(x | 0, y | 0, radius | 0, -Math.PI / 2, -Math.PI / 2 + progress * Math.PI * 2);
+    
+    // FIX 1b & FIX 2b: `| 0` wurde entfernt, damit der Ring extrem smooth läuft und wackelfrei bleibt
+    ctx.beginPath(); ctx.arc(x, y, radius, -Math.PI / 2, -Math.PI / 2 + progress * Math.PI * 2);
     ctx.strokeStyle = cachedRingBgColor; ctx.lineWidth = 12; ctx.lineCap = "round"; ctx.stroke();
     
-    ctx.beginPath(); ctx.arc(x | 0, y | 0, radius | 0, -Math.PI / 2, -Math.PI / 2 + progress * Math.PI * 2);
+    ctx.beginPath(); ctx.arc(x, y, radius, -Math.PI / 2, -Math.PI / 2 + progress * Math.PI * 2);
     ctx.strokeStyle = cachedRingFgColor; ctx.lineWidth = 8; ctx.lineCap = "round"; ctx.stroke();
 }
 
@@ -394,16 +400,15 @@ function drawSupernovaRings(x, y, progress) {
         ctx.globalAlpha = flashOpacity;
         const scale = (flashRadius * 2) / FLASH_CACHE_SIZE;
         const size = FLASH_CACHE_SIZE * scale;
-        ctx.drawImage(supernovaFlashCache, (x - size/2) | 0, (y - size/2) | 0, size | 0, size | 0);
+        ctx.drawImage(supernovaFlashCache, x - size/2, y - size/2, size, size);
         ctx.globalAlpha = 1.0; 
     }
     
     const waveRadius = easeOutQuint * spinnerConfig.supernovaMaxRadius;
     const waveWidth = Math.max(0.1, 8 * opacity);
     
-    // GC FIX: Wir setzen den Alpha-Wert nativ über Canvas statt aufwändige String-Replacements pro Frame
     ctx.globalAlpha = Math.max(0, opacity);
-    ctx.beginPath(); ctx.arc(x | 0, y | 0, waveRadius | 0, 0, Math.PI * 2);
+    ctx.beginPath(); ctx.arc(x, y, waveRadius, 0, Math.PI * 2);
     ctx.strokeStyle = cachedSupernovaBaseColor; 
     ctx.lineWidth = waveWidth; 
     ctx.stroke();
@@ -425,9 +430,14 @@ function drawParticle(p, currentTime) {
     if (finalOpacity <= 0.01) return;
     const radius = spinnerConfig.baseRadius * scale;
     
-    // GC FIX: Wir setzen den Alpha-Wert nativ statt jedes Mal neue RGBA-Strings zu interpolieren!
     ctx.globalAlpha = Math.max(0, finalOpacity);
-    ctx.beginPath(); ctx.arc(p.x | 0, p.y | 0, Math.max(0, radius), 0, Math.PI * 2);
+    
+    // FIX 2: Dies war der Auslöser für das Stottern! 
+    // `p.x | 0` schnitt alle Kommastellen ab und zwang den langsamen Partikel
+    // auf exakte Pixel-Koordinaten. Ohne `| 0` interpoliert der Canvas die Sub-Pixel
+    // und die Partikel gleiten butterweich, egal wie stark der FPS-Throttle greift!
+    ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(0, radius), 0, Math.PI * 2);
+    
     ctx.fillStyle = '#8ab4f8'; 
     ctx.fill();
     ctx.globalAlpha = 1.0;
@@ -446,15 +456,16 @@ export function init(canvasElement, onSupernova) {
     initPools();
     preRenderBlackHole();    
     preRenderSupernovaFlash(); 
-    cacheGlobalColors(); // Einmal CSS auslesen statt 60 mal pro Sekunde!
+    cacheGlobalColors(); 
     
     cloudSimulator.initCloudSimulator(canvas);
     cloudSimulator.reset(); 
     
-    // Reset Time
+    // Reset Time & Flags
     animConfig.lastFrameTime = 0; 
-    
     isLayoutInitialized = false; 
+    initialParticlesSpawned = false; // FIX: Reset Flag
+    
     layoutWidth = 0; layoutHeight = 0;
     currentState = STATE.ORBITING;
     ringProgress = 0;
@@ -479,7 +490,6 @@ export function triggerBlackHoleExplosion() {
     supernovaParticlesCreated = false; currentState = STATE.GROWING; growthStartTime = Date.now();
 }
 export function addParticle() {
-    // GC FIX: Vermeide Array.filter() für einfache Zählungen
     let activeCount = 0;
     for (let i = 0; i < mainParticlePool.length; i++) {
         if (mainParticlePool[i].active) activeCount++;

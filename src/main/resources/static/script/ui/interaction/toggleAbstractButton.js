@@ -1,4 +1,6 @@
 import { initializeTippy } from '/script/ui/base/tooltips.js';
+import { getTemplate } from '/script/core/templateManager.js';
+import { applyGeneralTranslations } from '/script/core/localization.js';
 
 let isListenerInitialized = false;
 
@@ -56,9 +58,7 @@ function initializeGlobalAbstractToggleListener() {
 export function initializeAbstractButtonsFor(container) {
     initializeGlobalAbstractToggleListener();
     
-    // Hinzufügen einer Klasse, um bereits verarbeitete Elemente zu ignorieren
     container.querySelectorAll('.expandable-abstract:not(.processed-for-toggle)').forEach(abstractElement => {
-        // Prüfen, ob der Inhalt tatsächlich länger ist als der sichtbare Bereich
         const needsButton = abstractElement.scrollHeight > abstractElement.clientHeight + 2;
 
         if (needsButton) {
@@ -67,13 +67,16 @@ export function initializeAbstractButtonsFor(container) {
             abstractElement.parentNode.insertBefore(wrapper, abstractElement);
             wrapper.appendChild(abstractElement);
 
-            const expandButton = document.createElement('span');
-            expandButton.className = 'expand-button';
-            expandButton.innerHTML = '<i class="fas fa-ellipsis"></i>';
-            expandButton.setAttribute('data-tippy-content', 'Show full description');
-            wrapper.appendChild(expandButton);
+            // Template holen
+            const fragment = getTemplate('tpl-abstract-expand-btn');
+            if (fragment) {
+                const expandButton = fragment.firstElementChild;
+                wrapper.appendChild(expandButton);
+                
+                // Falls data-tippy-content übersetzt werden muss
+                applyGeneralTranslations(wrapper);
+            }
         }
-        // Element als verarbeitet markieren
         abstractElement.classList.add('processed-for-toggle');
     });
     

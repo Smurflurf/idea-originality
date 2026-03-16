@@ -1,7 +1,7 @@
 import { getCsrfToken } from '/script/core/security.js';
 import { t } from '/script/core/localization.js';
 import { emit, on, EVENTS } from '/script/core/eventBus.js';
-
+import { renderTemplate } from '/script/core/templateManager.js';
 
 // --- STATE ---
 let audioContext = null;
@@ -386,28 +386,21 @@ function scheduleChunk(uint8Array) {
 }
 
 function ensurePlayerUI() {
-    if (document.getElementById('tts-floating-player')) return;
-    const div = document.createElement('div');
-    div.id = 'tts-floating-player';
-    div.classList.add('tts-floating-player-container');
-    div.innerHTML = `
-        <div class="tts-top-row">
-            <div class="tts-info-wrapper"><div class="tts-status-text" id="tts-status-text">...</div></div>
-            <div class="tts-controls">
-                <button class="tts-btn play-pause-btn" id="tts-play-pause"><i class="fa-solid fa-pause"></i></button>
-                <button class="tts-btn" id="tts-stop"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-        </div>
-        <div class="tts-progress-container" id="tts-progress-bg"><div class="tts-progress-bar" id="tts-progress-bar"></div></div>
-    `;
-    document.body.appendChild(div);
-    uiContainer = div;
-    uiStatusText = div.querySelector('#tts-status-text');
-    uiPlayBtn = div.querySelector('#tts-play-pause');
-    uiProgressBar = div.querySelector('#tts-progress-bar');
-    div.querySelector('#tts-stop').onclick = (e) => { e.stopPropagation(); stop(); };
-    uiPlayBtn.onclick = (e) => { e.stopPropagation(); togglePlayPause(); };
-    div.onclick = (e) => { if (!e.target.closest('button')) handlePanicClick(); };
+	uiContainer = renderTemplate('tts-floating-player');
+	if (!uiContainer) return;
+
+	if (uiContainer.dataset.eventsAttached !== 'true') {
+		// IDs via querySelector direkt im Container suchen
+		uiStatusText = uiContainer.querySelector('#tts-status-text');
+		uiPlayBtn = uiContainer.querySelector('#tts-play-pause');
+		uiProgressBar = uiContainer.querySelector('#tts-progress-bar');
+
+		uiContainer.querySelector('#tts-stop').onclick = (e) => { e.stopPropagation(); stop(); };
+		uiPlayBtn.onclick = (e) => { e.stopPropagation(); togglePlayPause(); };
+		uiContainer.onclick = (e) => { if (!e.target.closest('button')) handlePanicClick(); };
+
+		uiContainer.dataset.eventsAttached = 'true';
+	}
 }
 
 function startProgressLoop() {
@@ -429,33 +422,52 @@ function startProgressLoop() {
         uiProgressBar.style.width = `${percent}%`;
         progressFrameId = requestAnimationFrame(update);
     };
-    progressFrameId = requestAnimationFrame(update);
+	progressFrameId = requestAnimationFrame(update);
 }
 
 function updateUI(state) {
-    ensurePlayerUI();
-    lastUiState = state;
-    if (state === 'hidden') {
-        uiContainer.classList.remove('is-visible');
-        if (progressFrameId) cancelAnimationFrame(progressFrameId);
-        return;
-    }
-    requestAnimationFrame(() => uiContainer.classList.add('is-visible'));
-    let labelKey = '';
-    if (state === 'loading') {
-        labelKey = 'tts.loading';
-        if (uiPlayBtn) { uiPlayBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; uiPlayBtn.disabled = true; }
-        uiContainer.querySelector('.tts-progress-container')?.classList.add('is-loading');
-    } else if (state === 'playing') {
-        labelKey = 'tts.playing';
-        if (uiPlayBtn) { uiPlayBtn.innerHTML = '<i class="fa-solid fa-pause"></i>'; uiPlayBtn.disabled = false; }
-        uiContainer.querySelector('.tts-progress-container')?.classList.remove('is-loading');
-        startProgressLoop();
-    } else if (state === 'paused') {
-        labelKey = 'tts.paused';
-        if (uiPlayBtn) { uiPlayBtn.innerHTML = '<i class="fa-solid fa-play"></i>'; uiPlayBtn.disabled = false; }
-    }
-    if (uiStatusText) uiStatusText.textContent = t(labelKey) || labelKey;
+	ensurePlayerUI();
+	lastUiState = state;
+	if (state === 'hidden') {
+		uiContainer.classList.remove('is-visible');
+		if (progressFrameId) cancelAnimationFrame(progressFrameId);
+		return;
+	}
+	requestAnimationFrame(() => uiContainer.classList.add('is-visible'));
+	let labelKey = '';
+
+	if (state === 'loading') {
+		labelKey = 'tts.loading';
+		if (uiPlayBtn) {
+			uiPlayBtn.textContent = '';
+			const icon = document.createElement('i');
+			icon.className = 'fa-solid fa-spinner fa-spin';
+			uiPlayBtn.appendChild(icon);
+			uiPlayBtn.disabled = true;
+		}
+		uiContainer.querySelector('.tts-progress-container')?.classList.add('is-loading');
+	} else if (state === 'playing') {
+		labelKey = 'tts.playing';
+		if (uiPlayBtn) {
+			uiPlayBtn.textContent = '';
+			const icon = document.createElement('i');
+			icon.className = 'fa-solid fa-pause';
+			uiPlayBtn.appendChild(icon);
+			uiPlayBtn.disabled = false;
+		}
+		uiContainer.querySelector('.tts-progress-container')?.classList.remove('is-loading');
+		startProgressLoop();
+	} else if (state === 'paused') {
+		labelKey = 'tts.paused';
+		if (uiPlayBtn) {
+			uiPlayBtn.textContent = '';
+			const icon = document.createElement('i');
+			icon.className = 'fa-solid fa-play';
+			uiPlayBtn.appendChild(icon);
+			uiPlayBtn.disabled = false;
+		}
+	}
+	if (uiStatusText) uiStatusText.textContent = t(labelKey) || labelKey;
 }
 
 function handlePanicClick() {

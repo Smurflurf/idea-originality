@@ -1,0 +1,187 @@
+{
+	"page_title": "Über den Ideenatlas",
+	"intro": "Der Ideenatlas ist primär eine Kurations-Engine für Fragen. Er wurde entwickelt, um unausgereifte Ideen zu verorten und verfeinern, Forschungslücken aufzudecken und thematische Verbindungen sichtbar zu machen, deren Existenz man sich noch nicht bewusst war.",
+	"structure": [
+		{
+			"type": "section_title",
+			"text": "1. Die Vision: Vom Suchen zum Finden"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Herkömmliche Suchmaschinen basieren auf Keywords. ",
+					"bold": true
+				},
+				{
+					"text": "Das schafft ein fundamentales Problem: Um etwas zu finden, muss man bereits wissen, wie es heißt... und dass es überhaupt existiert. Wer eine wahrhaft neue Idee hat, kennt deren akademischen Namen oft noch nicht und bleibt in der eigenen Begrifflichkeit gefangen."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Alternative Ansätze wie Zitationsnetzwerke (Citation Graphs) haben andere Schwächen: Sie erfordern oft ein spezifisches Ausgangspaper und basieren auf subjektiven Metriken der Popularität. Ein exzellentes, aber bisher wenig zitiertes Paper landet dort im toten Winkel. Auch KI-Sprachmodelle (LLMs) sind hier unzuverlässig, da sie als Black Box agieren, Resultate oft halluzinieren und Zufall bei ihren Antworten ein fundamentaler Baustein ist."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Der Ideenatlas schließt diese Lücke durch die Nutzung von aufbereiteten Vektorräumen. Dieser Ansatz bewertet nicht nach Zitationen oder Klickzahlen, sondern so objektiv wie möglich nach rein thematischer und semantischer Nähe. Der zentrale Bewertungsmaßstab ist die Kosinus-Ähnlichkeit (Nähe im Raum), die deterministisch berechnet wird und daher transparent nachvollziehbar ist. Wir geben die Datenhoheit zurück an den Nutzer."
+				}
+			]
+		},
+		{
+			"type": "section_title",
+			"text": "2. Warum ein Atlas? Die Macht der Mustererkennung"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Es geht nicht darum, das Denken an eine Maschine auszulagern, sondern die Aufmerksamkeit auf das Unvorhergesehene zu lenken. Eine klassische \"Wall of Text\" oder abstrakte Liste ist dafür ungeeignet. Der Mensch versteht räumliche und visuelle Zusammenhänge intuitiv viel besser."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Der Ideenatlas projiziert Millionen wissenschaftlicher Dokumente in eine interaktive 2D-Karte. Die hierarchischen Cluster und die Darstellung der nächsten Nachbarn erlauben eine sofortige Diagnose:"
+				}
+			]
+		},
+		{
+			"type": "list",
+			"items": [
+				{
+					"label": "Der dichte Fleck",
+					"text": "Liegen alle Ergebnisse eng beieinander? Dann ist die Idee fest in einem etablierten Feld verortet."
+				},
+				{
+					"label": "Die Streuung",
+					"text": "Verteilen sich die Ergebnisse über die ganze Karte? Das deutet auf einen interdisziplinären Ansatz hin, der verschiedene \"Wissenskontinente\" verbindet."
+				},
+				{
+					"label": "Der Ausreißer",
+					"text": "Ein einzelner Nachbar ist extrem weit von allem anderen entfernt? Hier könnte eine interdisziplinäre Querverbindung vorliegen, die es wert ist, genauer untersucht zu werden."
+				}
+			]
+		},
+		{
+			"type": "section_title",
+			"text": "3. Serendipität: Etwas finden, während man Anderes sucht"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Serendipität wird oft als reiner Zufall missverstanden. Doch die Definition enthält eine entscheidende Komponente: Eine unerwartete Entdeckung entsteht "
+				},
+				{
+					"text": "dank einem aufmerksamen Verstand",
+					"italic": true,
+					"url": "https://en.wiktionary.org/wiki/serendipity#:~:text=finding%20something%20when%20looking%20for%20something%20else%2C%20thanks%20to%20an%20observant%20mind"
+				},
+				{
+					"text": ". Ohne die eigene Denkarbeit kann Serendipität nicht auftreten."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Wissenschaft findet oft in Silos statt. Ein Algorithmus in der Informatik könnte strukturell identisch mit einem Problem in der Biologie sein; doch die Disziplinen sprechen unterschiedliche Sprachen. Während RAG beispielsweise primär durch die faktische Verbesserung von LLM-Antworten bekannt ist, werden ähnliche Konzepte in der Biologie genutzt, um Genomsequenzen mit Referenzdatenbanken abzugleichen und funktionelle Muster zu identifizieren. Ein Vektorraum kann diese Verbindung technisch herstellen, aber er kann sie nicht interpretieren."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Das System ist darauf ausgelegt, Daten so aufzubereiten, dass diese unerwarteten Brücken sichtbar werden. Doch das Erkennen des Wertes der Ergebnisse bleibt beim Nutzer. Der Atlas liefert die Karte, der Nutzer muss suchen."
+				}
+			]
+		},
+		{
+			"type": "section_title",
+			"text": "4. Die Technologie: RAG ohne G"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Für die technisch Interessierten: Das System basiert auf einem hochdimensionalen Vektorraum, der mittels "
+				},
+				{
+					"text": "UMAP",
+					"url": "https://umap-learn.readthedocs.io/en/latest/"
+				},
+				{
+					"text": " auf eine viel geringere Dimension projiziert wird. Anschließend identifiziert ein Clustering-Algorithmus ("
+				},
+				{
+					"text":"HDBSCAN",
+					"url":"https://hdbscan.readthedocs.io/en/latest/"
+				},
+				{
+					"text":") die Themenfelder. Mithilfe der Cluster-Zentroiden wird ein neuer Vektorraum gefüllt, was thematische Suchen kontextbasiert ermöglicht."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Man kann den Ansatz am besten als "
+				},
+				{
+					"text": "'RAG ohne G mit Extra-Steps'",
+					"bold": true
+				},
+				{
+					"text": " bezeichnen (Retrieval Augmented Generation, aber ohne die finale Textgenerierung). Anstatt die Suchergebnisse direkt an eine KI zu geben, präsentieren wir die rohen, strukturierten Daten. Die Daten werden nicht für LLMs, sondern für menschliche Nutzer optimiert: mit dynamischen Visualisierungen, angemessener Informationsdichte und maximaler Transparenz. Wir zeigen den Korpus, aus dem das Wissen stammt, und überlassen die Synthese dem intelligentesten Baustein im System: dem Nutzer selbst. "
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Für den Fall, dass man tatsächlich echtes RAG anwenden wollte, kann man jederzeit die Ergebnisse als JSON herunterladen und weiterverwenden oder alternativ die "
+				},
+				{
+					"text": "API",
+					"url": "https://ideenatlas.eu/api"
+				},
+				{
+					"text": " nutzen."
+				}
+			]
+		},
+		{
+			"type": "section_title",
+			"text": "5. Status & Zukunft"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Der Ideenatlas ist ein aktives, unabhängiges Forschungsprojekt im Status eines fortgeschrittenen Proof-of-Concept. Neben der aktiven Verbesserung der Website umfasst die To-do-Liste die Weiterentwicklung der Pipeline zur Clusterbildung und eine Erweiterung der Metadaten-Datenbank."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Das langfristige Ziel ist es, diese Form der transparenten, visuellen Recherche als offenes Werkzeug verfügbar zu halten - ohne Tracking, ohne Werbung und mit striktem Fokus auf wissenschaftlicher Integrität. "
+				}
+			]
+		}
+	]
+}

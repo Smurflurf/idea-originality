@@ -1,4 +1,4 @@
-package de.simon.originality;
+package de.simon.originality.configs;
 
 import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springdoc.core.models.GroupedOpenApi;

@@ -84,7 +84,7 @@ const FEATURE_REGISTRY = {
         
         // Die eigentlichen Renderer
         initializeAllVisualizations(); // Punkte & Tooltips
-        initializeColorCodingTriggers(); // Farben
+		initializeColorCodingTriggers(); // Farben
 
         if (isDataAvailable()) {
             if (context.crosshairCoords) initializeAllCrosshairs();
@@ -242,7 +242,7 @@ async function bootstrapApp() {
 		let pageName = path.split('/')[0] || 'index';
 		pageName = pageName.replace('.html', '');
 		
-		await initializeLocalization(['common', pageName]);
+		await initializeLocalization(['common', 'sse', 'index', 'results', pageName]);
 		
 		initPrintHelper(); 
 				

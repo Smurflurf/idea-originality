@@ -14,9 +14,9 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.primitives.Floats;
 
-import de.simon.originality.HtmlSanitizerService;
 import de.simon.originality.magicquery.MagicNumbers;
 import de.simon.originality.magicquery.cluster_analysis.graph.KnowledgeGraphService;
+import de.simon.originality.security.HtmlSanitizerService;
 import io.qdrant.client.QdrantClient;
 import io.qdrant.client.QdrantGrpcClient;
 import io.qdrant.client.grpc.Common.Condition;

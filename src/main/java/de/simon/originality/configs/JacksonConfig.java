@@ -1,4 +1,4 @@
-package de.simon.originality;
+package de.simon.originality.configs;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

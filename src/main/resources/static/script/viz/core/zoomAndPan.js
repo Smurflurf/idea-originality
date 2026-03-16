@@ -1,16 +1,18 @@
 import { generateVisualizationImage } from '/script/viz/core/exportVisualization.js';
 import { registerCleanup } from '/script/core/lifecycleManager.js';
 import { getContext, getJobTitle } from '/script/core/context.js';
-import { emit } from '/script/core/eventBus.js';
+import { emit, on, EVENTS } from '/script/core/eventBus.js';
+import { saveVizSnapshot, getVizSnapshot } from '/script/data/idb-helper.js';
+import { renderTemplate } from '/script/core/templateManager.js';
 
 // ==========================================
 // ZOOM EINSTELLUNGEN
 // ==========================================
 export const ZOOM_CONFIG = {
-	ANIMATION_SPEED: 0.035,  
-	BUTTON_ZOOM_STEP: 1.4, 
+	ANIMATION_SPEED: 0.035,
+	BUTTON_ZOOM_STEP: 1.4,
 	WHEEL_ZOOM_STEP: 1.15,
-	ANIMATION_SPEED_WHEEL: 0.3,  
+	ANIMATION_SPEED_WHEEL: 0.3,
 };
 
 const MIN_ZOOM = 1.0;
@@ -21,6 +23,52 @@ let globallyActiveVizId = null;
 
 let globalMouseX = 0;
 let globalMouseY = 0;
+
+on(EVENTS.THEME_CHANGED, () => {
+	const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+
+	Object.keys(vizInstances).forEach(containerId => {
+		const container = document.getElementById(containerId);
+		if (!container) return;
+
+		// Prüfen, ob der Container GERADE SICHTBAR ist (offsetParent ist nur null, wenn display:none aktiv ist)
+		if (container.offsetParent !== null) {
+			// Dem Browser 50ms geben, um das neue CSS-Theme flüssig zu zeichnen, 
+			// BEVOR der prozessorlastige Canvas-Snapshot startet.
+			setTimeout(() => {
+				requestSnapshotUpdate(containerId);
+			}, 50);
+		} else {
+			// Container ist unsichtbar. Wir sparen uns die CPU-Last.
+			// Wir löschen nur den alten Snapshot und das Flag, damit er beim 
+			// nächsten Tab-Wechsel automatisch im neuen Theme frisch generiert wird.
+			container.classList.remove('has-snapshot');
+			const idSuffix = containerId.includes('own') ? 'own' : (containerId.includes('nc') ? 'nc' : 'serendipity');
+			const snapCanvas = document.getElementById(`viz-snapshot-canvas-${idSuffix}`);
+			if (snapCanvas) {
+				snapCanvas.remove();
+			}
+		}
+	});
+});
+
+export function deactivateAllVisualizations() {
+	Object.values(vizInstances).forEach(inst => inst.setScrollZoomActive(false));
+	globallyActiveVizId = null;
+}
+
+// Beobachtet das Body-Tag. Wenn das externe Swiping-Script aktiv wird,
+// schalten wir die Live-Ansichten SOFORT ab.
+const bodyClassObserver = new MutationObserver((mutations) => {
+	for (const mutation of mutations) {
+		if (mutation.attributeName === 'class' && document.body.classList.contains('is-swiping-active')) {
+			deactivateAllVisualizations();
+			break;
+		}
+	}
+});
+bodyClassObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
 
 window.addEventListener('mousemove', (e) => {
 	globalMouseX = e.clientX;
@@ -53,9 +101,127 @@ window.addEventListener('keydown', (e) => {
 	}
 });
 
+// =========================================================================
+// RASTERIZATION LOGIC (SNAPSHOTS)
+// =========================================================================
+
+export async function captureAndSetSnapshot(containerId, isUserPanningCheck = null) {
+	const idSuffix = containerId.includes('own') ? 'own' : (containerId.includes('nc') ? 'nc' : 'serendipity');
+	const oldSnapshotImg = document.getElementById(`viz-snapshot-${idSuffix}`);
+	const container = document.getElementById(containerId);
+	const wrapper = document.getElementById(`zoom-pan-wrapper-${idSuffix}`);
+
+	if (!container) return Promise.resolve();
+
+	// Erzwinge das Berechnen der Layout-Daten, falls noch nicht geschehen
+	if (!container.dataset.exactCw) {
+	    triggerPositionUpdateForViz(containerId, true);
+	}
+
+	const currentCaptureId = Date.now() + Math.random();
+	container.dataset.latestCaptureId = currentCaptureId;
+
+	const layerPrefix = `viz-layer-${idSuffix}`;
+	const pointsContainerId = `dynamic-points-${idSuffix}-neighbors`;
+	const ctx = getContext();
+
+	let pointsData =[];
+	let colorMap = {};
+
+	const pointsContainerEl = document.getElementById(pointsContainerId);
+	if (pointsContainerEl && pointsContainerEl.__pointsDataCache) {
+		pointsData = pointsContainerEl.__pointsDataCache;
+	} else if (idSuffix === 'own') {
+		pointsData = ctx.ownResults ||[];
+	} else if (idSuffix === 'serendipity') {
+		pointsData = ctx.serendipityResults || [];
+	}
+
+	if (idSuffix === 'own') {
+		colorMap = ctx.ownColorMap || {};
+	} else if (idSuffix === 'serendipity') {
+		colorMap = ctx.serendipityColorMap || {};
+	} else {
+		colorMap = ctx.neighborColorMap || {};
+	}
+
+	try {
+		const generatedCanvas = await generateVisualizationImage(layerPrefix, pointsContainerId, pointsData, colorMap, true);
+		
+        if (generatedCanvas) {
+			if (container.dataset.latestCaptureId != currentCaptureId) {
+				return Promise.resolve(); 
+			}
+
+            let snapshotCanvas = document.getElementById(`viz-snapshot-canvas-${idSuffix}`);
+            
+            if (!snapshotCanvas) {
+                snapshotCanvas = document.createElement('canvas');
+                snapshotCanvas.id = `viz-snapshot-canvas-${idSuffix}`;
+                snapshotCanvas.className = 'viz-snapshot-overlay'; // <--- FIX: Richtige CSS Klasse verwenden!
+                
+                // Canvas ins DOM einfügen
+                if (wrapper) {
+                    container.insertBefore(snapshotCanvas, wrapper.nextSibling);
+                } else {
+                    container.appendChild(snapshotCanvas);
+                }
+
+                // Altes IMG Element verstecken (für Abwärtskompatibilität)
+                if (oldSnapshotImg) {
+                    oldSnapshotImg.style.display = 'none';
+                }
+            }
+
+            // High-Speed Frame Swap: Wir kopieren den gerenderten Canvas 1:1 in unseren DOM-Canvas
+            snapshotCanvas.width = generatedCanvas.width;
+            snapshotCanvas.height = generatedCanvas.height;
+            const targetCtx = snapshotCanvas.getContext('2d', { alpha: false }); // alpha:false ist ein Hardware-Beschleuniger!
+            targetCtx.drawImage(generatedCanvas, 0, 0);
+
+			// Hintergrund-Speicherung in die IndexedDB
+			const vizInst = vizInstances[containerId];
+			if (ctx.jobId && vizInst) {
+				// Verzögert, damit die UI sofort flüssig bleibt
+				setTimeout(() => {
+					try {
+						const dataUrl = snapshotCanvas.toDataURL('image/webp', 0.9);
+						saveVizSnapshot({
+							id: `${ctx.jobId}_${idSuffix}`,
+							dataUrl: dataUrl,
+							state: vizInst.getState(), // Speichert Pan & Zoom
+							theme: document.documentElement.getAttribute('data-theme') || 'dark' 
+						}).catch(e => console.warn("IDB Save error", e));
+					} catch (err) { }
+				}, 300);
+			}
+			
+			return new Promise((resolve) => {
+				requestAnimationFrame(() => {
+					requestAnimationFrame(() => {
+                        // Das Umschalten der Klassen triggert das sofortige Umschalten der Opacity im CSS.
+                        // Durch das Warten auf zwei Frames ist garantiert, dass der Canvas bereits gerendert wurde.
+						if (!container.classList.contains('is-scroll-zoom-active') && container.dataset.latestCaptureId == currentCaptureId) {
+							container.classList.add('has-snapshot');
+						}
+						resolve();
+					});
+				});
+			});
+		}
+	} catch (e) {
+		console.warn("Snapshot capture failed:", e);
+	}
+	return Promise.resolve();
+}
+
+export function requestSnapshotUpdate(containerId) {
+	captureAndSetSnapshot(containerId);
+}
+
 export function triggerPositionUpdateForViz(containerId) {
 	if (vizInstances[containerId] && typeof vizInstances[containerId].update === 'function') {
-		vizInstances[containerId].update();
+		vizInstances[containerId].update(true);
 	}
 }
 
@@ -72,11 +238,13 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 
 	if (!container || !wrapper || !zoomInBtn || !zoomOutBtn) return;
 
+	container.classList.remove('has-snapshot');
 	container.classList.add('viz-container-managed');
 	const idSuffix = containerId.includes('own') ? 'own' : (containerId.includes('nc') ? 'nc' : 'serendipity');
 
 	let isScrollZoomActive = false;
 	let longPressTimer = null;
+	let snapshotDebounceTimer = null;
 
 	const debugOverlay = document.getElementById(`debug-overlay-${idSuffix}`);
 	const debugContainerSpan = document.getElementById(`debug-container-coords-${idSuffix}`);
@@ -84,17 +252,45 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 	const debugImageSpan = document.getElementById(`debug-image-coords-${idSuffix}`);
 	if (debugOverlay) debugOverlay.style.display = 'none';
 
-	let cachedCw = container.clientWidth;
-	let cachedCh = container.clientHeight;
+	function getContainerSize() {
+		if (!container) return { w: 0, h: 0 };
+		let w = parseFloat(window.getComputedStyle(container).width) || container.clientWidth;
+		let h = parseFloat(window.getComputedStyle(container).height) || container.clientHeight;
+
+		if (w === 0 || h === 0) {
+			const activePane = document.querySelector('.viz-content-pane.active .viz-stack-container');
+			if (activePane) {
+				w = activePane.clientWidth;
+				h = activePane.clientHeight;
+			}
+		}
+		return { w, h };
+	}
+
+	let size = getContainerSize();
+	let cachedCw = size.w;
+	let cachedCh = size.h;
 
 	const resizeObserver = new ResizeObserver(() => {
 		if (!container) return;
-		cachedCw = container.clientWidth;
-		cachedCh = container.clientHeight;
+		const newSize = getContainerSize();
+		if (newSize.w === 0 || newSize.h === 0) return;
+		cachedCw = newSize.w;
+		cachedCh = newSize.h;
 		updateDOM();
 	});
 	resizeObserver.observe(container);
 
+	const visibilityObserver = new IntersectionObserver((entries) => {
+		for (const entry of entries) {
+			// Sobald der Container nicht mehr auf dem Bildschirm ist (threshold 0)
+			if (!entry.isIntersecting && isScrollZoomActive) {
+				setScrollZoomActive(false);
+			}
+		}
+	}, { threshold: 0 });
+	visibilityObserver.observe(container);
+	
 	wrapper.style.left = '0px';
 	wrapper.style.top = '0px';
 
@@ -123,7 +319,8 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 	let lastMouseEvent = null;
 
 	let zoomInAnimation = false;
-	
+	let isButtonAnimating = false;
+
 	let initialPinchDistance = null;
 	let initialPinchZoom = null;
 
@@ -149,13 +346,11 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 	}
 
 	function clampTargetState() {
-		// Fix für den Button-Bug (Floating Point Ungenauigkeiten abfangen)
 		if (targetState.zoom <= MIN_ZOOM + 0.001) targetState.zoom = MIN_ZOOM;
 		if (targetState.zoom >= MAX_ZOOM - 0.001) targetState.zoom = MAX_ZOOM;
 
 		targetState.zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, targetState.zoom));
 
-		// Wenn wir wieder in der Ausgangsansicht sind, Reset des Pan-Status
 		if (targetState.zoom <= MIN_ZOOM) {
 			hasPannedFromCenter = false;
 		}
@@ -168,18 +363,16 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 	function renderLoop() {
 		let needsMoreFrames = false;
 		let zoomSpeed = 0;
-		
-		if(!zoomInAnimation) {
+
+		if (!zoomInAnimation) {
 			zoomSpeed = ZOOM_CONFIG.ANIMATION_SPEED_WHEEL;
 		} else {
 			zoomSpeed = ZOOM_CONFIG.ANIMATION_SPEED;
 		}
-		
+
 		const prevZoom = state.zoom;
-		// Smooth wie früher, aber durch Speed 0.35 viel crisper
 		state.zoom = lerp(state.zoom, targetState.zoom, zoomSpeed);
 
-		// Höherer Threshold (0.002 statt 0.001) kappt die mikroskopischen letzten Reste sofort ab
 		if (Math.abs(state.zoom - targetState.zoom) > 0.0001) {
 			needsMoreFrames = true;
 		} else {
@@ -189,7 +382,6 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 		if (isPanning) {
 			applyPanAnchor();
 		} else {
-			// MATHE-MAGIC FÜR DIE GRÜNE LINIE: Wir lerpen im Screen-Space!
 			const currentScreenX = (0.5 - state.centerX) * prevZoom;
 			const currentScreenY = (0.5 - state.centerY) * prevZoom;
 
@@ -199,7 +391,6 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 			const nextScreenX = lerp(currentScreenX, targetScreenX, zoomSpeed);
 			const nextScreenY = lerp(currentScreenY, targetScreenY, zoomSpeed);
 
-			// Zurück in Bildkoordinaten übersetzen
 			state.centerX = 0.5 - (nextScreenX / state.zoom);
 			state.centerY = 0.5 - (nextScreenY / state.zoom);
 
@@ -222,6 +413,12 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 		} else {
 			animFrameId = null;
 			zoomInAnimation = false;
+			if (isButtonAnimating && !isPanning) {
+			    isButtonAnimating = false;
+			    if (!initialPinchDistance) {
+			        setScrollZoomActive(false);
+			    }
+			}
 		}
 	}
 
@@ -229,7 +426,14 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 		if (!animFrameId) animFrameId = requestAnimationFrame(renderLoop);
 	}
 
-	function updateDOM() {
+	function updateDOM(forceReadDimensions = false) {
+		if (forceReadDimensions) {
+			const newSize = getContainerSize();
+			if (newSize.w > 0 && newSize.h > 0) {
+				cachedCw = newSize.w;
+				cachedCh = newSize.h;
+			}
+		}
 		const rectW = cachedCw;
 		const rectH = cachedCh;
 		if (rectW === 0 || rectH === 0) return;
@@ -251,6 +455,13 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 		wrapper.style.height = `${newHeight}px`;
 		wrapper.style.transform = `translate(${newLeft}px, ${newTop}px)`;
 
+		container.dataset.exactCw = rectW;
+		container.dataset.exactCh = rectH;
+		wrapper.dataset.exactLeft = newLeft;
+		wrapper.dataset.exactTop = newTop;
+		wrapper.dataset.exactWidth = newWidth;
+		wrapper.dataset.exactHeight = newHeight;
+
 		updateDynamicPositions(newLeft, newTop, newWidth, newHeight);
 		updateButtonStates();
 
@@ -269,17 +480,13 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 	}
 
 	function updateDynamicPositions(wrapperLeft, wrapperTop, wrapperWidth, wrapperHeight) {
-	        const pointsContainer = document.getElementById(pointsContainerId);
-	        if (!pointsContainer || wrapperWidth <= 0) return;
+		const pointsContainer = document.getElementById(pointsContainerId);
+		if (!pointsContainer || wrapperWidth <= 0) return;
 
-	        // MASSIVER PERFORMANCE BOOST:
-	        // Die teure for-Schleife über alle "hitboxes" wurde komplett entfernt!
-	        // Stattdessen skalieren wir nur diesen EINEN Container. Da die Hitboxen jetzt
-	        // %-Werte nutzen, wandern sie völlig ohne JavaScript-Berechnung an die richtige Stelle.
-	        pointsContainer.style.width = `${wrapperWidth}px`;
-	        pointsContainer.style.height = `${wrapperHeight}px`;
-	        pointsContainer.style.transform = `translate(${wrapperLeft}px, ${wrapperTop}px)`;
-	    }
+		pointsContainer.style.width = `${wrapperWidth}px`;
+		pointsContainer.style.height = `${wrapperHeight}px`;
+		pointsContainer.style.transform = `translate(${wrapperLeft}px, ${wrapperTop}px)`;
+	}
 
 	function updateDebugInfo(event = lastMouseEvent) {
 		if (!debugOverlay || debugOverlay.style.display === 'none') return;
@@ -321,18 +528,20 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 
 		if (newZoom === oldZoom) return;
 
+		setScrollZoomActive(true);
+		if (!isWheel) {
+			isButtonAnimating = true;
+		}
+
 		if (forceCrosshair) {
-			// Wenn NICHT gepannt wurde, zentrieren wir aufs Crosshair
-			if (!hasPannedFromCenter) {
-				const crosshair = getCenterAnchor();
-				targetState.centerX = crosshair.x;
-				targetState.centerY = crosshair.y;
-			}
-			// Wenn gepannt wurde, bleibt das aktuelle centerX/Y bestehen (Zoom in die Mitte)
-			targetState.zoom = newZoom;
+		    if (!hasPannedFromCenter) {
+		        const crosshair = getCenterAnchor();
+		        targetState.centerX = crosshair.x;
+		        targetState.centerY = crosshair.y;
+		    }
+		    targetState.zoom = newZoom;
 		} else {
-			// Mausrad / Pinch-to-Zoom verändert den Fokus und gilt daher als Panning
-			hasPannedFromCenter = true;
+		    hasPannedFromCenter = true;
 
 			let anchorX = 0.5;
 			let anchorY = 0.5;
@@ -414,6 +623,7 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 		e.preventDefault();
 		if (targetState.zoom <= MIN_ZOOM) return;
 		isPanning = true;
+		container.classList.add('is-panning');
 		latestPanX = e.clientX;
 		latestPanY = e.clientY;
 		const cw = cachedCw;
@@ -425,7 +635,6 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 		const cRect = container.getBoundingClientRect();
 		panAnchorImageX = (e.clientX - cRect.left - startTranslateX) / currentWidth;
 		panAnchorImageY = (e.clientY - cRect.top - startTranslateY) / currentHeight;
-		container.style.cursor = 'grabbing';
 	});
 
 	const onWindowMouseMove = (e) => {
@@ -442,7 +651,7 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 	const onWindowMouseUp = () => {
 		if (isPanning) {
 			isPanning = false;
-			container.style.cursor = targetState.zoom > MIN_ZOOM ? 'grab' : 'default';
+			container.classList.remove('is-panning');
 		}
 	};
 
@@ -479,15 +688,20 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 	container.addEventListener('touchstart', (e) => {
 		if (document.body.classList.contains('is-swiping-active')) return;
 		if (e.target.closest('.zoom-controls button') || e.target.closest('.point-hitbox')) return;
+
 		const isMultiTouch = e.touches.length > 1;
 		const isZoomedIn = targetState.zoom > MIN_ZOOM + 0.01;
+
 		if (!isMultiTouch && !isZoomedIn) return;
+
 		setScrollZoomActive(true);
 		globallyActiveVizId = containerId;
 		e.stopPropagation();
 		if (e.cancelable) e.preventDefault();
+
 		if (!isMultiTouch && isZoomedIn) {
 			isPanning = true;
+			container.classList.add('is-panning');
 			latestPanX = e.touches[0].clientX;
 			latestPanY = e.touches[0].clientY;
 			const cw = cachedCw;
@@ -522,6 +736,7 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 	container.addEventListener('touchend', () => {
 		clearTimeout(longPressTimer);
 		isPanning = false;
+		container.classList.remove('is-panning');
 		initialPinchDistance = null;
 	});
 
@@ -535,6 +750,8 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 		let isValidTap = false;
 		button.addEventListener('touchstart', (e) => {
 			if (e.touches.length > 1) return;
+			e.stopPropagation();
+
 			isValidTap = true;
 			startX = e.touches[0].clientX;
 			startY = e.touches[0].clientY;
@@ -551,10 +768,14 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 			isValidTap = false;
 		});
 		button.addEventListener('click', (e) => {
-			e.preventDefault(); e.stopPropagation();
+			e.preventDefault();
+			e.stopPropagation(); 
 			zoomToTarget(isZoomingIn, true);
 		});
-		button.addEventListener('mousedown', (e) => { e.preventDefault(); e.stopPropagation(); });
+		button.addEventListener('mousedown', (e) => {
+			e.preventDefault();
+			e.stopPropagation(); 
+		});
 	};
 
 	setupButton(zoomInBtn, true);
@@ -562,24 +783,23 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 
 	function showContextMenu(e) {
 		e.preventDefault();
-		const existingMenu = document.getElementById('custom-context-menu');
-		if (existingMenu) existingMenu.remove();
-
-		const menu = document.createElement('div');
-		menu.className = 'custom-context-menu';
-		menu.id = 'custom-context-menu';
+		
+	    // Element aus dem Template holen (hängt es beim ersten Mal an den Body an)
+		const menu = renderTemplate('custom-context-menu');
+	    if (!menu) return;
 
 		const clientX = e.touches ? e.touches[0].clientX : e.clientX;
 		const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
+		// Zurücksetzen
 		menu.style.visibility = 'hidden';
-		
-		menu.style.top = `${clientY}px`;
-		menu.style.left = `${clientX}px`;
+		menu.innerHTML = ''; // Vorherige Items leeren
 
 		const menuItems = [
 			{
 				label: 'Center on Idea', action: () => {
+					setScrollZoomActive(true);
+					isButtonAnimating = true;
 					hasPannedFromCenter = false;
 					const center = getCenterAnchor();
 					targetState.centerX = center.x;
@@ -589,9 +809,11 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 			},
 			{
 				label: 'Zoom in', action: () => {
+					setScrollZoomActive(true);
+					isButtonAnimating = true;
 					hasPannedFromCenter = true;
 					zoomInAnimation = true;
-					
+
 					const rect = container.getBoundingClientRect();
 					let anchorX = 0.5;
 					let anchorY = 0.5;
@@ -604,7 +826,6 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 					const oldZoom = targetState.zoom;
 					const newZoom = MAX_ZOOM;
 
-					// Exakt selbe Mathematik wie beim Mausrad für reibungsloses Anker-Zoomen
 					targetState.centerX += (anchorX - 0.5) * (1 / oldZoom - 1 / newZoom);
 					targetState.centerY += (anchorY - 0.5) * (1 / oldZoom - 1 / newZoom);
 					targetState.zoom = newZoom;
@@ -615,6 +836,8 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 			},
 			{
 				label: 'Zoom out', action: () => {
+					setScrollZoomActive(true);
+					isButtonAnimating = true;
 					zoomInAnimation = false;
 					targetState.zoom = MIN_ZOOM;
 					const center = getCenterAnchor();
@@ -636,18 +859,25 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 			}
 		];
 
+	    // Items generieren
 		menuItems.forEach(item => {
 			if (item.type === 'separator') {
 				const sep = document.createElement('div'); sep.className = 'context-menu-separator'; menu.appendChild(sep);
 			} else {
 				const menuItem = document.createElement('div'); menuItem.className = 'context-menu-item'; menuItem.textContent = item.label;
-				menuItem.addEventListener('click', () => { item.action(); menu.remove(); });
+				menuItem.addEventListener('click', () => { 
+	                item.action(); 
+	                menu.style.visibility = 'hidden'; // Statt remove() verstecken wir es nur!
+	            });
 				menu.appendChild(menuItem);
 			}
 		});
 
-		document.body.appendChild(menu);
+	    // Damit getBoundingClientRect() funktioniert, muss es display:block haben, 
+	    // darf aber durch visibility:hidden noch unsichtbar bleiben.
+	    menu.style.display = 'block'; 
 		const menuRect = menu.getBoundingClientRect();
+	    
 		let finalLeft = clientX;
 		let finalTop = clientY;
 
@@ -660,9 +890,10 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 
 		menu.style.left = `${finalLeft}px`;
 		menu.style.top = `${finalTop}px`;
-		menu.style.visibility = 'visible'; 
-		
-		setTimeout(() => window.addEventListener('click', () => menu.remove(), { once: true }), 0);
+		menu.style.visibility = 'visible';
+
+	    // Globaler Klick-Schließer
+		setTimeout(() => window.addEventListener('click', () => menu.style.visibility = 'hidden', { once: true }), 0);
 	}
 
 	container.addEventListener('contextmenu', showContextMenu);
@@ -671,14 +902,26 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 		let layerPrefix = 'viz-layer-nc';
 		if (idSuffix === 'own') layerPrefix = 'viz-layer-own';
 		else if (idSuffix === 'serendipity') layerPrefix = 'viz-layer-serendipity';
+
 		const ctx = getContext();
-		const pointsData = (idSuffix === 'own' && ctx.ownResults) ? ctx.ownResults : [];
+
+		let pointsData = [];
+		const pointsContainerEl = document.getElementById(pointsContainerId);
+		if (pointsContainerEl && pointsContainerEl.__pointsDataCache) {
+			pointsData = pointsContainerEl.__pointsDataCache;
+		} else if (idSuffix === 'own' && ctx.ownResults) {
+			pointsData = ctx.ownResults;
+		} else if (idSuffix === 'serendipity' && ctx.serendipityResults) {
+			pointsData = ctx.serendipityResults;
+		}
+
 		let colorMap = {};
 		if (idSuffix === 'own') colorMap = ctx.ownColorMap || {};
 		else if (idSuffix === 'serendipity') colorMap = ctx.serendipityColorMap || {};
 		else colorMap = ctx.neighborColorMap || {};
-		const finalImageURL = await generateVisualizationImage(layerPrefix, pointsContainerId, pointsData, colorMap);
-		if (finalImageURL) {
+
+		const finalImageURL = await generateVisualizationImage(layerPrefix, pointsContainerId, pointsData, colorMap, false);
+		if (finalImageURL && typeof finalImageURL === 'string') {
 			const link = document.createElement('a');
 			link.href = finalImageURL;
 			let title = getJobTitle() ? getJobTitle().trim().toLowerCase().replace(/[^a-z0-9]/g, '-') : 'analysis';
@@ -692,25 +935,121 @@ export function initializeZoomAndPan(containerId, wrapperId, zoomInId, zoomOutId
 	function setScrollZoomActive(isActive) {
 		if (isScrollZoomActive === isActive) return;
 		isScrollZoomActive = isActive;
-		container.classList.toggle('is-scroll-zoom-active', isActive);
-		if (!isActive) container.style.cursor = 'default';
-		else updateButtonStates();
+
+		clearTimeout(snapshotDebounceTimer);
+
+		if (isActive) {
+			container.classList.add('is-scroll-zoom-active');
+			container.classList.remove('has-snapshot');
+			container.focus();
+
+			updateDOM();
+			updateButtonStates();
+		} else {
+			updateDOM();
+
+			container.classList.remove('is-scroll-zoom-active');
+			updateButtonStates();
+
+			snapshotDebounceTimer = setTimeout(async () => {
+				if (!isScrollZoomActive) {
+					await captureAndSetSnapshot(containerId);
+				}
+			}, 250);
+		}
 	}
 
 	function updateButtonStates() {
 		zoomInBtn.disabled = targetState.zoom >= MAX_ZOOM;
 		zoomOutBtn.disabled = targetState.zoom <= MIN_ZOOM;
-		if (!isPanning && isScrollZoomActive) container.style.cursor = targetState.zoom > MIN_ZOOM ? 'grab' : 'default';
+		
+		if (targetState.zoom > MIN_ZOOM) {
+			container.classList.add('is-zoomed-in');
+		} else {
+			container.classList.remove('is-zoomed-in');
+		}
 	}
 
-	vizInstances[containerId] = { update: () => { updateDOM(); }, zoomToTarget: zoomToTarget, setScrollZoomActive: setScrollZoomActive };
+	vizInstances[containerId] = {
+		update: (force) => { updateDOM(force); },
+		zoomToTarget: zoomToTarget,
+		setScrollZoomActive: setScrollZoomActive,
+		getState: () => ({ zoom: state.zoom, centerX: state.centerX, centerY: state.centerY })
+	};
 	updateDOM();
 
-	registerCleanup(() => {
-		resizeObserver.disconnect();
-		window.removeEventListener('mousemove', onWindowMouseMove);
-		window.removeEventListener('mouseup', onWindowMouseUp);
-		window.removeEventListener('touchmove', onWindowTouchMove);
-		if (animFrameId) cancelAnimationFrame(animFrameId);
-	});
-}
+	const baseImage = document.getElementById(`viz-layer-${idSuffix}-base`);
+		if (baseImage) {
+			const takeInitialSnapshot = async () => {
+				if (document.fonts && document.fonts.ready) {
+					await document.fonts.ready;
+				}
+				
+				const ctxData = getContext();
+				if (ctxData.jobId) {
+					try {
+						const savedSnap = await getVizSnapshot(`${ctxData.jobId}_${idSuffix}`);
+						const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+						
+						// FIX: Wir akzeptieren alte Snapshots ohne Theme (!savedSnap.theme)
+						if (savedSnap && savedSnap.dataUrl && savedSnap.state && (!savedSnap.theme || savedSnap.theme === currentTheme)) {
+							
+							// FIX: SOFORT markieren, damit der 4-Sekunden-Background-Renderer den Tab in Ruhe lässt!
+							if (!container.classList.contains('is-scroll-zoom-active')) {
+								container.classList.add('has-snapshot');
+							}
+
+							// 1. Kamera-Position wiederherstellen
+							state.zoom = savedSnap.state.zoom;
+							state.centerX = savedSnap.state.centerX;
+							state.centerY = savedSnap.state.centerY;
+							targetState = { ...state };
+							updateDOM(true);
+
+							// 2. Bild auf das Canvas zeichnen
+							let snapshotCanvas = document.getElementById(`viz-snapshot-canvas-${idSuffix}`);
+							if (!snapshotCanvas) {
+								snapshotCanvas = document.createElement('canvas');
+								snapshotCanvas.id = `viz-snapshot-canvas-${idSuffix}`;
+								snapshotCanvas.className = 'viz-snapshot-overlay';
+								if (wrapper) container.insertBefore(snapshotCanvas, wrapper.nextSibling);
+								else container.appendChild(snapshotCanvas);
+							}
+
+							const img = new Image();
+							img.onload = () => {
+								snapshotCanvas.width = img.width;
+								snapshotCanvas.height = img.height;
+								const tCtx = snapshotCanvas.getContext('2d', { alpha: false });
+								tCtx.drawImage(img, 0, 0);
+							};
+							img.src = savedSnap.dataUrl;
+
+							return; // Erfolg! Wir brechen ab und sparen uns das aufwendige Neu-Rendern!
+						}
+					} catch (err) {
+						console.warn("Failed to load snapshot from IDB", err);
+					}
+				}
+
+				// Fallback (wird ausgeführt, wenn kein Snapshot existiert oder das Theme veraltet ist)
+				setTimeout(() => {
+					if (!isScrollZoomActive && container.offsetParent !== null) {
+						captureAndSetSnapshot(containerId);
+					}
+				}, 250);
+			};
+
+			// SOFORT ausführen (die Export-Funktion wartet im Zweifel selbständig auf das Bild)
+			takeInitialSnapshot();
+		}
+
+		registerCleanup(() => {
+			resizeObserver.disconnect();
+			window.removeEventListener('mousemove', onWindowMouseMove);
+			window.removeEventListener('mouseup', onWindowMouseUp);
+			window.removeEventListener('touchmove', onWindowTouchMove);
+			if (animFrameId) cancelAnimationFrame(animFrameId);
+			clearTimeout(snapshotDebounceTimer);
+		});
+	}

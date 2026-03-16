@@ -6,7 +6,8 @@ function drawOutlines(gContainer, clusterIds, colorMap, isContext = false) {
 	if (!gContainer || !clusterIds || !colorMap) return;
 	gContainer.innerHTML = '';
 	const ctx = getContext();
-
+	const fragment = document.createDocumentFragment();
+	
 	const outlinePathData = ctx.outlineData;
 	const contextColor = '#808080';
 	const baseStrokeWidth = 0.015;
@@ -24,9 +25,10 @@ function drawOutlines(gContainer, clusterIds, colorMap, isContext = false) {
 
 			path.setAttribute('vector-effect', 'non-scaling-stroke');
 			path.classList.add('outline-path');
-			gContainer.appendChild(path);
+			fragment.appendChild(path);
 		}
 	}
+	gContainer.appendChild(fragment);
 }
 
 export function initializeOutlineRenderer(prefix) {

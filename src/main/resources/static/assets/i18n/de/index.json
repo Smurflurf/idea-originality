@@ -42,9 +42,6 @@
 		"status": {
 			"uploading": "Lade Daten hoch & starte Prozess...",
 			"processing": "Verarbeite Anfrage...",
-			"embedding": "Bette Idee in den Vektorraum ein...",
-			"clustering": "Themengebiete werden gefunden...",
-			"visualizing": "Erstelle Visualisierungen...",
 			"finalizing": "Finalisiere...",
 			"error": "Fehler"
 		},

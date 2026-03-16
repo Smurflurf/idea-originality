@@ -6,11 +6,12 @@ export const EVENTS = {
     // State Changes
     LANG_CHANGED: 'app:language-changed',
     ATTACHMENTS_CHANGED: 'app:attachments-changed',
-    
+	THEME_CHANGED: 'app:theme-changed',
+		
     // UI Signals
     TTS_NAVIGATE: 'app:tts-navigate',
     TTS_FINISHED: 'app:tts-finished',
-    
+	
     // Data Signals
     FILTERED_RESULTS_RENDERED: 'app:filtered-results-rendered'
 };

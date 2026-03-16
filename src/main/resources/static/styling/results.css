@@ -21,10 +21,10 @@
     text-overflow: ellipsis;
     color: var(--text-primary);
     
-    transition: color 0.1s ease; /* Nur Farbe darf animieren (Theme) */
-    opacity: 1 !important;       /* Erzwinge sofortige Sichtbarkeit */
-    transform: none !important;  /* Keine Bewegung */
-    animation: none !important;  /* Keine Animationen */ 
+    transition: color 0.1s ease;
+    opacity: 1 !important;       
+    transform: none !important;  
+    animation: none !important;  
 }
 
 .result-title-link {
@@ -63,7 +63,7 @@
 
 .download-btn-styled:hover {
     background-color: var(--bg-element-hover);
-    border-color: var(--text-quaternary); /* #8f9194 */
+    border-color: var(--text-quaternary); 
     color: var(--text-primary);
 }
 
@@ -81,50 +81,12 @@
         font-size: 1.2rem;
     }
 
-   /* .download-btn-styled span {
-        display: none;
-    }*/
-
     .download-btn-styled {
         padding: 8px 10px;
     }
-}
-
-.results-container {
-	width: 100% !important; 
-	max-width : none !important;
-	min-height: 100dvh;
-	display: flex;
-	flex-direction: column;
-	padding: 0;
-	margin: 0 auto;
-	position: relative;
-	background-color: var(--bg-app);
-	max-width: none !important;min-height: 100dvh; 
-    display: flex;
-    flex-direction: column;
-    padding: 0; 
-    margin: 0 auto; 
-    position: relative;
-    background-color: var(--bg-app);
-}
-
-/* Während des Wischens zwingen wir alle Tabs auf die Position 0,0 im Container.
-   Dadurch liegen sie übereinander (gestapelt).
-   Das JS übernimmt dann das Verschieben (translateX) nach links/rechts. */
-.results-container.is-swiping .viz-content-pane {
-    position: absolute;
-    top: var(--swipe-header-offset, 60px); 
-    left: 0;
-    width: 100%;
-    overflow: hidden; 
-}
-
-/* Der Container selbst muss overflow-x hidden sein, 
-   damit keine horizontale Scrollbar während des Wischens entsteht */
-.results-container.is-swiping {
-	overflow-x: hidden;
-	overflow-y: hidden;
+	/*.download-btn-styled span {
+		display: none;
+	}*/
 }
 
 .result-card {
@@ -151,7 +113,7 @@
 }
 
 .result-payload {
-    background-color: var(--bg-app); /* #202124 */
+    background-color: var(--bg-app); 
     border-radius: 8px;
     border: 1px solid var(--border-subtle);
     font-family: monospace;
@@ -258,11 +220,10 @@ h2 {
     right: 75%;
 }
 
-/* Neue Klasse für GPU-Beschleunigung */
 .gpu-accelerated {
     will-change: transform;
-    transform-origin: 0 0; /* Wichtig: Skalierung vom Ursprung oben links */
-    backface-visibility: hidden; /* Verhindert Flackern auf manchen Mobiles */
+    transform-origin: 0 0; 
+    backface-visibility: hidden; 
     perspective: 1000px;
 }
 
@@ -274,7 +235,6 @@ h2 {
     left: calc(var(--indent-level) * 15px - 12px);
     top: 50%;
     transform: translateY(-50%);
-    /* Fallback war #8f9194 -> text-quaternary */
     color: var(--indicator-color, var(--text-quaternary));
     font-weight: 500;
     font-size: 16px;
@@ -288,16 +248,12 @@ h2 {
 
     
 .hierarchy-item-box {
-    /* Fallback für Browser, die color-mix nicht können */
     background-color: var(--bg-element);
-    
-    /* Mische die Cluster-Farbe (falls vorhanden) mit dem Element-Hintergrund */
     background-color: color-mix(
         in srgb, 
         var(--cluster-border-color, var(--bg-element)) var(--cluster-box-bg-opacity), 
         var(--bg-element)
     );
-
     border-width: var(--cluster-box-border-width);
     border-style: solid;
     border-color: var(--cluster-border-color, var(--border-main));
@@ -312,10 +268,8 @@ h2 {
 }
 
   
-
 .hierarchy-item-box:hover {
     border-color: var(--cluster-border-color, var(--color-primary-hover));
-    
     background-color: color-mix(
         in srgb, 
         var(--cluster-border-color, var(--bg-element)) var(--cluster-box-bg-opacity-hover), 
@@ -334,7 +288,6 @@ h2 {
     white-space: nowrap;
 }
 
-/* --- NEW STYLES FOR COLLAPSIBLE HIERARCHY --- */
 .hierarchy-list-wrapper {
     position: relative;
     padding-left: 20px; 
@@ -370,11 +323,9 @@ h2 {
 	overflow: hidden;
 	max-height: 500px;
 	opacity: 1;
-	transition: max-height 0.3s ease-out, opacity 0.2s ease-out,
-		padding-left 0.3s ease-out;
+	transition: max-height 0.3s ease-out, opacity 0.2s ease-out, padding-left 0.3s ease-out;
 }
 
-/* 1. Alle li-Elemente im eingeklappten Zustand komplett kollabieren lassen */
 .hierarchy-list-wrapper.is-collapsed .hierarchy-list li {
 	max-height: 0;
 	min-height: 0;
@@ -383,7 +334,6 @@ h2 {
 	visibility: hidden;
 }
 
-/* 2. NUR das letzte li-Element wieder sichtbar und groß machen */
 .hierarchy-list-wrapper.is-collapsed .hierarchy-list li:last-child {
 	max-height: 120px;
 	min-height: 24px;
@@ -449,7 +399,6 @@ h2 {
     overflow-y: auto;
     scrollbar-gutter: stable;
     scrollbar-width: thin;
-    /* #5f6368 (thumb) #303134 (track) */
     scrollbar-color: var(--border-main) var(--bg-surface); 
 }
 
@@ -480,7 +429,6 @@ h2 {
 /* ==   HIERARCHY CONNECTORS & INDICATORS (GEOMETRIC FIX)           == */
 /* =================================================================== */
 
-/* 1. Konsistente Höhe für Listenelemente */
 .hierarchy-list li {
     position: relative;
     display: flex;
@@ -489,10 +437,9 @@ h2 {
     padding-left: calc(var(--indent-level) * 15px);
 }
 
-/* 2. Der PFEIL (>) */
 #neighbor-viz-content > .hierarchy-container .hierarchy-list li[style*="--indicator-color"]::before,
 #serendipity-viz-content > .hierarchy-container .hierarchy-list li[style*="--indicator-color"]::before {
-    content: ''; /* Kein Textzeichen mehr! */
+    content: ''; 
     position: absolute;
     width: 6px;
     height: 6px;
@@ -505,7 +452,6 @@ h2 {
     line-height: 0;
 }
 
-/* 3. Der FARBLOSE Strich */
 #neighbor-viz-content > .hierarchy-container .hierarchy-list li:not([style*="--indicator-color"]):not([style*="--indent-level: 0;"])::before,
 #serendipity-viz-content > .hierarchy-container .hierarchy-list li:not([style*="--indicator-color"]):not([style*="--indent-level: 0;"])::before {
     content: '';
@@ -515,10 +461,9 @@ h2 {
     width: 8px;
     height: 0;
     border-top: 1.75px solid var(--text-quaternary);
-    transform: translateY(-50%); /* Exakte geometrische Mitte */
+    transform: translateY(-50%); 
 }
 
-/* 4. Die L-förmige Verbindungslinie (Der Connector) */
 #neighbor-viz-content > .hierarchy-container .hierarchy-list li[style*="--indicator-color"][style*="--parent-indent-level"]::after,
 #serendipity-viz-content > .hierarchy-container .hierarchy-list li[style*="--indicator-color"][style*="--parent-indent-level"]::after {
     content: '';
@@ -545,7 +490,6 @@ h2 {
     background-color: var(--bg-surface);
     border: 1px solid var(--border-main);
     border-radius: 12px;
-    
     contain: layout paint;
     position: relative;
 }
@@ -554,7 +498,7 @@ h2 {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: clamp(2px, 1cqi, 10px); /* Lücke schrumpft mit */
+    gap: clamp(2px, 1cqi, 10px); 
     margin-bottom: 15px;
     border-bottom: 1px solid var(--border-subtle);
     padding-bottom: 15px;
@@ -574,11 +518,7 @@ h2 {
     font-size: clamp(6px, 2.8cqi, 14px);
     padding: 6px clamp(2px, 1cqi, 15px);
     cursor: pointer;
-    transition: 
-        background-color 0.2s ease, 
-        color 0.2s ease, 
-        border-color 0.2s ease, 
-        box-shadow 0.2s ease;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
     flex: 0 1 auto;
     min-width: 0;
 }
@@ -594,18 +534,19 @@ h2 {
 
 .viz-stack-container {
     position: relative;
-	overflow: hidden;
     width: 100%;
     background-color: var(--bg-deep); 
     border-radius: 8px;
-    pointer-events: auto;
+    contain: strict; 
+    overflow: clip; 
+    transform: translateZ(0); 
 }
 
 .export-btn {
     position: absolute;
     top: 12px;
     right: 12px;
-    z-index: 10;
+    z-index: 30;
     width: 32px;
     height: 32px;
     background-color: var(--bg-element);
@@ -635,13 +576,8 @@ h2 {
     height: 100%;
 }
 
-#viz-layer-own-base, #viz-layer-nc-base {
-    z-index: 1; 
-    pointer-events: auto; 
-}
-
+#viz-layer-own-base, #viz-layer-nc-base { z-index: 1; pointer-events: auto; }
 #viz-layer-own-points, #viz-layer-nc-points { z-index: 2; } 
-
 #viz-layer-own-context-img, #viz-layer-nc-context-img { z-index: 3; }
 
 #viz-layer-own-outlines-svg, #viz-layer-nc-outlines-svg { 
@@ -654,7 +590,6 @@ h2 {
 .outline-path {
     stroke-width: var(--stroke-width-px, 1.5px);
 }
-
 
 #viz-layer-own-labels-svg, #viz-layer-nc-labels-svg {
     z-index: 7; 
@@ -703,23 +638,27 @@ h2 {
 /* ==                 	OWN IDEA VS NEIGHBORS		                == */
 /* =================================================================== */
 .viz-content-pane {
-    /* Wir nehmen sie wieder in den Fluss */
-    position: relative; 
+    position: absolute !important; 
+    top: 0;
+    left: 0;
     width: 100%;
-    height: auto; /* Höhe passt sich dem Inhalt an */
-    overflow: visible; /* Keine internen Scrollbalken mehr! */
+    min-height: 100vh;
+    height: auto; 
+    overflow: visible !important; /* Kein innerer Scrollbar */
     
-    /* Standardmäßig ausblenden */
     display: none;
-    
-    /* Wichtig für deine Swipe-Animation: */
     transform-origin: top center;
-    padding: 20px 0 20px 0; 
+
+	background: var(--bg-app);    
+    padding: 110px 0 20px 0 !important; 
+    
+    transform: translateZ(0);
+    z-index: 5;
+    transition: none;
 }
 
 .viz-content-pane.active {
     display: block;
-    /* transform: translateX(0); <-- Kann raus oder bleiben, stört meist nicht */
 }
 
 .viz-content-pane.is-swiping {
@@ -732,6 +671,16 @@ h2 {
 .viz-content-pane.is-animating {
 	transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
+
+/* --- WICHTIG: DIE FEHLENDE BEGRENZUNG WIEDER HERGESTELLT --- */
+.viz-content-pane > * {
+    max-width: 900px;
+    margin-inline: auto;
+    width: 90%;
+}
+
+.viz-content-pane > hr { margin: 30px auto !important; }
+.viz-content-pane > *:first-child { margin-top: 0 !important; }
 
 .viz-toggle-header {
     flex: 0 0 auto; 
@@ -828,16 +777,13 @@ h2 {
 }
 
 .topic-tab.active {
-    /* Fallback war #8ab4f8 -> color-primary */
     background-color: var(--active-cluster-color, var(--color-primary));
     border-color: var(--active-cluster-color, var(--color-primary));
     font-weight: 500;
-    /* Fallback war #202124 -> text-on-accent */
 	color: var(--active-cluster-text-color, var(--text-on-accent));
 }
 
 .tab-score {
-    /* War rgba(0, 0, 0, 0.1) -> Black mit 10% */
     background-color: rgba(var(--bg-black-rgb), 0.1);
     padding: 2px 6px;
     border-radius: 10px;
@@ -849,7 +795,6 @@ h2 {
     margin-bottom: 25px;
 }
 .active-cluster-card-container .result-card {
-    /* Fallback war #8ab4f8 -> color-primary */
     border-color: var(--active-cluster-color, var(--color-primary));
 }
 
@@ -857,7 +802,6 @@ h2 {
     padding-top: 4px;
     padding-left: 4px;
     padding-right: 4px;
-    /* Fallback war #444746 -> border-subtle */
     border: 1px solid var(--active-cluster-color, var(--border-subtle));
     border-radius: 12px;
     min-height: 400px;
@@ -888,12 +832,7 @@ h2 {
 
 .skeleton-item {
     background-color: var(--bg-element);
-    /* Gradient von bg-element zu bg-element-hover und zurück */
-    background-image: linear-gradient(to right, 
-        var(--bg-element) 0%, 
-        var(--bg-element-hover) 20%, 
-        var(--bg-element) 40%, 
-        var(--bg-element) 100%);
+    background-image: linear-gradient(to right, var(--bg-element) 0%, var(--bg-element-hover) 20%, var(--bg-element) 40%, var(--bg-element) 100%);
     background-repeat: no-repeat;
     background-size: 800px 104px;
     border-radius: 6px;
@@ -955,21 +894,9 @@ h2 {
 /* ==             HIGHLIGHTING FOR CLICKED CARDS                    == */
 /* =================================================================== */
 @keyframes flash {
-  0% {
-    box-shadow: 
-      inset 0 0 0px 2000px rgba(var(--color-primary-rgb), 0.2),
-      0 0 0px 0px rgba(var(--color-primary-rgb), 0.7);
-  }
-  40% {
-     box-shadow: 
-      inset 0 0 0px 2000px rgba(var(--color-primary-rgb), 0.25),
-      0 0 10px 15px rgba(var(--color-primary-rgb), 0);
-  }
-  100% {
-    box-shadow: 
-      inset 0 0 0px 2000px rgba(var(--color-primary-rgb), 0),
-      0 0 0px 0px rgba(var(--color-primary-rgb), 0);
-  }
+  0% { box-shadow: inset 0 0 0px 2000px rgba(var(--color-primary-rgb), 0.2), 0 0 0px 0px rgba(var(--color-primary-rgb), 0.7); }
+  40% { box-shadow: inset 0 0 0px 2000px rgba(var(--color-primary-rgb), 0.25), 0 0 10px 15px rgba(var(--color-primary-rgb), 0); }
+  100% { box-shadow: inset 0 0 0px 2000px rgba(var(--color-primary-rgb), 0), 0 0 0px 0px rgba(var(--color-primary-rgb), 0); }
 }
 
 .result-card.highlight {
@@ -995,24 +922,7 @@ h2 {
 
 
 /* =================================================================== */
-/* ==                 		NO RESULTS MESSAGE		                == */
-/* =================================================================== */
-.no-results-message {
-    padding: 60px 20px;
-    text-align: center;
-    color: var(--text-quaternary);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
-}
-.no-results-message i {
-    font-size: 2.5rem;
-    color: var(--text-disabled);
-}
-
-/* =================================================================== */
-/* ==       TOOLTIP & RESPONSIVE ANPASSUNGEN (KORRIGIERTE VERSION)  == */
+/* ==       TOOLTIP & RESPONSIVE ANPASSUNGEN                          == */
 /* =================================================================== */
 
 .tippy-box[data-theme~='custom-card'] .result-card {
@@ -1058,10 +968,6 @@ h2 {
     }
 }
 
-/* =================================================================== */
-/* ==       TOOLTIP-SPEZIFISCHE ÜBERSCHREIBUNGEN                      == */
-/* =================================================================== */
-
 .tippy-box .result-summary p.expandable-abstract {
     max-height: 14em; 
 }
@@ -1078,13 +984,14 @@ h2 {
 /* ==             MOBILE SELECTION SCOPING (ISOLATION)              == */
 /* =================================================================== */
 
-/* 1. Isolation: Die Karte als unabhängigen Inhalt definieren */
 .result-card {
-    /* 'contain' hilft dem Browser, Grenzen für Rendering & Selection zu erkennen */
     contain: layout style; 
+    contain: layout style paint; 
+    content-visibility: auto;
+    contain-intrinsic-size: 0 250px;
+    transform: translateZ(0);
 }
 
-/* 2. UI-Elemente unselektierbar machen (Die Grenzen schaffen) */
 .result-header,
 .result-score,
 .source-link,
@@ -1094,12 +1001,10 @@ h2 {
 .topic-tabs-scroller,
 .download-btn-styled,
 .content-header-flex button {
-    -webkit-user-select: none; /* Safari / Chrome */
-    user-select: none;         /* Standard */
+    -webkit-user-select: none;
+    user-select: none;         
 }
 
-/* 3. Den eigentlichen Inhalt explizit als Text markieren */
-/* Das zwingt den Browser, hier den Fokus für die Auswahl zu setzen */
 .result-summary,
 .expandable-abstract,
 .result-payload {
@@ -1108,39 +1013,56 @@ h2 {
     cursor: text;
 }
 
-/* Optional: Verhindert, dass Klicks auf den Expand-Button Text markieren */
 .expand-button {
     -webkit-user-select: none;
     user-select: none;
 }
 
 /* =================================================================== */
-/* ==       SCROLL, SCREENSHOT & PRINT FIX (FINALE VERSION)         == */
+/* ==       SCROLL, SCREENSHOT & PRINT FIX (NATIVE VARIANTE)        == */
 /* =================================================================== */
 
-/* 1. Body ist der alleinige Scroller */
-html, body {
+html {
     height: auto !important;
     min-height: 100%;
-	overscroll-behavior-y: none;
-}
-
-body {
+    overscroll-behavior-y: none;
+    overflow-y: scroll !important; /* Erzwingt GENAU EINEN Scrollbar auf Root-Ebene */
     overflow-x: hidden !important;
 }
 
-/* 2. Der Hauptcontainer ist nur noch ein Rahmen ohne eigene Höhe */
-.results-container {
-    position: relative;
-    width: 100%;
-    max-width: none !important;
-    height: auto !important; /* WICHTIG: Keine feste Höhe mehr! */
-    min-height: 100dvh;
-    padding: 0 !important;
-    overflow: hidden; /* Verhindert, dass swipe-Animationen überlaufen */
+body {
+    height: auto !important;
+    min-height: 100%;
+    overflow: visible !important; /* Verhindert zweiten Scrollbar auf dem Body */
 }
 
-/* 3. Header bleibt fixiert */
+/* Der Scroll-Proxy MUSS im Hintergrund unsichtbar die Höhe aufspannen */
+#scroll-proxy {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    width: 1px;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    z-index: -1;
+    display: block !important;
+}
+
+.results-container {
+    position: relative;
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important; 
+    min-height: 100dvh;
+    padding: 0 !important;
+    overflow: visible !important; /* WICHTIG: Verhindert Abschneiden der absoluten Tabs */
+}
+
+/* Nur WÄHREND des Wischens kappen wir den Überlauf auf der X-Achse */
+.results-container.is-swiping {
+    overflow-x: hidden !important;
+}
+
 .viz-toggle-header {
 	position: fixed;
 	top: 0;
@@ -1156,8 +1078,6 @@ body {
 	box-sizing: border-box;
 }
 
-/* WICHTIG: Wenn wir manuell eingreifen (Klasse vom JS), muss die Transition AUS sein, 
-   sonst "schwimmt" der Header hinterher */
 .viz-toggle-header.is-manual-scroll {
 	transition: none !important;
 }
@@ -1167,46 +1087,9 @@ body {
 	html[data-is-offline="true"] .viz-toggle-header { padding: 0 15px !important; }
 }
 
-/* 4. TABS: Fixierte Fenster, die NICHT MEHR SELBST SCROLLEN */
-.viz-content-pane {
-    position: fixed !important;
-    top: 0;
-    left: 0;
-    width: 100%;
-    
-    min-height: 100vh; 
-    height: auto; 
-    
-    display: none;
-    overflow: visible !important;
-    
-    padding-top: 110px !important;
-    
-    background: var(--bg-app);
-    z-index: 5;
-	transition: none;
-	
-	will-change: transform;
-	backface-visibility: hidden;
-	transform: translate3d(0, 0, 0);
-}
-
-/* --- LOGIK ZUM VERSTECKEN & PADDING-FIX (JETZT PER JS GESTEUERT) --- */
 body.is-header-hidden .viz-toggle-header {
     transform: translateY(-100%);
 }
-.results-container.is-swiping .viz-content-pane {
-    transition: none;
-}
-
-/* --- INHALTS-STYLING (BLEIBT GLEICH) --- */
-.viz-content-pane > * {
-    max-width: 900px;
-    margin-inline: auto;
-    width: 90%;
-}
-.viz-content-pane > hr { margin: 30px auto !important; }
-.viz-content-pane > *:first-child { margin-top: 0 !important; }
 
 /* =================================================================== */
 /* ==       	    Menu Button auf header höhe			            == */
@@ -1218,31 +1101,32 @@ body.is-header-hidden .viz-toggle-header {
     justify-content: center !important;
     background: transparent;
     border: none !important;
-    z-index: 110 !important; 
+    z-index: 2000 !important; 
 }
 
 @media (max-width: 768px) {
-	/* Der Button verschwindet mit, wenn der Header versteckt wird */
     body.is-header-hidden .menu-trigger {
         transform: translateY(-150%) !important;
     }
 }
 
 @media (min-width: 768px) {
-	/* Der Button verschwindet nicht, wenn der Header versteckt wird */
     body.is-header-hidden .menu-trigger {
         transform: translateY(0%) !important;
     }
 }
 
-
-
 @media (max-width: 768px) {
-    
-    /* Offline: Container auf volle Breite ziehen, damit keine gelben Ränder (Margins) entstehen */
     html[data-is-offline="true"] .results-container {
         width: 100% !important;
         margin: 0 !important;
     }
+}
+
+
+
+
+body.is-swiping-active .result-card {
+    content-visibility: visible !important;
 }
 

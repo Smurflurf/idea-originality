@@ -200,7 +200,7 @@ async function navigateTo(url, pushState = true) {
         let pageName = path.split('/')[0] || 'index';
         pageName = pageName.replace('.html', '');
 
-        await loadLanguageData(currentLang, ['common', pageName]);
+        await loadLanguageData(currentLang, ['common', 'index', 'results', pageName]);
 
         await swapStyles(newDoc);
         await swapBodyContent(newDoc);

@@ -1,76 +1,34 @@
-/**
- * FPS Monitor - Korrigierte Singleton-Version
- */
+import { renderTemplate } from '/script/core/templateManager.js';
 
 let isInitialized = false;
 let animationId = null;
 
 export function initFPSMonitor() {
-    // 1. Singleton-Check: Existiert der Monitor bereits im DOM?
-    let wrapper = document.getElementById('fps-counter-wrapper');
-    
-    if (wrapper) {
-        console.log('[FPS] Monitor already exists, skipping creation.');
+    let wrapper = renderTemplate('fps-counter-wrapper');
+    if (!wrapper) return;
+
+    if (wrapper.dataset.eventsAttached === 'true') {
         return;
     }
-
-    console.log('[FPS] Initializing Monitor...');
-
-    // 2. Container erstellen
-    wrapper = document.createElement('div');
-    wrapper.id = 'fps-counter-wrapper';
-    wrapper.popover = "manual"; 
     
-    // Initial: Nicht persistent, da versteckt
-    wrapper.setAttribute('data-is-persistent', 'false');
-
-    wrapper.style.cssText = `
-        inset: auto; 
-        margin: 0; 
-        position: fixed; 
-        top: 5px; 
-        right: 0px; 
-        z-index: 2147483647; 
-        display: none; 
-        flex-direction: row; 
-        align-items: flex-start; 
-        pointer-events: auto; 
-        background: rgba(0,0,0,0.8); 
-        padding: 4px; 
-        border-radius: 4px; 
-        backdrop-filter: blur(4px); 
-        cursor: pointer; 
-        border: 1px solid rgba(255,255,255,0.1); 
-        gap: 4px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-    `;
-    
-    // Canvas & Context Setup
     const canvas = document.createElement('canvas');
     const PR = Math.round(window.devicePixelRatio || 1);
-    const CSS_WIDTH = 250;
-    const CSS_HEIGHT = 60; 
+    const CSS_WIDTH = 100;  
+    const CSS_HEIGHT = 45;  
     const WIDTH = CSS_WIDTH * PR;
     const HEIGHT = CSS_HEIGHT * PR;
+    
     canvas.width = WIDTH;
     canvas.height = HEIGHT;
     canvas.style.cssText = `width:${CSS_WIDTH}px; height:${CSS_HEIGHT}px; display:block; border-right: 1px solid #444; flex-shrink: 0;`;
+    
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = '#111';
     ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-    const infoPanel = document.createElement('div');
-    infoPanel.style.cssText = `
-        background: transparent; color: #00ff00; font-family: 'Courier New', monospace; 
-        font-size: 11px; padding-left: 4px; line-height: 1.3; width: 80px; 
-        height: ${CSS_HEIGHT}px; display: flex; flex-direction: column; 
-        justify-content: space-between; user-select: none; flex-shrink: 0;
-    `;
-    infoPanel.innerHTML = 'init...';
-
-    wrapper.appendChild(canvas);
-    wrapper.appendChild(infoPanel);
-    document.body.appendChild(wrapper);
+    const infoPanel = wrapper.querySelector('.fps-info-panel');
+    infoPanel.style.height = `${CSS_HEIGHT}px`; 
+    wrapper.insertBefore(canvas, infoPanel);
 
     // --- SECRET TRIGGER LOGIC (Globaler Schutz) ---
     if (!isInitialized) {
@@ -128,15 +86,20 @@ export function initFPSMonitor() {
     let lastGraphY = HEIGHT; 
     let lastPitGraphY = HEIGHT; 
     const UPDATE_DIVIDER = 2; 
-    let frameSkipCounter = 0;
+	let frameSkipCounter = 0;
 
-    wrapper.addEventListener('click', () => {
-        pitFps = 120; pitHoldTime = 0; maxFps = 0; avgFps = 60; fpsHistory = [];
-        ctx.fillStyle = '#111';
-        ctx.fillRect(0, 0, WIDTH, HEIGHT);
-        lastGraphY = HEIGHT; lastPitGraphY = HEIGHT; 
-        infoPanel.innerHTML = '<span style="color:#fff">RESET</span>';
-    });
+	wrapper.addEventListener('click', () => {
+		pitFps = 120; pitHoldTime = 0; maxFps = 0; avgFps = 60; fpsHistory = [];
+		ctx.fillStyle = '#111';
+		ctx.fillRect(0, 0, WIDTH, HEIGHT);
+		lastGraphY = HEIGHT; lastPitGraphY = HEIGHT;
+
+		infoPanel.textContent = '';
+		const resetSpan = document.createElement('span');
+		resetSpan.style.color = '#fff';
+		resetSpan.textContent = 'RESET';
+		infoPanel.appendChild(resetSpan);
+	});
 
     function updateGraph(fps) {
         const now = performance.now();
@@ -159,59 +122,78 @@ export function initFPSMonitor() {
         ctx.fillRect(WIDTH - scrollStep, y60, scrollStep, 1 * PR); 
         ctx.fillRect(WIDTH - scrollStep, y30, scrollStep, 1 * PR);
 
-        const scaledPit = Math.min(pitFps, 70);
-        const currentPitY = HEIGHT - ((scaledPit / 70) * graphHeight);
-        ctx.lineWidth = 1.5 * PR; ctx.strokeStyle = '#ff3333'; ctx.beginPath();
-        ctx.moveTo(WIDTH - scrollStep * 2, lastPitGraphY); ctx.lineTo(WIDTH - (scrollStep/2), currentPitY);
-        ctx.stroke(); lastPitGraphY = currentPitY;
+		const scaledPit = Math.min(pitFps, 70);
+		const currentPitY = HEIGHT - ((scaledPit / 70) * graphHeight);
+		ctx.lineWidth = 1 * PR; // <--- Dünnere Linien für den kleinen Graph
+		ctx.strokeStyle = '#ff3333'; ctx.beginPath();
+		ctx.moveTo(WIDTH - scrollStep * 2, lastPitGraphY);
+		ctx.lineTo(WIDTH - scrollStep, currentPitY); 
+		ctx.stroke(); lastPitGraphY = currentPitY;
 
-        const scaledFps = Math.min(fps, 70); 
-        const currentY = HEIGHT - ((scaledFps / 70) * graphHeight);
-        ctx.lineWidth = 2 * PR; ctx.strokeStyle = '#3399ff'; ctx.beginPath();
-        ctx.moveTo(WIDTH - scrollStep * 2, lastGraphY); ctx.lineTo(WIDTH - (scrollStep/2), currentY);
-        ctx.stroke(); lastGraphY = currentY;
+		// Blaue Linie (FPS)
+		const scaledFps = Math.min(fps, 70);
+		const currentY = HEIGHT - ((scaledFps / 70) * graphHeight);
+		ctx.lineWidth = 1 * PR; // <--- Dünnere Linien
+		ctx.strokeStyle = '#3399ff'; ctx.beginPath();
+		ctx.moveTo(WIDTH - scrollStep * 2, lastGraphY);
+		ctx.lineTo(WIDTH - scrollStep, currentY); 
+		ctx.stroke(); lastGraphY = currentY;
+
     }
 
-    function animate() {
-        const currentWrapper = document.getElementById('fps-counter-wrapper');
-        // Falls das Element gelöscht wurde (nicht persistent beim Seitenwechsel), Loop stoppen!
-        if (!currentWrapper) {
-            animationId = null;
-            return; 
-        }
+	function animate() {
+		const currentWrapper = document.getElementById('fps-counter-wrapper');
+		// Falls das Element gelöscht wurde (nicht persistent beim Seitenwechsel), Loop stoppen!
+		if (!currentWrapper) {
+			animationId = null;
+			return;
+		}
 
-        if (currentWrapper.style.display !== 'none') {
-            const time = performance.now();
-            frames++;
-            if (time >= prevTime + 1000) {
-                const fps = Math.round((frames * 1000) / (time - prevTime));
-                if (fps > 0) {
-                    fpsHistory.push(fps);
-                    if (fpsHistory.length > 20) fpsHistory.shift(); 
-                    const sum = fpsHistory.reduce((a, b) => a + b, 0);
-                    avgFps = Math.round(sum / fpsHistory.length);
-                    infoPanel.innerHTML = `
-                        <span style="color:#3399ff; font-weight:bold; font-size:12px;">NOW:${fps}</span>
-                        <span style="color:#aaa">AVG:${avgFps}</span>
-                        <span style="color:#ff3333">PIT:${Math.round(pitFps)}</span>
-                    `;
-                }
-                prevTime = time;
-                frames = 0;
-            }
+		if (currentWrapper.style.display !== 'none') {
+			const time = performance.now();
+			frames++;
+			if (time >= prevTime + 1000) {
+				const fps = Math.round((frames * 1000) / (time - prevTime));
+				if (fps > 0) {
+					fpsHistory.push(fps);
+					if (fpsHistory.length > 20) fpsHistory.shift();
+					const sum = fpsHistory.reduce((a, b) => a + b, 0);
+					avgFps = Math.round(sum / fpsHistory.length);
 
-            frameSkipCounter++;
-            if (frameSkipCounter >= UPDATE_DIVIDER) {
-                const instantFps = 1000 / (time - (window._lastFrameTime || time));
-                window._lastFrameTime = time;
-                if (isFinite(instantFps)) updateGraph(instantFps);
-                frameSkipCounter = 0;
-            } else {
-                window._lastFrameTime = time; 
-            }
-        }
-        animationId = requestAnimationFrame(animate);
-    }
+					infoPanel.textContent = '';
+
+					const spanNow = document.createElement('span');
+					spanNow.style.cssText = 'color:#3399ff; font-weight:bold; font-size:12px;';
+					spanNow.textContent = `NOW:${fps}`;
+
+					const spanAvg = document.createElement('span');
+					spanAvg.style.cssText = 'color:#aaa';
+					spanAvg.textContent = `AVG:${avgFps}`;
+
+					const spanPit = document.createElement('span');
+					spanPit.style.cssText = 'color:#ff3333';
+					spanPit.textContent = `PIT:${Math.round(pitFps)}`;
+
+					infoPanel.appendChild(spanNow);
+					infoPanel.appendChild(spanAvg);
+					infoPanel.appendChild(spanPit);
+				}
+				prevTime = time;
+				frames = 0;
+			}
+
+			frameSkipCounter++;
+			if (frameSkipCounter >= UPDATE_DIVIDER) {
+				const instantFps = 1000 / (time - (window._lastFrameTime || time));
+				window._lastFrameTime = time;
+				if (isFinite(instantFps)) updateGraph(instantFps);
+				frameSkipCounter = 0;
+			} else {
+				window._lastFrameTime = time;
+			}
+		}
+		animationId = requestAnimationFrame(animate);
+	}
 
     // Nur einen Loop starten
     if (!animationId) {

@@ -1,26 +1,25 @@
-import { triggerPositionUpdateForViz } from '/script/viz/core/zoomAndPan.js';
-import { applyColorCoding } from '/script/ui/base/colorCoder.js'; 
+import { triggerPositionUpdateForViz, requestSnapshotUpdate, deactivateAllVisualizations } from '/script/viz/core/zoomAndPan.js';
+import { applyColorCoding } from '/script/ui/base/colorCoder.js';
 
 // =========================================================================
 // KONFIGURATION & STATE
 // =========================================================================
 
-export let availableTabs = []; 
-let isSwitchingTab = false; 
-let currentResizeObserver = null; 
+export let availableTabs = [];
+let isSwitchingTab = false;
 
-const HEADER_HEIGHT = 90; 
+const HEADER_HEIGHT = 90;
 
 // State für Header-Synchronisation
 let lastScrollY = 0;
 let overlayWantsOpen = false;
 
 let headerDomCache = {
-    visible: null,
-    pos: null,
-    transform: null,
-    transition: null,
-    manualClass: null
+	visible: null,
+	pos: null,
+	transform: null,
+	transition: null,
+	manualClass: null
 };
 
 // =========================================================================
@@ -30,186 +29,169 @@ let headerDomCache = {
 const tabScrollRegistry = {};
 
 export function getCurrentTabIndex() {
-    return availableTabs.findIndex(t => t.content.classList.contains('active'));
+	return availableTabs.findIndex(t => t.content.classList.contains('active'));
 }
 
 export function clearAvailableTabs() {
-    availableTabs = [];
+	availableTabs = [];
 }
 
 function getCompensatedScroll(paneId) {
-    const entry = tabScrollRegistry[paneId];
-    return entry ? entry.y : 0; 
+	const entry = tabScrollRegistry[paneId];
+	return entry ? entry.y : 0;
 }
-
 
 export function getScrollYForTabIndex(index) {
-    if (index < 0 || index >= availableTabs.length) return 0;
-    
-    if (isSwitchingTab) {
-        return getCompensatedScroll(availableTabs[index].content.id);
-    }
+	if (index < 0 || index >= availableTabs.length) return 0;
 
-    const isCurrentActive = availableTabs[index].content.classList.contains('active');
-    return isCurrentActive ? window.scrollY : getCompensatedScroll(availableTabs[index].content.id);
-}
-
-// =========================================================================
-// SCROLL SYNC LOGIC
-// =========================================================================
-
-let currentSyncTarget = null;
-
-let ticking = false;
-function syncPaneScroll() {
-	if (!ticking && !isSwitchingTab && !document.body.classList.contains('is-swiping-active')) {
-		window.requestAnimationFrame(() => {
-			if (currentSyncTarget) {
-				currentSyncTarget.style.transform = `translate3d(0, -${window.scrollY}px, 0)`;
-			}
-			ticking = false;
-		});
-		ticking = true;
+	const tab = availableTabs[index];
+	if (tab.content.classList.contains('active')) {
+		return window.scrollY; // WICHTIG: Behebt den Sprung nach unten beim ersten Swipe!
 	}
+
+	if (isSwitchingTab) {
+		return getCompensatedScroll(tab.content.id);
+	}
+
+	return getCompensatedScroll(tab.content.id);
 }
+
+function startBackgroundPreRender() {
+	// BUGFIX: Erhöht auf 4000ms! Lass dem Nutzer Zeit, die Seite flüssig zu betreten.
+	// Nach 4 Sekunden ist meistens eine erste Lese-Pause erreicht.
+	setTimeout(async () => {
+		const { captureAndSetSnapshot } = await import('/script/viz/core/zoomAndPan.js');
+
+		for (const tab of availableTabs) {
+			if (tab.content.classList.contains('active')) continue;
+
+			const vizContainer = tab.content.querySelector('.viz-stack-container');
+			if (vizContainer && !vizContainer.classList.contains('has-snapshot')) {
+
+				triggerPositionUpdateForViz(vizContainer.id, true);
+
+				// Wir zwingen den Snapshot in einen echten Idle-Frame des Browsers
+				await new Promise(resolve => {
+					const doRender = async () => {
+						await captureAndSetSnapshot(vizContainer.id);
+						resolve();
+					};
+					if ('requestIdleCallback' in window) {
+						requestIdleCallback(doRender, { timeout: 2000 });
+					} else {
+						setTimeout(doRender, 100);
+					}
+				});
+
+				// Die Pause zwischen den Tabs von 500ms auf 800ms erhöhen
+				await new Promise(r => setTimeout(r, 800));
+			}
+		}
+	}, 4000);
+}
+
+// =========================================================================
+// SCROLL SYNC LOGIC (NATIV)
+// =========================================================================
 
 function setupScrollSyncFor(pane, fromSwipe = false) {
-    const scrollProxy = document.getElementById('scroll-proxy');
-    if (!scrollProxy || !pane) return;
+	const scrollProxy = document.getElementById('scroll-proxy');
+	if (scrollProxy) scrollProxy.style.display = 'none'; // Proxy ausblenden
 
-    isSwitchingTab = true; 
+	if (!pane) return;
 
-    if (currentResizeObserver) currentResizeObserver.disconnect();
-    window.removeEventListener('scroll', syncPaneScroll);
-    
-    currentSyncTarget = pane;
+	isSwitchingTab = true;
 
-    // 1. Layout lesen (Teuer, aber nur 1x beim Tab-Wechsel)
-    const targetHeight = pane.scrollHeight;
-    
-    // 2. Layout schreiben
-    scrollProxy.style.height = `${targetHeight}px`;
+	const targetY = getCompensatedScroll(pane.id);
 
-    const targetY = getCompensatedScroll(pane.id);
+	headerDomCache = { visible: null, pos: null, transform: null, transition: null, manualClass: null };
 
-    // Header Cache resetten, damit beim Tab-Wechsel sicher neu gezeichnet wird
-    headerDomCache = { visible: null, pos: null, transform: null, transition: null, manualClass: null };
-    
-    updateHeaderForScrollY(targetY, null, true, fromSwipe);
+	updateHeaderForScrollY(targetY, null, true, fromSwipe);
 
-    window.scrollTo({
-        top: targetY,
-        left: 0,
-        behavior: 'instant'
-    });
+	// Hardwarebeschleunigter nativer Sprung, statt JS-Transform
+	window.scrollTo({
+		top: targetY,
+		left: 0,
+		behavior: 'instant'
+	});
 
-    pane.style.transform = `translate3d(0, -${targetY}px, 0)`;
+	// FIX: Transform nicht auf 'none' setzen, sondern leeren!
+	// So bleibt das CSS 'transform: translateZ(0)' aktiv und der Browser
+	// verliert beim ersten Swipe nicht den GPU-Containing-Block.
+	pane.style.transform = ''; 
 
-    requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-            isSwitchingTab = false;
-            window.addEventListener('scroll', syncPaneScroll, { passive: true });
-            
-            currentResizeObserver = new ResizeObserver((entries) => {
-                // OPTIMIERUNG: Nur schreiben wenn sich wirklich was ändert
-                const newHeight = entries[0].target.scrollHeight;
-                if (scrollProxy.style.height !== `${newHeight}px`) {
-                    scrollProxy.style.height = `${newHeight}px`;
-                }
-            });
-            currentResizeObserver.observe(pane);
-        });
-    });
+	requestAnimationFrame(() => {
+		isSwitchingTab = false;
+	});
 }
-
 // =========================================================================
 // HEADER LOGIC (FIXED)
 // =========================================================================
 
 export function updateHeaderForScrollY(currentY, isScrollingUp = false, forceUpdate = false, fromSwipe = false) {
-    const root = document.body;
-    const header = document.querySelector('.viz-toggle-header');
-    const menuBtn = document.getElementById('menu-trigger');
+	const root = document.body;
+	const header = document.querySelector('.viz-toggle-header');
+	const menuBtn = document.getElementById('menu-trigger');
 
-    if (!header) return;
+	if (!header) return;
 
-    // === SCHRITT 1: ZUSTAND ERMITTELN ===
-    const isZone1 = currentY <= HEADER_HEIGHT;
-    const isOverscroll = currentY < 0;
+	const isZone1 = currentY <= HEADER_HEIGHT;
+	const isOverscroll = currentY < 0;
 
-    // Intent (Absicht) berechnen: Will der User das Overlay sehen?
-    if (forceUpdate) {
-        // FIX: Wir messen die VISUELLE Sichtbarkeit des alten Tabs!
-        // lastScrollY beinhaltet hier noch exakt die Scroll-Position des Tabs, den wir verlassen.
-        let wasVisuallyOpen = overlayWantsOpen; 
-        
-        // Wenn der Nutzer ganz oben war, hat er den Header zu 100% gesehen (egal was der interne Intent sagt)
-        if (lastScrollY < (HEADER_HEIGHT / 2)) {
-            wasVisuallyOpen = true; 
-        }
-        
-        // Wir übernehmen die visuelle Wahrheit als neuen Intent
-        overlayWantsOpen = wasVisuallyOpen;
+	if (forceUpdate) {
+		let wasVisuallyOpen = overlayWantsOpen;
+		if (lastScrollY < (HEADER_HEIGHT / 2)) {
+			wasVisuallyOpen = true;
+		}
+		overlayWantsOpen = wasVisuallyOpen;
+		if (currentY === 0) {
+			overlayWantsOpen = false;
+		}
+	} else {
+		if (isOverscroll || currentY === 0) {
+			overlayWantsOpen = false;
+		} else if (!isZone1 && isScrollingUp !== null) {
+			overlayWantsOpen = isScrollingUp;
+		}
+	}
 
-        // Ausnahme: Wenn wir auf dem neuen Tab EXAKT oben (Y=0) landen, zwingen wir den Intent 
-        // auf false, damit der Header beim Runterscrollen wieder ganz normal natürlich mitscrollt.
-        if (currentY === 0) {
-            overlayWantsOpen = false;
-        }
-    } else {
-        // Normales Scroll-Verhalten
-        if (isOverscroll || currentY === 0) {
-            overlayWantsOpen = false;
-        } else if (!isZone1 && isScrollingUp !== null) {
-            overlayWantsOpen = isScrollingUp;
-        }
-    }
+	let isVisible = true;
+	let pos = 'absolute';
+	let useTransition = false;
 
-    // === SCHRITT 2: RENDER-REGELN FESTLEGEN ===
-    let isVisible = true;
-    let pos = 'absolute';
-    let useTransition = false;
+	if (isOverscroll) {
+		isVisible = true;
+		pos = 'fixed';
+		useTransition = false;
+	} else if (isZone1) {
+		isVisible = true;
+		if (overlayWantsOpen) {
+			pos = 'fixed';
+			useTransition = !forceUpdate;
+		} else {
+			pos = 'absolute';
+			useTransition = false;
+		}
+	} else {
+		isVisible = overlayWantsOpen;
+		pos = 'fixed';
 
-    if (isOverscroll) {
-        isVisible = true;
-        pos = 'fixed';
-        useTransition = false;
-    } else if (isZone1) {
-        isVisible = true;
-        if (overlayWantsOpen) {
-            // Wenn der Intent "Offen" ist, halten wir ihn fixed fest, damit er nicht rausscrollt
-            pos = 'fixed';
-            useTransition = !forceUpdate; // Keine Animation beim Tab-Wechsel, nur beim Scrollen
-        } else {
-            pos = 'absolute';
-            useTransition = false;
-        }
-    } else {
-        // Zone 2 (> 90px)
-        isVisible = overlayWantsOpen;
-        pos = 'fixed';
+		if (!isVisible && headerDomCache.pos === 'absolute') {
+			useTransition = false;
+		} else {
+			useTransition = !forceUpdate;
+		}
+	}
 
-        // Animation ausschalten bei Tab-Wechsel oder wenn wir nach unten in Zone 2 eintreten
-        //const crossingDownwards = (lastScrollY <= HEADER_HEIGHT && currentY > HEADER_HEIGHT && !forceUpdate);
-        //useTransition = !(forceUpdate || crossingDownwards);
-		useTransition = !forceUpdate;
-    }
-
-	// === SCHRITT 3: DOM UPDATES (Nur hier!) ===
-
-	// Wir schreiben nur in den DOM, wenn sich der Wert geändert hat.
-
-	// 1. Sichtbarkeit (Class auf Body)
 	if (headerDomCache.visible !== isVisible) {
 		if (isVisible) root.classList.remove('is-header-hidden');
 		else root.classList.add('is-header-hidden');
 		headerDomCache.visible = isVisible;
 	}
 
-	// 2. Position
 	if (headerDomCache.pos !== pos) {
 		header.style.position = pos;
-		header.style.top = '0'; // Statisch, kaum Kosten
+		header.style.top = '0';
 		if (menuBtn && window.innerWidth <= 768) {
 			menuBtn.style.setProperty('position', pos, 'important');
 			menuBtn.style.top = '12px';
@@ -217,7 +199,6 @@ export function updateHeaderForScrollY(currentY, isScrollingUp = false, forceUpd
 		headerDomCache.pos = pos;
 	}
 
-	// 3. Transform (Overscroll Fix)
 	const transformVal = isOverscroll ? 'translateY(0)' : '';
 	if (headerDomCache.transform !== transformVal) {
 		header.style.transform = transformVal;
@@ -225,7 +206,6 @@ export function updateHeaderForScrollY(currentY, isScrollingUp = false, forceUpd
 		headerDomCache.transform = transformVal;
 	}
 
-	// 4. Transition
 	const transitionVal = useTransition ? '' : 'none';
 	if (headerDomCache.transition !== transitionVal) {
 		header.style.transition = transitionVal;
@@ -233,7 +213,6 @@ export function updateHeaderForScrollY(currentY, isScrollingUp = false, forceUpd
 		headerDomCache.transition = transitionVal;
 	}
 
-	// 5. Manual Scroll Class
 	const manualClassVal = (pos === 'absolute' || isOverscroll);
 	if (headerDomCache.manualClass !== manualClassVal) {
 		if (manualClassVal) header.classList.add('is-manual-scroll');
@@ -242,64 +221,65 @@ export function updateHeaderForScrollY(currentY, isScrollingUp = false, forceUpd
 	}
 }
 
-// Wird beim Swipen gerufen
 export function syncHeaderStateForTab(newScrollY) {
-    lastScrollY = newScrollY;
-    // Wir tun so, als wäre es ein "forceUpdate" (Tab Wechsel)
-    updateHeaderForScrollY(newScrollY, null, true, true);
+	lastScrollY = newScrollY;
+	updateHeaderForScrollY(newScrollY, null, true, true);
 }
 
 export function syncAllTabsToHeaderState() {
-    // Diese Funktion dient nur der Vorbereitung des Swipes (damit Tabs nicht springen)
-    // Sie ändert NICHT den sichtbaren Header-Zustand.
-    const root = document.body;
-    const currentY = window.scrollY;
-    const isHeaderHidden = root.classList.contains('is-header-hidden');
-    
-    let hState = 'OVERLAY_OPEN';
-    if (currentY <= HEADER_HEIGHT) hState = 'STATIC';
-    else if (isHeaderHidden) hState = 'OVERLAY_CLOSED';
+	const root = document.body;
+	const currentY = window.scrollY;
+	const isHeaderHidden = root.classList.contains('is-header-hidden');
 
-    availableTabs.forEach(tab => {
-        const paneId = tab.content.id;
-        if (tab.content.classList.contains('active')) {
-            tabScrollRegistry[paneId] = { y: currentY };
-            return;
-        }
-        const entry = tabScrollRegistry[paneId];
-        let targetY = entry ? entry.y : 0;
+	let hState = 'OVERLAY_OPEN';
+	if (currentY <= HEADER_HEIGHT) hState = 'STATIC';
+	else if (isHeaderHidden) hState = 'OVERLAY_CLOSED';
 
-        if (hState === 'STATIC') {
-            if (targetY <= HEADER_HEIGHT) targetY = currentY; 
-        } else if (hState === 'OVERLAY_CLOSED') {
-            if (targetY < HEADER_HEIGHT) targetY = HEADER_HEIGHT; 
-        } else if (hState === 'OVERLAY_OPEN') {
-            if (targetY <= HEADER_HEIGHT) targetY = 0; 
-        }
-        tabScrollRegistry[paneId] = { y: targetY };
-    });
+	availableTabs.forEach(tab => {
+		const paneId = tab.content.id;
+		if (tab.content.classList.contains('active')) {
+			tabScrollRegistry[paneId] = { y: currentY };
+			return;
+		}
+		const entry = tabScrollRegistry[paneId];
+		let targetY = entry ? entry.y : 0;
+
+		if (hState === 'STATIC') {
+			if (targetY <= HEADER_HEIGHT) targetY = currentY;
+		} else if (hState === 'OVERLAY_CLOSED') {
+			if (targetY < HEADER_HEIGHT) targetY = HEADER_HEIGHT;
+		} else if (hState === 'OVERLAY_OPEN') {
+			if (targetY <= HEADER_HEIGHT) targetY = 0;
+		}
+		tabScrollRegistry[paneId] = { y: targetY };
+	});
 }
 
 function initializeScrollHiding() {
-    const root = document.body;
-    lastScrollY = window.scrollY;
+	const root = document.body;
+	lastScrollY = window.scrollY;
 
-    window.addEventListener('scroll', () => {
-        if (isSwitchingTab || document.body.classList.contains('is-swiping-active')) {
-            lastScrollY = window.scrollY; // Trotzdem Position für später merken
-            return;
-        }
-        
-        const currentY = window.scrollY;
-        const diff = currentY - lastScrollY;
-        
-        // --- FIX 1: Puffer gegen Micro-Scrolls beim reinen Antippen ---
-        if (Math.abs(diff) < 5 && currentY > 0) return;
+	window.addEventListener('scroll', () => {
+		if (isSwitchingTab || document.body.classList.contains('is-swiping-active')) {
+			lastScrollY = window.scrollY;
+			return;
+		}
 
-        const isScrollingUp = diff < 0;
-        updateHeaderForScrollY(currentY, isScrollingUp);
-        lastScrollY = currentY;
-    }, { passive: true });
+		const currentY = window.scrollY;
+		const diff = currentY - lastScrollY;
+
+		// WICHTIG: Die native Scrollposition sofort für den aktiven Tab cachen
+		const currentActive = availableTabs.find(t => t.content.classList.contains('active'));
+		if (currentActive) {
+			tabScrollRegistry[currentActive.content.id] = { y: currentY };
+		}
+
+		if (Math.abs(diff) < 5 && currentY > 0) return;
+
+		const isScrollingUp = diff < 0;
+		updateHeaderForScrollY(currentY, isScrollingUp);
+		lastScrollY = currentY;
+	}, { passive: true });
 }
 
 // =========================================================================
@@ -307,120 +287,122 @@ function initializeScrollHiding() {
 // =========================================================================
 
 export function activateTabByIndex(index, fromSwipe = false) {
-    if (index < 0 || index >= availableTabs.length) return;
-    const target = availableTabs[index];
-    activateView(target.btn, target.content, fromSwipe);
+	if (index < 0 || index >= availableTabs.length) return;
+	const target = availableTabs[index];
+	activateView(target.btn, target.content, fromSwipe);
 }
 
 function activateView(btnToActivate, contentToActivate, fromSwipe = false) {
-    const currentActive = availableTabs.find(t => t.content.classList.contains('active'));
-    
-    if (currentActive) {
-        tabScrollRegistry[currentActive.content.id] = { y: window.scrollY };
-        currentActive.btn.classList.remove('active');
-        currentActive.content.classList.remove('active');
-        currentActive.content.style.display = 'none';
-    }
+	deactivateAllVisualizations();
 
-    btnToActivate.classList.add('active');
-    contentToActivate.style.display = 'block';
-    contentToActivate.classList.add('active');
+	const currentActive = availableTabs.find(t => t.content.classList.contains('active'));
 
-    setupScrollSyncFor(contentToActivate, fromSwipe);
+	if (currentActive) {
+		tabScrollRegistry[currentActive.content.id] = { y: window.scrollY };
+		currentActive.btn.classList.remove('active');
+		currentActive.content.classList.remove('active');
+		currentActive.content.style.display = 'none';
+	}
 
-    requestAnimationFrame(() => {
-        applyColorCoding();
-        const vizContainer = contentToActivate.querySelector('.viz-stack-container');
-        if (vizContainer) triggerPositionUpdateForViz(vizContainer.id);
-    });
+	btnToActivate.classList.add('active');
+	contentToActivate.style.display = 'block';
+	contentToActivate.classList.add('active');
+
+	setupScrollSyncFor(contentToActivate, fromSwipe);
+
+	requestAnimationFrame(() => {
+		applyColorCoding();
+		const vizContainer = contentToActivate.querySelector('.viz-stack-container');
+		if (vizContainer) {
+			triggerPositionUpdateForViz(vizContainer.id);
+
+			if (!vizContainer.classList.contains('has-snapshot')) {
+				if ('requestIdleCallback' in window) {
+					requestIdleCallback(() => requestSnapshotUpdate(vizContainer.id), { timeout: 1500 });
+				} else {
+					setTimeout(() => requestSnapshotUpdate(vizContainer.id), 400);
+				}
+			}
+		}
+	});
 }
 
+
 // =========================================================================
-// INITIALIZATION (MIT WIEDERHERGESTELLTEN BUTTONS)
+// INITIALIZATION
 // =========================================================================
 
 export function initializeVisualizationToggles() {
-    const btnOwn = document.getElementById('show-own-viz');
-    const btnNeighbor = document.getElementById('show-neighbor-viz');
-    const btnSerendipity = document.getElementById('show-serendipity-viz');
-    
-    const contentOwn = document.getElementById('own-viz-content');
-    const contentNeighbor = document.getElementById('neighbor-viz-content');
-    const contentSerendipity = document.getElementById('serendipity-viz-content');
+	const btnOwn = document.getElementById('show-own-viz');
+	const btnNeighbor = document.getElementById('show-neighbor-viz');
+	const btnSerendipity = document.getElementById('show-serendipity-viz');
 
-    availableTabs = [];
-    if (btnOwn && contentOwn) availableTabs.push({ btn: btnOwn, content: contentOwn });
-    if (btnNeighbor && contentNeighbor) availableTabs.push({ btn: btnNeighbor, content: contentNeighbor });
-    if (btnSerendipity && contentSerendipity) availableTabs.push({ btn: btnSerendipity, content: contentSerendipity });
+	const contentOwn = document.getElementById('own-viz-content');
+	const contentNeighbor = document.getElementById('neighbor-viz-content');
+	const contentSerendipity = document.getElementById('serendipity-viz-content');
 
-    const initialActive = availableTabs.find(t => t.content.classList.contains('active'));
-    if (initialActive) setupScrollSyncFor(initialActive.content);
-    else if (availableTabs.length > 0) activateTabByIndex(0);
-    
-    availableTabs.forEach((tab, index) => {
-        tab.btn.addEventListener('click', () => {
-            if (tab.content.classList.contains('active')) {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            } else {
-                activateTabByIndex(index);
-            }
-        });
-    });
+	availableTabs = [];
+	if (btnOwn && contentOwn) availableTabs.push({ btn: btnOwn, content: contentOwn });
+	if (btnNeighbor && contentNeighbor) availableTabs.push({ btn: btnNeighbor, content: contentNeighbor });
+	if (btnSerendipity && contentSerendipity) availableTabs.push({ btn: btnSerendipity, content: contentSerendipity });
 
-    // --- BUTTON TOGGLES (WIEDERHERGESTELLT) ---
-    ['own', 'nc', 'serendipity'].forEach(prefix => { 
-        
-        // 1. Einfache Toggles (Ein Button -> Ein Ziel)
-        const setup = (id, targetId, startActive = true) => {
-            const btn = document.getElementById(id);
-            const target = document.getElementById(targetId);
-            if (!btn) return; // Button existiert nicht im DOM -> Überspringen
-            
-            // Initialer Zustand
-            btn.classList.toggle('active', startActive);
-            if(target) target.style.display = startActive ? 'block' : 'none';
-            
-            btn.onclick = (e) => {
-                // Verhindert Bubbling (wichtig für Zoom/Pan)
-                e.stopPropagation(); 
-                const isActive = btn.classList.toggle('active');
-                if(target) target.style.display = isActive ? 'block' : 'none';
-            };
-        };
+	const initialActive = availableTabs.find(t => t.content.classList.contains('active'));
+	if (initialActive) setupScrollSyncFor(initialActive.content);
+	else if (availableTabs.length > 0) activateTabByIndex(0);
 
-        // 2. Gruppen Toggles (Ein Button -> Mehrere Ziele, z.B. Context Outline + Context Label)
-        const setupGroup = (id, targetIds, startActive = false) => {
-            const btn = document.getElementById(id);
-            if (!btn) return;
+	availableTabs.forEach((tab, index) => {
+		tab.btn.addEventListener('click', () => {
+			if (tab.content.classList.contains('active')) {
+				window.scrollTo({ top: 0, behavior: 'smooth' });
+			} else {
+				activateTabByIndex(index);
+			}
+		});
+	});
 
-            const targets = targetIds.map(tid => document.getElementById(tid)).filter(Boolean);
-            
-            btn.classList.toggle('active', startActive);
-            targets.forEach(t => t.style.display = startActive ? 'block' : 'none');
+	['own', 'nc', 'serendipity'].forEach(prefix => {
 
-            btn.onclick = (e) => {
-                e.stopPropagation();
-                const isActive = btn.classList.toggle('active');
-                targets.forEach(t => t.style.display = isActive ? 'block' : 'none');
-            };
-        };
+		const setup = (id, targetId, startActive = true) => {
+			const btn = document.getElementById(id);
+			const target = document.getElementById(targetId);
+			if (!btn) return;
 
-        // --- KONFIGURATION DER BUTTONS ---
-        
-        // Crosshair, Points, Outlines (Standard: AN)
-        setup(`viz-toggle-${prefix}-crosshair`, `viz-layer-${prefix}-crosshair-canvas`, true);
-        setup(`viz-toggle-${prefix}-points`, `viz-layer-${prefix}-points`, true);
-        setup(`viz-toggle-${prefix}-outlines`, `g-outlines-${prefix}-main`, true);
-        
-        // Labels (Standard: AUS, zu unruhig)
-        setup(`viz-toggle-${prefix}-labels`, `g-labels-${prefix}-main`, false);
+			btn.classList.toggle('active', startActive);
+			if (target) target.style.display = startActive ? 'block' : 'none';
 
-        // Neighbors (Div Container) - Nur bei 'own' standardmäßig an, sonst aus
-        setup(`viz-toggle-${prefix}-neighbors`, `dynamic-points-${prefix}-neighbors`, (prefix === 'own'));
+			btn.onclick = (e) => {
+				e.stopPropagation();
+				const isActive = btn.classList.toggle('active');
+				if (target) target.style.display = isActive ? 'block' : 'none';
+				requestSnapshotUpdate(`viz-stack-container-${prefix}`);
+			};
+		};
 
-        // Context (Gruppe aus Outline + Labels) - Standard: AUS
-        setupGroup(`viz-toggle-${prefix}-context`, [`g-outlines-${prefix}-context`, `g-labels-${prefix}-context`], false);
-    });
+		const setupGroup = (id, targetIds, startActive = false) => {
+			const btn = document.getElementById(id);
+			if (!btn) return;
 
-    initializeScrollHiding();
+			const targets = targetIds.map(tid => document.getElementById(tid)).filter(Boolean);
+
+			btn.classList.toggle('active', startActive);
+			targets.forEach(t => t.style.display = startActive ? 'block' : 'none');
+
+			btn.onclick = (e) => {
+				e.stopPropagation();
+				const isActive = btn.classList.toggle('active');
+				targets.forEach(t => t.style.display = isActive ? 'block' : 'none');
+				requestSnapshotUpdate(`viz-stack-container-${prefix}`);
+			};
+		};
+
+		setup(`viz-toggle-${prefix}-crosshair`, `viz-layer-${prefix}-crosshair-canvas`, true);
+		setup(`viz-toggle-${prefix}-points`, `viz-layer-${prefix}-points`, true);
+		setup(`viz-toggle-${prefix}-outlines`, `g-outlines-${prefix}-main`, true);
+		setup(`viz-toggle-${prefix}-labels`, `g-labels-${prefix}-main`, false);
+		setup(`viz-toggle-${prefix}-neighbors`, `dynamic-points-${prefix}-neighbors`, (prefix === 'own'));
+		setupGroup(`viz-toggle-${prefix}-context`, [`g-outlines-${prefix}-context`, `g-labels-${prefix}-context`], false);
+	});
+
+	initializeScrollHiding();
+	startBackgroundPreRender();
 }

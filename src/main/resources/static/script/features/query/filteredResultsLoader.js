@@ -1,22 +1,22 @@
 import { getContext } from '/script/core/context.js';
 import { applyColorCoding, getUiColor, getContrastingTextColor } from "/script/ui/base/colorCoder.js";
 import { initializeDynamicPoints } from '/script/viz/render/clickablePoints.js';
-import { triggerPositionUpdateForViz } from '/script/viz/core/zoomAndPan.js';
+import { triggerPositionUpdateForViz, requestSnapshotUpdate } from '/script/viz/core/zoomAndPan.js';
 import { getCsrfToken } from '/script/core/security.js';
 import { applyGeneralTranslations, t } from '/script/core/localization.js';
 import { emit, EVENTS } from '/script/core/eventBus.js';
 import { initializeAbstractButtonsFor } from '/script/ui/interaction/toggleAbstractButton.js';
 import { registerCleanup } from '/script/core/lifecycleManager.js';
+import { getTemplate } from '/script/core/templateManager.js';
 
-function createSkeletonCardHTML() {
-    const cardHTML = `
-        <div class="skeleton-card">
-            <div class="skeleton-header"><div class="skeleton-item skeleton-score"></div><div class="skeleton-item skeleton-link"></div></div>
-            <div class="skeleton-item skeleton-title"></div><div class="skeleton-item skeleton-line"></div>
-            <div class="skeleton-item skeleton-line"></div><div class="skeleton-item skeleton-line short"></div>
-        </div>
-    `;
-    return cardHTML.repeat(3);
+// Liefert jetzt ein echtes DocumentFragment mit 3 Karten
+function createSkeletonCards() {
+	const frag = document.createDocumentFragment();
+	for (let i = 0; i < 3; i++) {
+		const tpl = getTemplate('tpl-skeleton-card');
+		if (tpl) frag.appendChild(tpl);
+	}
+	return frag;
 }
 
 function initializeTopicTabs(paneId, colorMap, queryVector) {
@@ -45,19 +45,19 @@ function initializeTopicTabs(paneId, colorMap, queryVector) {
 	const vizPrefix = paneId.includes('neighbor') ? 'nc' : 'serendipity';
 	const dynamicPointsContainerId = `dynamic-points-${vizPrefix}-neighbors`;
 
-	const activateTabAndUpdateView = (tabToActivate) => {
+	const activateTabAndUpdateView = (tabToActivate, isUserAction = true) => {
 		if (!tabToActivate || isLoading) return;
 
 		contentPane.querySelector('.topic-tab.active')?.classList.remove('active');
 		tabToActivate.classList.add('active');
 
 		if (tabsContainer) {
-			const containerRect = tabsContainer.getBoundingClientRect();
-			const tabRect = tabToActivate.getBoundingClientRect();
-			if (tabRect.left < containerRect.left || tabRect.right > containerRect.right) {
-				const targetScrollLeft = tabToActivate.offsetLeft - (tabsContainer.clientWidth / 2) + (tabToActivate.clientWidth / 2);
-				tabsContainer.scrollTo({ left: targetScrollLeft, behavior: 'smooth' });
-			}
+			const containerCenter = tabsContainer.clientWidth / 2;
+			const tabCenter = tabToActivate.offsetLeft + (tabToActivate.clientWidth / 2);
+			tabsContainer.scrollTo({
+				left: tabCenter - containerCenter,
+				behavior: 'smooth'
+			});
 		}
 
 		const clusterId = tabToActivate.dataset.clusterId;
@@ -75,7 +75,7 @@ function initializeTopicTabs(paneId, colorMap, queryVector) {
 			contextContainer.innerHTML = dataContent.innerHTML;
 		}
 
-		loadFilteredResults(clusterId);
+		loadFilteredResults(clusterId, isUserAction); // <--- WICHTIG: Parameter weitergeben
 	};
 
 	const initializeView = () => {
@@ -83,7 +83,7 @@ function initializeTopicTabs(paneId, colorMap, queryVector) {
 		isFirstLoad = false;
 		const firstTab = contentPane.querySelector('.topic-tab');
 		if (firstTab) {
-			activateTabAndUpdateView(firstTab);
+			activateTabAndUpdateView(firstTab, false); // <--- FALSE: Das ist keine User-Aktion!
 		}
 	};
 
@@ -130,13 +130,13 @@ function initializeTopicTabs(paneId, colorMap, queryVector) {
 
 	if (contentPane.classList.contains('active')) initializeView();
 	
-    if (tabsContainer) {
-        tabsContainer.addEventListener('click', (event) => {
-            const clickedTab = event.target.closest('.topic-tab');
-            if (clickedTab && !clickedTab.classList.contains('active')) {
-                activateTabAndUpdateView(clickedTab);
-            }
-        });
+	if (tabsContainer) {
+		tabsContainer.addEventListener('click', (event) => {
+			const clickedTab = event.target.closest('.topic-tab');
+			if (clickedTab && !clickedTab.classList.contains('active')) {
+				activateTabAndUpdateView(clickedTab, true); // <--- TRUE
+			}
+		});
     }
 
     if (hierarchyContainer && tabsContainer) {
@@ -146,63 +146,70 @@ function initializeTopicTabs(paneId, colorMap, queryVector) {
 			const clusterId = clickedBox.dataset.clusterId;
 			const correspondingTab = contentPane.querySelector(`.topic-tab[data-cluster-id="${clusterId}"]`);
 			if (correspondingTab) {
-				// Der 'contentPane' ist unser scrollbarer Container
-				const scrollablePane = contentPane;
-
-				// Finde heraus, wie weit die Tab-Leiste vom oberen Rand des Containers entfernt ist
-				const targetOffsetTop = tabsContainer.offsetTop;
-
-				// Scrolle den Container sanft an die richtige Position
-				scrollablePane.scrollTo({
-					top: targetOffsetTop - 20, // -20px Puffer, damit es nicht ganz oben klebt
-					behavior: 'smooth'
-				});
-
-				// Wechsle den Tab wie gewohnt
+				scrollIntoViewSafe(tabsContainer);
 				if (!correspondingTab.classList.contains('active')) {
-					activateTabAndUpdateView(correspondingTab);
+					activateTabAndUpdateView(correspondingTab, true); // <--- TRUE
 				}
 			}
         });
-    }
+	}
 
-    async function loadFilteredResults(clusterId) {
-        if (!filteredResultsContainer) return;
+	function scrollIntoViewSafe(element) {
+		if (!element) return;
+		const rect = element.getBoundingClientRect();
+		const offsetToCenter = rect.top - (window.innerHeight / 2) + (rect.height / 2);
 
-        const contextPrefix = paneId.includes('neighbor') ? 'nc' : 'serendipity';
+		window.scrollBy({
+			top: offsetToCenter,
+			behavior: 'smooth'
+		});
+	}
 
-        function updateUiWithResults(container, results, clusterId) {
-            container.innerHTML = results.html;
+	async function loadFilteredResults(clusterId, isUserAction = true) {
+		if (!filteredResultsContainer) return;
 
-            applyGeneralTranslations(container);
-			applyColorCoding(); 
-			
-            initializeDynamicPoints(
-                dynamicPointsContainerId,
-                results.pointsData,
-                colorMap,
-                contextPrefix
-            );
+		const contextPrefix = paneId.includes('neighbor') ? 'nc' : 'serendipity';
 
-            // --- FIX: Auch hier Buttons initialisieren, falls AJAX fertig wird ---
-            // während der Tab schon offen ist.
-            initializeAbstractButtonsFor(container);
+		function updateUiWithResults(container, results, clusterId, isUserActionCall) {
+			container.innerHTML = results.html;
 
-            setTimeout(() => {
-                const vizStackContainer = contentPane.querySelector('.viz-stack-container');
-                if (vizStackContainer) {
-                    triggerPositionUpdateForViz(vizStackContainer.id);
-                }
-            }, 50);
+			applyGeneralTranslations(container);
+			applyColorCoding();
 
-			emit(EVENTS.FILTERED_RESULTS_RENDERED, { 
-			    containerId: container.id, 
-			    clusterId: clusterId 
+			initializeDynamicPoints(
+				dynamicPointsContainerId,
+				results.pointsData,
+				colorMap,
+				contextPrefix
+			);
+
+			initializeAbstractButtonsFor(container);
+
+			setTimeout(() => {
+				const vizStackContainer = contentPane.querySelector('.viz-stack-container');
+				if (vizStackContainer) {
+					triggerPositionUpdateForViz(vizStackContainer.id);
+
+					// DER FIX: Snapshot NUR anfordern, wenn es ein User-Klick war, 
+					// ODER wenn der Container wirklich noch keinen IDB-Snapshot hat!
+					if (isUserActionCall || !vizStackContainer.classList.contains('has-snapshot')) {
+						if ('requestIdleCallback' in window) {
+							requestIdleCallback(() => requestSnapshotUpdate(vizStackContainer.id), { timeout: 1500 });
+						} else {
+							setTimeout(() => requestSnapshotUpdate(vizStackContainer.id), 600);
+						}
+					}
+				}
+			}, 50);
+
+			emit(EVENTS.FILTERED_RESULTS_RENDERED, {
+				containerId: container.id,
+				clusterId: clusterId
 			});
-        }
+		}
         
         if (resultsCache[clusterId]) {
-            updateUiWithResults(filteredResultsContainer, resultsCache[clusterId], clusterId);
+            updateUiWithResults(filteredResultsContainer, resultsCache[clusterId], clusterId, isUserAction);
             return;
         }
         
@@ -213,7 +220,7 @@ function initializeTopicTabs(paneId, colorMap, queryVector) {
                 const cachedResults = snapshotCache[clusterId];
                 if (cachedResults) {
                     resultsCache[clusterId] = cachedResults;
-                    updateUiWithResults(filteredResultsContainer, cachedResults, clusterId);
+                    updateUiWithResults(filteredResultsContainer, cachedResults, clusterId, isUserAction);
                     return;
                 }
             } catch (e) {
@@ -222,7 +229,8 @@ function initializeTopicTabs(paneId, colorMap, queryVector) {
         }
 
         isLoading = true;
-        filteredResultsContainer.innerHTML = createSkeletonCardHTML();
+		filteredResultsContainer.innerHTML = '';
+		filteredResultsContainer.appendChild(createSkeletonCards());
         
         try {
             const finalQueryVector = (typeof queryVector === 'string') ? JSON.parse(queryVector) : queryVector;
@@ -236,16 +244,23 @@ function initializeTopicTabs(paneId, colorMap, queryVector) {
             });
             
             if (!response.ok) throw new Error(`Server error: ${response.status}`);
-            const results = await response.json();
-            resultsCache[clusterId] = results; 
-            updateUiWithResults(filteredResultsContainer, results, clusterId);
-            
-        } catch (error) {
-            console.error(`Error loading filtered results for ${paneId}:`, error);
-			filteredResultsContainer.innerHTML = `<p style="padding: 20px; text-align: center; color: var(--text-secondary);">${t('errors.results_load_failed')}</p>`;
-        } finally {
-            isLoading = false;
-        }
+			const results = await response.json();
+			resultsCache[clusterId] = results;
+			updateUiWithResults(filteredResultsContainer, results, clusterId, isUserAction);
+
+		} catch (error) {
+			console.error(`Error loading filtered results for ${paneId}:`, error);
+
+			// Error Template einfügen und übersetzen
+			filteredResultsContainer.innerHTML = '';
+			const errTpl = getTemplate('tpl-results-error');
+			if (errTpl) {
+				applyGeneralTranslations(errTpl); 
+				filteredResultsContainer.appendChild(errTpl);
+			}
+		} finally {
+			isLoading = false;
+		}
     }
 
 	registerCleanup(() => {

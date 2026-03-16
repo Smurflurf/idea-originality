@@ -1,6 +1,7 @@
 import { getContext, getJobTitle } from '/script/core/context.js';
 import { getI18nData, t } from '/script/core/localization.js'; 
 import { getCsrfToken } from '/script/core/security.js';
+import { getTemplate, renderTemplate } from '/script/core/templateManager.js';
 
 let offlineLoaderCache = {};
 
@@ -382,6 +383,12 @@ async function createSelfContainedHTML() {
 	    } catch(e) {}
 	`;
 	clonedDocument.head.prepend(safetyScript);
+	
+	const cspMeta = clonedDocument.createElement('meta');
+	cspMeta.httpEquiv = "Content-Security-Policy";
+	// Erlaubt nur inline-styles, inline-scripts, keine externen Requests
+	cspMeta.content = "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:;";
+	clonedDocument.head.prepend(cspMeta);
 
     const restoreVisibility = temporarilyRevealAll(clonedDocument);
 
@@ -470,44 +477,25 @@ async function createSelfContainedHTML() {
         buttonInClone.querySelector('span').textContent = 'Download JSON';
         buttonInClone.querySelector('i').className = 'fa-solid fa-file-arrow-down';
         buttonInClone.setAttribute('data-is-offline-download', 'true');
-        buttonInClone.disabled = false;
-        buttonInClone.classList.remove('loading'); 
-    }
+		buttonInClone.disabled = false;
+		buttonInClone.classList.remove('loading');
+	}
 
-	let bannerText = t('download.offline_banner') || 'Archived version.';
+	const fragment = getTemplate('tpl-offline-archive-banner');
+	if (fragment) {
+		// Wir müssen hier `importNode` verwenden, weil wir von einem anderen
+		// Dokument (dem aktiven) in unser geklontes Dokument importieren.
+		const bannerNode = clonedDocument.importNode(fragment, true);
+		clonedDocument.body.appendChild(bannerNode);
+	}
 
-	const notice = clonedDocument.createElement('div');
-	notice.id = 'offline-archive-banner';
-	notice.style.cssText = `
-		    position: fixed; 
-	        bottom: 0;
-	        left: 0;
-		    width: 100%; 
-		    background: rgba(30, 30, 30, 0.95); 
-		    color: #eee; 
-		    text-align: center; 
-		    padding: 12px 40px; 
-		    font-size: 13px; 
-		    z-index: 2147483647; 
-		    font-family: sans-serif;
-	        box-shadow: 0 -4px 15px rgba(0,0,0,0.4);
-	        display: flex;
-	        justify-content: center;
-	        align-items: center;
-	        backdrop-filter: blur(5px);
-		`;
-	notice.innerHTML = `
-	        <span>${bannerText}</span>
-	        <button id="offline-banner-close" aria-label="Close" style="position: absolute; right: 15px; background: transparent; border: none; color: #aaa; font-size: 20px; cursor: pointer; padding: 5px 10px; line-height: 1;">&times;</button>
-	    `;
-	clonedDocument.body.appendChild(notice);
-
+	// Das Skript zum Schließen des Banners bleibt
 	const closeScript = clonedDocument.createElement('script');
 	closeScript.textContent = `
-	        document.getElementById('offline-banner-close')?.addEventListener('click', function() { 
-	            document.getElementById('offline-archive-banner')?.remove(); 
-	        });
-	    `;
+		        document.getElementById('offline-banner-close')?.addEventListener('click', function() { 
+		            document.getElementById('offline-archive-banner')?.remove(); 
+		        });
+		    `;
 	clonedDocument.body.appendChild(closeScript);
 
 	console.log(" HTML generation complete.");
@@ -627,27 +615,6 @@ const offlineClickListener = async (event) => {
 	}
 };
 
-function createDownloadPopup() {
-	if (document.getElementById('download-popup-overlay')) return;
-	const overlay = document.createElement('div');
-	overlay.id = 'download-popup-overlay';
-	overlay.className = 'download-popup-overlay';
-	overlay.innerHTML = `
-        <div class="download-popup-modal">
-            <div class="download-popup-header"><h2>Download Options</h2><button class="download-popup-close-btn">&times;</button></div>
-            <div class="download-popup-body">
-                <button id="download-html-choice-btn" class="download-choice-btn"><i class="fa-solid fa-file-code"></i> <span>Download Interactive HTML</span></button>
-                <button id="download-json-choice-btn" class="download-choice-btn"><i class="fa-solid fa-file-arrow-down"></i> <span>Download Results as JSON</span></button>
-            </div>
-        </div>`;
-	document.body.appendChild(overlay);
-	activePopup = overlay;
-	overlay.querySelector('.download-popup-close-btn').addEventListener('click', hideDownloadPopup);
-	overlay.addEventListener('click', (e) => { if (e.target === overlay) hideDownloadPopup(); });
-	document.getElementById('download-html-choice-btn').addEventListener('click', () => handleDownloadChoice('html'));
-	document.getElementById('download-json-choice-btn').addEventListener('click', () => handleDownloadChoice('json'));
-}
-
 // Hilfsfunktion zum Sperren/Freigeben des Hintergrunds
 function setBackgroundScroll(locked) {
     const contentSelectors = ['.idea-form', '.results-container', '.legal-content-wrapper', '.no-results-message'];
@@ -668,11 +635,26 @@ function setBackgroundScroll(locked) {
 }
 
 function showDownloadPopup() {
-	if (!activePopup) createDownloadPopup();
+	// Schritt 1: Hole das Popup. Wenn es nicht im DOM ist, erstelle es.
+	activePopup = renderTemplate('download-popup-overlay');
+	if (!activePopup) return;
 
+	// Schritt 2: Binde die Events, aber nur, wenn sie noch nicht gebunden wurden.
+	if (activePopup.dataset.eventsAttached !== 'true') {
+		activePopup.querySelector('.download-popup-close-btn').addEventListener('click', hideDownloadPopup);
+		activePopup.addEventListener('click', (e) => { if (e.target === activePopup) hideDownloadPopup(); });
+
+		activePopup.querySelector('.download-html-choice-btn').addEventListener('click', () => handleDownloadChoice('html'));
+		activePopup.querySelector('.download-json-choice-btn').addEventListener('click', () => handleDownloadChoice('json'));
+
+		activePopup.dataset.eventsAttached = 'true';
+	}
+
+	// Schritt 3: Zeige das Popup an (unverändert).
 	setBackgroundScroll(true);
-
-	setTimeout(() => activePopup.classList.add('is-visible'), 10);
+	setTimeout(() => {
+		if (activePopup) activePopup.classList.add('is-visible');
+	}, 10);
 }
 
 function hideDownloadPopup() {

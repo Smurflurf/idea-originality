@@ -33,6 +33,8 @@ function drawLabels(gContainer, labelData, baseScale, bounds) {
     if (!gContainer || !labelData || !bounds) return;
     gContainer.innerHTML = '';
     
+	const fragment = document.createDocumentFragment();
+	
     const dataWidth = bounds.xmax - bounds.xmin;
     const dataHeight = bounds.ymax - bounds.ymin;
     
@@ -109,9 +111,10 @@ function drawLabels(gContainer, labelData, baseScale, bounds) {
         group.appendChild(whiteLayer);
         group.appendChild(blackLayer);
         group.appendChild(colorLayer);
-        
-        gContainer.appendChild(group);
+		
+		fragment.appendChild(group);
     });
+	gContainer.appendChild(fragment);
 }
 
 export function initializeLabelRenderer(prefix) {

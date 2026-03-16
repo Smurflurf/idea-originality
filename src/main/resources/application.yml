@@ -1,6 +1,25 @@
+server:
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
+  error:
+    include-stacktrace: never
+    include-message: never
+
 spring:
   application:
     name: ideenatlas-mcp-service
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+  main:
+    allow-bean-definition-overriding: true
+  security:
+    user:
+      name: admin
+      password: "dummy-password-to-hide-warning-xd"
   ai:
     mcp:
       server:
@@ -10,9 +29,20 @@ spring:
         transport: SSE
         sse-endpoint: /sse
         sse-message-endpoint: /mcp/message
-        
         capabilities:
           tool: true
           resource: false
           prompt: false
           completion: false
+
+app:
+  version: "@project.version@"
+
+logging:
+  level:
+    # Versteckt die Spring AI MCP Bug-Warnungen
+    org.springframework.context.support.PostProcessorRegistrationDelegate: ERROR
+    # Versteckt die SpringDoc Warnungen
+    org.springdoc.core.utils.SpringDocAppInitializer: ERROR
+    # Versteckt die MCP Versions-Aushandlung
+    #io.modelcontextprotocol.server.McpAsyncServer: ERROR

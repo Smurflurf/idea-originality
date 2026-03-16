@@ -3,6 +3,7 @@ package de.simon.originality.magicquery.python;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
@@ -11,7 +12,10 @@ import java.util.function.Consumer;
 
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
+import org.springframework.http.codec.json.Jackson2JsonEncoder;
+import org.springframework.http.codec.json.JacksonJsonEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.MimeType;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -21,6 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.simon.originality.magicquery.MagicNumbers;
 import reactor.core.publisher.Mono;
+import tools.jackson.databind.json.JsonMapper;
 
 
 /**
@@ -28,23 +33,35 @@ import reactor.core.publisher.Mono;
  */
 @Service
 public class PythonService {
-    private final WebClient webClient;
-    private final ObjectMapper objectMapper;
-    private final PythonServerManager serverManager;
-    public record TranslationResponse(
-        @JsonProperty("translated_text") String translatedText,
-        @JsonProperty("detected_source_lang") String detectedSourceLang,
-        @JsonProperty("target_lang") String targetLang
-    ) {}
-    private List<Map<String, String>> cachedLanguages = null;
-    
-    public PythonService(ObjectMapper objectMapper, PythonServerManager serverManager) {
+	private final WebClient webClient;
+	private final ObjectMapper objectMapper;
+	private final PythonServerManager serverManager;
+
+	public record TranslationResponse(@JsonProperty("translated_text") String translatedText,
+			@JsonProperty("detected_source_lang") String detectedSourceLang,
+			@JsonProperty("target_lang") String targetLang) {
+	}
+
+	private List<Map<String, String>> cachedLanguages = null;
+
+	public PythonService(ObjectMapper objectMapper, PythonServerManager serverManager, WebClient.Builder webClientBuilder) {
         this.objectMapper = objectMapper;
         this.serverManager = serverManager;
-        this.webClient = WebClient.builder()
+
+        // Wir definieren den MimeType explizit mit UTF-8.
+        MimeType utf8Json = new MimeType("application", "json", StandardCharsets.UTF_8);
+
+        this.webClient = webClientBuilder
                 .baseUrl("http://127.0.0.1:5001")
+                .codecs(configurer -> {
+                    configurer.defaultCodecs().jacksonJsonEncoder(
+                        new JacksonJsonEncoder(JsonMapper.builder(), utf8Json)
+                    );
+                })
                 .build();
     }
+
+
     
     private <T> T performRequestWithRetry(String uri, Class<T> responseType) {
         return performRequestWithRetry(uri, null, responseType);
@@ -157,6 +174,7 @@ public class PythonService {
 
                 webClient.post()
                         .uri(uri)
+                        .header(org.springframework.http.HttpHeaders.CONTENT_TYPE, "application/json;charset=UTF-8")
                         .bodyValue(requestBody)
                         .retrieve()
                         .bodyToFlux(DataBuffer.class)
@@ -233,6 +251,7 @@ public class PythonService {
                 // Wir nutzen Flux, um den Stream "live" zu verarbeiten
                 webClient.post()
                         .uri("/translate")
+                        .header(org.springframework.http.HttpHeaders.CONTENT_TYPE, "application/json;charset=UTF-8")
                         .bodyValue(requestBody)
                         .retrieve()
                         .bodyToFlux(String.class) // Holt die Daten stückchenweise als String

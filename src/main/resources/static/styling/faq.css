@@ -1,0 +1,1226 @@
+@import './colours.css';
+
+/* =================================================================== */
+/* ==                 FAQ SEARCH BAR & OVERLAY                      == */
+/* =================================================================== */
+.faq-search-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(0, 0, 0, 0.75);
+	backdrop-filter: blur(var(--blur-strength));
+	z-index: 2100;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.4s ease;
+}
+
+.faq-search-overlay.is-active {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+
+.faq-search-container {
+    position: relative;
+    margin-bottom: 40px;
+    z-index: 1;
+	transition: opacity 0.2s ease; 
+	-webkit-tap-highlight-color: transparent;
+	cursor: text;
+}
+
+#static-faq-search-box,
+#static-faq-search-box * {
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.faq-search-container.is-hidden-by-overlay {
+	opacity: 0 !important;
+	pointer-events: none !important;
+}
+
+.faq-search-container.is-floating.is-animating-from-origin {
+	transition: none !important;
+	transform-origin: top left;
+}
+
+.faq-search-container.is-focused {
+	transform: scale(1.02);
+}
+
+.faq-search-input {
+	width: 100%;
+	padding: 16px 20px 16px 45px;
+	font-size: 1.05rem;
+	border: 1px solid var(--border-main);
+	border-radius: 16px;
+	background-color: var(--bg-app);
+	color: var(--text-primary);
+	transition: all 0.2s ease;
+	outline: none;
+	box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.faq-search-input:focus {
+	border-color: var(--color-primary);
+	background-color: var(--bg-surface);
+	box-shadow: 0 0 0 4px rgba(var(--color-primary-rgb), 0.15), 0 10px 30px
+		rgba(0, 0, 0, 0.3);
+}
+
+.faq-search-icon {
+	position: absolute;
+	left: 18px;
+	top: 50%;
+	transform: translateY(-50%);
+	color: var(--text-quaternary);
+	font-size: 1.1rem;
+}
+
+.faq-input-wrapper {
+	position: relative;
+	width: 100%;
+	/* Wichtig: Wenn der Hauptcontainer wächst, bleibt das hier stabil */
+	flex-shrink: 0;
+	height: 54px; /* Standard Höhe */
+}
+
+/* Anpassung Icon: Bezieht sich jetzt auf den Wrapper */
+.faq-search-container .faq-search-icon {
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	left: 18px;
+	z-index: 2; /* Über dem Input */
+	pointer-events: none;
+}
+
+/* Anpassung Input: Füllt den Wrapper */
+.faq-search-container .faq-search-input {
+	width: 100%;
+	height: 100% !important; /* Füllt den Wrapper komplett */
+	margin: 0;
+}
+
+/* --- FIX: Ergebnisse --- */
+.faq-search-results {
+	background-color: var(--bg-surface);
+	border: 1px solid var(--border-main);
+	border-top: none;
+	border-bottom-left-radius: 16px;
+	border-bottom-right-radius: 16px;
+	border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+
+	margin-top: 5px;
+    position: relative;
+    z-index: 10;
+	display: block;
+	max-height: 0;
+	overflow-y: auto;
+	opacity: 0;
+	transform: translateZ(0);
+	transition: max-height 0.2s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.2s ease;
+	-webkit-overflow-scrolling: touch;
+}
+
+.faq-search-results.is-visible {
+	opacity: 1;
+	/* Border wieder aktivieren wenn offen */
+	border-top: 1px solid var(--border-subtle);
+	max-height: 60vh;
+}
+
+/* Damit der Container Ecken oben hat, wenn unten was dranhängt */
+.faq-search-container {
+	background-color: transparent; /* Container selbst ist unsichtbar */
+}
+
+.faq-search-results.is-active {
+	display: flex;
+}
+
+.faq-search-item {
+	padding: 16px;
+	border-bottom: 1px solid var(--border-subtle);
+	cursor: pointer;
+	transition: background-color 0.2s;
+}
+
+.faq-search-item:hover {
+	background-color: var(--bg-element);
+}
+
+.faq-search-item h4 {
+	margin: 0 0 6px 0;
+	font-size: 1rem;
+	color: var(--color-primary);
+}
+
+.faq-search-item p {
+	margin: 0;
+	font-size: 0.9rem;
+	color: var(--text-secondary);
+	line-height: 1.5;
+}
+
+.faq-search-item p, .faq-search-preview {
+	margin: 0;
+	font-size: 0.9rem;
+	color: var(--text-secondary);
+	line-height: 1.5;
+	display: -webkit-box;
+	line-clamp: 2;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* =================================================================== */
+/* ==                 FAQ CATEGORY CARDS (ROOT)                     == */
+/* =================================================================== */
+.cascade-wrapper {
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+	margin-bottom: 60px;
+	position: relative;
+}
+
+.faq-category-card {
+	background-color: rgba(var(--bg-surface-rgb), 0.75);
+	border: 1px solid var(--border-subtle);
+	border-radius: 16px;
+	margin-bottom: 24px;
+	transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* AKTIV STATUS: Der Container (oder Kinder) sind offen */
+.faq-category-card.has-active-content {
+	border-color: var(--border-main);
+	box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+}
+
+.faq-category-header {
+	width: 100%;
+	padding: 20px 24px;
+	background: transparent;
+	border: none;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	cursor: pointer;
+	transition: opacity 0.2s;
+}
+
+.faq-category-header:hover {
+	opacity: 0.8;
+}
+
+.faq-category-header h3 {
+	margin: 0;
+	font-size: 1.2rem;
+	font-weight: 600;
+	color: var(--text-primary);
+	letter-spacing: -0.2px;
+}
+
+/* =================================================================== */
+/* ==           SMART HEADER ARROW (LOGIC PART 1)                   == */
+/* =================================================================== */
+.faq-category-header .icon-circle {
+	width: 32px;
+	height: 32px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	background-color: transparent;
+	color: var(--text-secondary);
+	/* STANDARD: Unsichtbar & nicht klickbar (Clean Look) */
+	opacity: 0;
+	transform: scale(0.8) rotate(0deg);
+	pointer-events: none;
+	transition: opacity 0.3s ease, transform 0.4s
+		cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s;
+}
+
+/* WENN INHALT AKTIV IST: Pfeil anzeigen & umdrehen (Signalisiert: "Hier schließt du alles") */
+.faq-category-card.has-active-content>.faq-category-header .icon-circle
+	{
+	opacity: 1;
+	transform: scale(1) rotate(180deg);
+	color: var(--color-primary);
+}
+
+/* HOVER: Pfeil leicht andeuten, wenn man drüber fährt */
+.faq-category-header:hover .icon-circle {
+	opacity: 0.4;
+	transform: scale(1) rotate(0deg);
+}
+
+/* HOVER WENN BEREITS AKTIV: Pfeil hervorheben */
+.faq-category-card.has-active-content>.faq-category-header:hover .icon-circle
+	{
+	opacity: 1;
+	background-color: var(--bg-element);
+	transform: scale(1) rotate(180deg);
+}
+
+/* =================================================================== */
+/* ==                 CONTENT BODY (SLIDE)                          == */
+/* =================================================================== */
+.faq-category-body-wrapper {
+	display: grid;
+	grid-template-rows: 0fr;
+	transition: grid-template-rows 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.faq-category-card.has-active-content>.faq-category-body-wrapper {
+	grid-template-rows: 1fr;
+}
+
+.faq-category-body-inner {
+    position: relative;
+	overflow: visible;
+	padding: 0 24px 20px 24px;
+	display: flex;
+	flex-direction: column;
+}
+.faq-category-card .faq-category-card > .faq-category-body-wrapper > .faq-category-body-inner {
+    border-left: none; 
+    margin-left: 24px; 
+    padding-left: 24px;  
+}
+
+.faq-category-card .faq-category-card > .faq-category-body-wrapper > .faq-category-body-inner::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0; 
+    bottom: 5px; 
+    width: 2px;
+    background-color: var(--border-subtle);
+}
+
+/* =================================================================== */
+/* ==                 NESTED CARDS (RECURSIVE)                      == */
+/* =================================================================== */
+.faq-category-card .faq-category-card {
+	border: none !important;
+	box-shadow: none !important;
+	background: transparent !important;
+	border-radius: 0 !important;
+	margin: 24px 0 8px 0;
+	padding: 0;
+}
+
+.faq-category-card .faq-category-card .faq-category-card {
+	padding: 16px !important;
+	margin-top: 16px;
+}
+
+.faq-category-card .faq-category-card>.faq-category-header {
+	padding: 8px 0 12px 0;
+	justify-content: flex-start;
+	gap: 12px;
+}
+
+.faq-category-card .faq-category-card>.faq-category-header h3 {
+	font-size: 0.95rem;
+	font-weight: 600;
+	text-transform: none;
+	color: var(--text-primary);
+}
+
+.faq-category-card .faq-category-card>.faq-category-body-wrapper>.faq-category-body-inner
+	{
+	border-left: none;
+	margin-left: 0;
+	padding: 5px 0 5px 0;
+	gap: 0;
+}
+
+/* =================================================================== */
+/* ==                 FAQ ITEMS (QUESTIONS)                         == */
+/* =================================================================== */
+.faq-item {
+	transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+	border-radius: 12px;
+	margin: 0;
+	background-color: transparent;
+}
+
+/* Dimming Effekt für inaktive Items - Verhindert durch fehlende Selektoren-Begrenzung */
+.faq-category-body-inner:has(>.faq-item.is-open)>.faq-item:not(.is-open)
+	{
+	opacity: 0.4;
+	transform: scale(0.98);
+}
+
+/* --- STATE: CLOSED --- */
+.faq-item:not(.is-open):not(.is-open-inline) {
+	border-bottom: 1px solid var(--border-subtle);
+	border-radius: 0;
+}
+
+.faq-item:not(.is-open):not(.is-open-inline):hover {
+	background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* --- STATE: POP-OUT (Manuell geöffnet) --- */
+.faq-item.is-open {
+	background-color: var(--bg-panel-floating);
+	border: 1px solid var(--border-main);
+	box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+	margin: 16px -24px;
+	padding: 8px 24px;
+	z-index: 10;
+	position: relative;
+	border-radius: 16px;
+}
+
+.faq-question {
+	width: 100%;
+	padding: 16px 8px;
+	background: transparent;
+	border: none;
+	text-align: left;
+	font-size: 1rem;
+	font-weight: 500;
+	color: var(--text-primary);
+	cursor: pointer;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	transition: color 0.2s;
+}
+
+.faq-item.is-open .faq-question {
+	color: var(--text-primary);
+	font-size: 1.05rem;
+	font-weight: 600;
+	padding-bottom: 16px;
+}
+
+/* --- STATE: INLINE (Von Vater-Element "Alle" geöffnet) --- */
+.faq-item.is-open-inline {
+	background-color: transparent;
+	border: none;
+	border-bottom: 1px solid var(--border-subtle);
+	box-shadow: none;
+	margin: 0;
+	padding: 0;
+	border-radius: 0;
+}
+
+.faq-item.is-open-inline .faq-question {
+	color: var(--text-primary);
+	font-size: 1.05rem;
+	font-weight: 600;
+	padding-bottom: 16px;
+}
+
+/* =================================================================== */
+/* ==           SMART ITEM ARROW (LOGIC PART 2)                     == */
+/* =================================================================== */
+.icon-circle-small {
+	color: var(--text-tertiary);
+	font-size: 0.9rem;
+	transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s
+		ease;
+	opacity: 1; /* Standard: Sichtbar */
+}
+
+/* Wenn Item offen ist -> Pfeil drehen */
+.faq-item.is-open .icon-circle-small, .faq-item.is-open-inline .icon-circle-small
+	{
+	transform: rotate(180deg);
+	color: var(--color-primary);
+}
+
+/* WICHTIG: Wenn der Container per Klick auf den Header komplett aufgeklappt wurde,
+   werden die kleinen Pfeile unsichtbar, um Visual Clutter zu vermeiden.
+*/
+.faq-category-card.is-expanded-all>.faq-category-body-wrapper>.faq-category-body-inner>.faq-item .icon-circle-small
+	{
+	opacity: 0;
+}
+
+/* Beim Hovern kommen sie als Hinweis wieder zum Vorschein */
+.faq-category-card.is-expanded-all>.faq-category-body-wrapper>.faq-category-body-inner>.faq-item:hover .icon-circle-small
+	{
+	opacity: 0.6;
+}
+
+/* =================================================================== */
+/* ==                 ANSWER CONTENT & MOCKUPS                      == */
+/* =================================================================== */
+
+/* 1. Header vorbereiten: Flexbox zentriert jetzt den Inhalt */
+.faq-answer-modal .recorder-header {
+	position: relative;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+/* 2. Titel zentrieren und Sicherheitsabstand hinzufügen */
+.faq-answer-modal .faq-answer-title {
+	text-align: center;
+	margin: 0;
+	padding: 0 40px;
+}
+
+/* 3. Das X absolut an den rechten Rand pinnen */
+.faq-answer-modal .recorder-close-btn {
+	position: absolute;
+	right: 24px;
+	top: 50%;
+	transform: translateY(-50%);
+	margin: 0;
+}
+
+.faq-answer-modal {
+	max-height: 85vh !important;
+	max-width: 900px;
+	display: flex;
+	flex-direction: column;
+}
+/* 1. Modal Body darf NICHT mehr scrollen, sondern gibt die Flex-Höhe weiter */
+.faq-answer-modal .recorder-body {
+	flex: 1;
+	overflow: hidden; /* WICHTIG: Kein auto mehr! */
+	display: flex;
+	flex-direction: column;
+	padding-bottom: 20px;
+}
+
+.faq-answer-modal .faq-answer-content-box {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.faq-answer-content {
+	width: 100%;
+	background-color: transparent;
+	border-top: 1px dashed var(--border-subtle);
+	padding: 0px 8px 8px 8px;
+	color: var(--text-secondary);
+	line-height: 1.7;
+	font-size: 0.95rem;
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	overflow: hidden;
+}
+
+.faq-answer-text {
+	flex: 1; 
+	padding-bottom: 16px;
+}
+
+.faq-answer-modal .faq-answer-text {
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	-webkit-overflow-scrolling: touch;
+	padding-right: 12px; 
+}
+
+.faq-answer-wrapper {
+	display: grid;
+	grid-template-rows: 0fr;
+	transition: grid-template-rows 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.faq-item.is-open>.faq-answer-wrapper, .faq-item.is-open-inline>.faq-answer-wrapper
+	{
+	grid-template-rows: 1fr;
+}
+
+.faq-answer-inner {
+	overflow: hidden;
+}
+
+.faq-ui-mockup-box {
+	width: 100%;
+	margin-top: 0px;
+	position: relative;
+	flex-shrink: 0;
+	background-color: rgba(var(--bg-app-rgb), 0.7) !important;
+	border: 1px solid var(--border-subtle);
+	border-radius: 12px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 0px 0px 25px 0px;
+	min-height: 140px;
+	background-image: radial-gradient(var(--border-subtle) 1px, transparent
+		1px);
+	background-size: 16px 16px;
+	background-position: center;
+	box-shadow: inset 0 5px 20px rgba(0, 0, 0, 0.2);
+}
+
+.mockup-badge {
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	background-color: rgba(var(--border-subtle-rgb), 0.4);
+	color: var(--text-secondary);
+	font-size: 0.7rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	padding: 6px 12px;
+	border-top-left-radius: 12px;
+	border-bottom-right-radius: 11px;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	z-index: 2;
+}
+
+/* 1. BASIS (Nebeneinander / Flex) */
+.mockup-content {
+	/* Diese Werte kommen jetzt aus dem CSS, da wir sie im JS gelöscht haben */
+	display: flex;
+	flex-wrap: nowrap;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	gap: 2%;
+	padding: 2%;
+	width: 100%;
+	overflow: visible !important; /* Wichtig, war vorher im JS */
+}
+
+/* 2. GESTAPELT (Übereinander / Grid) */
+.mockup-content.is-stacked {
+	/* !important überschreibt eventuelle Reste von Inline-Styles */
+	display: grid !important;
+	place-items: center;
+	grid-template-areas: "stack";
+	gap: 0; /* Kein Gap beim Stapeln */
+}
+
+/* 3. KIND-ELEMENTE (Die Wrapper um die Bilder) */
+.mockup-content.is-stacked>.mockup-isolation-wrapper {
+	/* Alle Elemente in dieselbe Zelle zwingen */
+	grid-area: stack;
+	/* Grid-Zelle voll ausfüllen */
+	width: 100%;
+	height: 100%;
+	/* Flexbox inside, um das Bild zu zentrieren */
+	display: flex !important;
+	align-items: center;
+	justify-content: center;
+	/* Verhindert, dass der Wrapper größer wird als der Container */
+	min-width: 0;
+	min-height: 0;
+}
+
+/* 4. DAS BILD SELBST */
+.mockup-snapshot-image {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+	background-color: var(--bg-deep);
+	/* Hintergrund nötig, sonst sieht es komisch aus wenn transparent */
+	display: block;
+	border: none !important;
+	/* Rahmen entfernen wir beim Stapeln oft lieber, oder? sonst doppelt */
+	box-shadow: none !important; /* Schatten wird oft auch doppelt */
+}
+
+/* Optional: Nur das unterste Bild kriegt den Rahmen/Hintergrund */
+.mockup-content.is-stacked>.mockup-isolation-wrapper:first-child .mockup-snapshot-image
+	{
+	background-color: var(--bg-deep);
+}
+
+.mockup-content.is-stacked>.mockup-isolation-wrapper:not(:first-child) .mockup-snapshot-image
+	{
+	background-color: transparent; /* Obere Layer transparent */
+}
+
+.faq-item.is-highlighted {
+	animation: pulse-border 2s ease-out;
+}
+
+@keyframes pulse-border { 
+	0% {	
+		border-color: var(--color-primary);
+		box-shadow: 0 0 0 4px rgba(var(--color-primary-rgb), 0.3);
+	}
+	100% {
+		border-color : var(--color-primary ); 
+		box-shadow: 0 0 0 0 rgba(var(--color-primary-rgb),0);
+	} 
+}
+
+.mockup-highlight-effect {
+	border-color: var(--color-primary) !important;
+	box-shadow: 0 0 0 1px var(--color-primary), 0 0 12px
+		rgba(var(--color-primary-rgb), 0.8) !important;
+	outline: none !important;
+	opacity: 1 !important;
+	z-index: 10 !important;
+}
+/* =================================================================== */
+/* ==         GLOBAL FOCUS MODE (SPOTLIGHT EFFECT)                  == */
+/* =================================================================== */
+
+/* REGEL 1: DER TRIGGER
+   Wenn IRGENDWO in unserem Hauptcontainer eine Frage den Pop-out-Status ".is-open" hat...
+*/
+.legal-content-wrapper:has(.faq-item.is-open) {
+	/* ...dann werden alle verschachtelbaren Karten und alle einzelnen Fragen gedimmt und verkleinert. */
+	& .faq-category-card , & .faq-item { opacity:0.4;
+	transform: scale(0.98);
+	transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+}
+
+/* REGEL 2: DIE AUSNAHMEN ("PFAD DES LICHTS")
+   Wir heben die Dimmung für die wichtigen Elemente wieder auf.
+*/
+
+/* A) Die geöffnete Frage selbst muss natürlich voll sichtbar sein. */
+.legal-content-wrapper:has(.faq-item.is-open) .faq-item.is-open {
+	opacity: 1;
+	/* Die Pop-out-Transformation wird von den bestehenden .is-open Regeln übernommen */
+	transform: none;
+}
+
+/* B) ALLE Eltern-Container der geöffneten Frage müssen sichtbar bleiben. */
+.legal-content-wrapper:has(.faq-item.is-open) .faq-category-card:has(.faq-item.is-open)
+	{
+	opacity: 1;
+	transform: scale(1);
+}
+
+/* C) Die Suchleiste soll nicht vom Effekt betroffen sein. */
+.legal-content-wrapper:has(.faq-item.is-open) .faq-search-container {
+	opacity: 1;
+	transform: none; /* Verhindert das Miteinbeziehen in Skalierung */
+}
+
+/* =================================================================== */
+/* ==         		SIDE MENU + DYNAMIC FAQ STYLES                  == */
+/* =================================================================== */
+.faq-arrow-zone {
+	padding: 12px 22px 12px 20px;
+	margin: -12px -22px -12px 0;
+	display: flex;
+	align-items: center;
+}
+
+.faq-submenu-panel {
+	padding: 10px;
+	min-width: 210px;
+}
+
+.faq-btn-spaced {
+	margin-bottom: 12px;
+}
+
+.faq-submenu-separator {
+	height: 1px;
+	background-color: var(--border-subtle);
+	margin: 8px 0;
+}
+
+.sidebar-menu .faq-small-link {
+	justify-content: flex-start !important;
+	font-size: 0.9rem !important;
+	padding: 6px 12px !important;
+	min-height: 0 !important;
+	border-radius: 8px !important;
+}
+
+/* 2. Der Wrapper (span) im Link */
+.sidebar-menu .faq-small-link>span {
+	display: flex;
+	align-items: center;
+	width: auto !important;
+	gap: 10px !important;
+}
+
+/* Das Icon */
+.sidebar-menu .faq-small-link i {
+	width: auto !important;
+	min-width: 14px !important;
+	margin: 0 !important;
+	text-align: center;
+	opacity: 0.6;
+	font-size: 0.9em;
+}
+
+.faq-small-link:hover {
+	color: var(--text-primary);
+}
+
+.faq-small-link .faq-icon-dimmed {
+	opacity: 0.6;
+	font-size: 0.85rem;
+}
+
+.faq-small-link .faq-icon-external {
+	font-size: 0.7em !important;
+	opacity: 0.4;
+}
+
+body.faq-selection-active, body.faq-selection-active * {
+	cursor: none !important;
+	user-select: none !important;
+	-webkit-user-select: none !important;
+}
+
+body.faq-selection-active .custom-translate-cursor {
+    pointer-events: none !important;
+}
+
+body.faq-selection-active .is-disabled,
+body.translate-mode-active .is-disabled {
+	pointer-events: auto !important;
+}
+
+body.faq-selection-active .custom-translate-cursor {
+	color: var(--color-star);
+	text-shadow: 0 0 10px rgba(var(--color-star-rgb), 0.6);
+}
+
+.menu-trigger.is-faq-active {
+	background-color: var(--color-star);
+	color: var(--bg-app);
+	box-shadow: 0 4px 12px rgba(var(--color-star-rgb), 0.4);
+	transform: scale(1.1);
+}
+
+.menu-trigger.is-faq-active.is-scrolled-away {
+	transform: scale(1.1) !important;
+	opacity: 1 !important;
+	pointer-events: auto !important;
+	visibility: visible !important;
+}
+
+.faq-trigger-icon {
+	font-size: 1.4em;
+}
+
+body.faq-selection-active .hierarchy-list li {
+	overflow: visible !important;
+	contain: none !important;
+}
+
+/* Macht den kompletten Container "durchlässig" für Touch-Events -> Wischen klappt! */
+body.faq-selection-active .viz-stack-container {
+    pointer-events: none !important;
+}
+
+/* Holt die klickbaren FAQ-Ziele zurück in den Vordergrund */
+body.faq-selection-active .faq-context-highlight {
+    pointer-events: auto !important;
+}
+
+.faq-context-highlight {
+	outline: 3px dashed rgba(var(--color-star-rgb), 0.7) !important;
+	outline-offset: 3px !important;
+	opacity: 1 !important;
+	transition: outline-color 0.1s ease, outline-width 0.1s ease,
+		outline-offset 0.1s ease, box-shadow 0.1s ease !important;
+}
+
+.faq-context-highlight:hover {
+    outline: 4px solid var(--color-star) !important;
+    outline-offset: 2px !important;
+    
+    /* Wir ändern NICHT background-color, sondern legen ein Overlay per Shadow drüber */
+    box-shadow: 
+        0 4px 20px rgba(var(--color-star-rgb), 0.4), /* Äußerer Glow */
+        inset 0 0 0 1000px rgba(var(--color-star-rgb), 0.4) !important; /* Innerer "Tint" */
+    
+    /* Textfarbe anpassen, damit sie auf dem Gold lesbar ist */
+    color: var(--bg-black) !important;
+    z-index: 50 !important;
+}
+
+.faq-search-modal, .faq-answer-modal {
+	width: 90%;
+	max-width: 900px;
+	min-height: 50px;
+}
+
+.faq-answer-content-box {
+	width: 100%;
+	font-size: 1rem;
+	line-height: 1.6;
+	color: var(--text-secondary);
+	padding: 10px;
+}
+
+/* =================================================================== */
+/* ==           FLOATING SEARCH MODE (Für das Menü Overlay)         == */
+/* =================================================================== */
+.faq-search-container.is-floating {
+	position: fixed;
+	top: 15vh;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 90%;
+	max-width: 900px;
+	z-index: 2110;
+	margin: 0;
+	transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.faq-search-overlay.is-floating-backdrop {
+	z-index: 2100;
+	background-color: rgba(var(--bg-black-rgb), 0.635);
+	backdrop-filter: blur(var(--blur-strength));
+}
+
+/* =================================================================== */
+/* ==         MOBILE FOCUS MODE: BORDER ALIGNMENT                   == */
+/* =================================================================== */
+@media ( max-width : 768px) {
+	/* Haupt-Logik:
+       Wenn ein Item den Pop-Out-Status ".is-open" hat...
+    */
+	.faq-item.is-open {
+		/* 2. Radius-Korrektur:
+           Der Radius des Eltern-Containers (.faq-category-card) ist 16px. Wir reduzieren
+           den Radius der unteren Ecken des Items um die Border-Breite (1px), damit es
+           nahtlos in die Rundung des Elternteils übergeht.
+        */
+		border-bottom-left-radius: 15px;
+		border-bottom-right-radius: 15px;
+		/* 3. Negative Seiten-Margins anpassen:
+           Der Eltern-Container hat 24px padding links/rechts. Wir setzen den
+           negativen Margin des Items auf -25px (-24px padding + -1px border),
+           damit die Ränder perfekt bündig sind.
+        */
+		margin-left: -25px;
+		margin-right: -25px;
+		padding-left: 5px;
+		padding-right: 5px;
+	}
+}
+
+/* =================================================================== */
+/* ==           MOCKUP ENGINE: THE PHANTOM SHELL SYSTEM             == */
+/* =================================================================== */
+
+/* 1. DIE SCHALE (Phantom-Wrapper) 
+   Leitet CSS-Variablen weiter, ist aber layout-technisch unsichtbar.
+*/
+.mockup-shell {
+	position: static !important;
+	display: block !important;
+	width: auto !important;
+	height: auto !important;
+	min-height: 0 !important;
+	max-width: none !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	border: none !important;
+	background: transparent !important;
+	box-shadow: none !important;
+	transform: none !important;
+	opacity: 1 !important;
+	visibility: visible !important;
+	contain: none !important;
+	overflow: visible !important;
+}
+
+/* 2. DER KERN (Das eigentliche Element)
+   Reset für Positionierung, aber KEINE aggressiven Style-Overrides (wie Radius) mehr!
+*/
+.mockup-internal-reset {
+	/* Layout Reset */
+	position: relative !important;
+	top: auto !important;
+	left: auto !important;
+	bottom: auto !important;
+	right: auto !important;
+	transform: none !important;
+	/* Sichtbarkeit */
+	opacity: 1 !important;
+	visibility: visible !important;
+	/* Abstände und Dimensionen */
+	margin: 0 auto !important;
+	width: max-content !important;
+	max-width: 100% !important;
+	height: auto !important;
+	z-index: 5 !important;
+	/* shadows */
+	box-shadow: none;
+}
+
+/* 3. SPEZIALFÄLLE (Targeted Fixes) */
+
+/* --- MEDIA MENU FIX (Dropdown zwingend aufklappen) --- */
+.mockup-internal-reset.media-menu {
+	max-height: none !important;
+	overflow: visible !important;
+	display: block !important;
+	opacity: 1 !important;
+	visibility: visible !important;
+	transform: none !important;
+	padding: 10px !important;
+}
+
+/* Die Liste im Menü sauber formatieren */
+.mockup-internal-reset.media-menu ul {
+	list-style: none !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	display: flex !important;
+	flex-direction: column !important;
+}
+
+/* --- FLEX ROWS (Pillen-Leiste, Content Header) --- */
+.mockup-internal-reset.viz-controls, .mockup-internal-reset.content-header-flex
+	{
+	display: flex !important;
+	flex-direction: row !important;
+	flex-wrap: nowrap !important;
+	/* Verhindert das vertikale Stapeln wie auf dem Screenshot */
+	justify-content: center !important;
+	align-items: center !important;
+	gap: 8px !important;
+	background: transparent !important;
+	border: none !important;
+	padding: 10px 0 !important;
+	width: 100% !important;
+	container-type: normal !important;
+	/* Verhindert Container-Query Glitches (Breite=0) */
+}
+
+/* --- FLEX COLUMNS (Zoom Controls) --- */
+.mockup-internal-reset.zoom-controls {
+	display: flex !important;
+	flex-direction: column !important;
+	gap: 8px !important;
+	width: auto !important;
+	background: transparent !important;
+}
+
+/* --- HEADER FIX (Viz Toggle Header) --- */
+.mockup-internal-reset.viz-toggle-header {
+	width: 100% !important;
+	background-color: var(--bg-app) !important;
+	border-radius: 8px !important;
+	/* Leicht abgerundet für die Vorschau-Box */
+	border: 1px solid var(--border-subtle) !important;
+	padding: 10px 15px !important;
+	display: flex !important;
+	flex-direction: row !important;
+	flex-wrap: nowrap !important;
+	/* Auch hier horizontales Layout erzwingen */
+	justify-content: center !important;
+	align-items: center !important;
+	gap: 15px !important;
+}
+
+/* --- BUTTONS & PILLEN --- */
+.mockup-internal-reset .ctrl-btn {
+	font-size: 13px !important;
+	padding: 6px 12px !important;
+	white-space: nowrap !important;
+	flex: 0 0 auto !important;
+	width: auto !important;
+	height: auto !important;
+	border-radius: 15px !important; /* Pillen-Form */
+}
+
+/* Runde Icon-Buttons (Zoom, Export, etc.) */
+.mockup-internal-reset .zoom-controls button, .mockup-internal-reset .toggle-json-btn,
+	.mockup-internal-reset .record-icon, .mockup-internal-reset .export-btn
+	{
+	display: flex !important;
+	width: 32px !important;
+	height: 32px !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	border-radius: 50% !important; /* Kreis erzwingen */
+	flex-shrink: 0 !important;
+	align-items: center !important;
+	justify-content: center !important;
+}
+
+/* Download Button Fix */
+.mockup-internal-reset.download-btn-styled {
+	display: flex !important;
+	opacity: 1 !important;
+	width: auto !important;
+	padding: 8px 16px !important;
+	white-space: nowrap !important;
+	align-items: center !important;
+	gap: 8px !important;
+}
+
+/* --- RESULT CARDS --- */
+.mockup-internal-reset.result-card {
+	display: block !important;
+	background-color: var(--bg-surface) !important;
+	border: 1px solid var(--border-main) !important;
+	border-radius: 12px !important;
+	padding: 15px !important;
+	width: 100% !important;
+	box-sizing: border-box !important;
+}
+
+/* --- TEXTAREA WRAPPER --- */
+/* Zuvor war das mit .result-card gruppiert, weshalb die Textarea einen falschen Rahmen bekam */
+.mockup-internal-reset.textarea-wrapper {
+	display: block !important;
+	background: transparent !important;
+	border: none !important;
+	padding: 0 !important;
+	width: 100% !important;
+	min-width: 300px !important;
+	/* Sorgt dafür, dass sie im Mockup nicht zerquetscht wird */
+	box-sizing: border-box !important;
+}
+
+/* Textarea Input selbst */
+.mockup-internal-reset textarea {
+	height: auto !important;
+	min-height: 120px !important;
+	/* Eine angenehme, kleinere Höhe für die Vorschau */
+	resize: none !important;
+	width: 100% !important;
+	box-sizing: border-box !important;
+}
+
+/* Text-Inhalte schützen */
+.mockup-internal-reset span {
+	white-space: nowrap !important;
+	display: inline-block !important;
+}
+
+/* --- ISOLATION WRAPPER --- */
+.mockup-isolation-wrapper {
+	width: 100%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	isolation: isolate;
+	z-index: 1;
+	pointer-events: auto !important;
+}
+
+/* --- DEAKTIVIERTE INTERAKTIONEN & VISUELLER RESET (FIX 3) --- */
+
+/* Echte Eingabefelder im Mockup sperren, damit man nicht tippen kann */
+.mockup-internal-reset input, .mockup-internal-reset select,
+	.mockup-internal-reset textarea {
+	pointer-events: none !important;
+}
+
+/* Links entschärfen (damit man nicht wegnavigiert), aber Hover erlauben */
+.mockup-internal-reset a {
+	cursor: default !important;
+	pointer-events: auto !important;
+	/* Klicks passieren im Clone ohnehin meist ohne Effekt, aber Hover bleibt */
+}
+
+/* Stellt sicher, dass Buttons und Trennstriche auf einer perfekten Linie liegen */
+.mockup-internal-reset .viz-toggle-btn,
+.mockup-internal-reset .viz-separator {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+    height: auto !important;
+}
+
+/* Und die inaktiven explizit grau machen */
+.mockup-internal-reset .viz-toggle-btn:not(:hover) {
+	color: var(--text-quaternary) !important;
+}
+
+
+.mockup-internal-reset.menu-trigger {
+	visibility: visible !important;
+	transform: none !important;
+	display: flex !important;
+	position: relative !important; 
+	pointer-events: none !important;
+}
+
+
+.mockup-image-content {
+	/* Reset um sicherzugehen */
+	max-width: none !important;
+	height: auto !important;
+	/* Damit es gut aussieht */
+	display: block;
+	object-fit: contain;
+	background-color: var(--bg-deep); /* Hintergrund falls transparent */
+}
+
+.mockup-snapshot-image {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+	background-color: var(--bg-deep);
+	max-width: none !important;
+	max-height: none !important;
+}
+
+/* WICHTIG: Mobile Anpassung für Bilder im Mockup */
+@media ( max-width : 768px) {
+	.mockup-image-content {
+		/* Auf Mobile begrenzen wir die "native" Größe etwas, 
+           damit die Berechnung in scaleMockupsToFit nicht mit riesigen Werten startet */
+		max-width: 100% !important;
+	}
+}
+
+@media
+(max-width:768px) {
+	/* 1. Container ganz nach oben schieben */
+	.faq-search-container.is-floating {
+		width: 95%;
+	}
+
+	/* 2. Ergebnisse scrollbar halten, aber nicht den ganzen Screen füllen */
+	.faq-search-results {
+		/* 
+           max-height begrenzen. 
+           Wenn die Tastatur offen ist, haben wir oft nur ca. 40-50% der Höhe.
+           50vh ist ein guter Kompromiss.
+        */
+		max-height: 50vh;
+		-webkit-overflow-scrolling: touch; /* Flüssiges Scrollen auf iOS */
+	}
+
+	/* Optional: Input etwas kompakter machen */
+	.faq-search-input {
+		padding-top: 12px;
+		padding-bottom: 12px;
+		font-size: 16px; /* Verhindert Auto-Zoom auf iOS bei Inputs < 16px */
+	}
+}
+
+
+/* =================================================================== */
+/* ==         TOOLTIPS IM FAQ-MODUS DEAKTIVIEREN                    == */
+/* =================================================================== */
+body.faq-selection-active [data-tippy-root] {
+	display: none !important;
+	opacity: 0 !important;
+	pointer-events: none !important;
+}

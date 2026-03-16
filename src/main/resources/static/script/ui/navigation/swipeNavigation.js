@@ -11,8 +11,7 @@ const CONFIG = {
 	rubberBandFactor: 0.4,
 	shadowDistanceDivisor: 100,
 	maxShadowOpacity: 0.6,
-	animDuration: 250, 
-	headerFallbackHeight: 0
+	animDuration: 250
 };
 
 let state = {
@@ -30,7 +29,8 @@ let state = {
 	leftShadow: null,
 	rightShadow: null,
 	didSwipe: false,
-	cachedScrollYs: [] // <-- NEU: Cache für das Scroll-Layout
+	cachedScrollYs:[],
+	cachedViewportY: 0 
 };
 
 let cleanupTimer = null;
@@ -52,7 +52,7 @@ export function initializeSwipeNavigation() {
 	window.addEventListener('mousemove', handleMove);
 	window.addEventListener('mouseup', handleEnd);
 
-	const blockEvents = ['mouseover', 'mouseenter', 'mouseout', 'mouseleave', 'click', 'focusin', 'focusout'];
+	const blockEvents =['mouseover', 'mouseenter', 'mouseout', 'mouseleave', 'click', 'focusin', 'focusout'];
 
 	blockEvents.forEach(eventType => {
 		document.body.addEventListener(eventType, (e) => {
@@ -101,7 +101,7 @@ function setShadowIntensity(shadowEl, amount) {
 function handleStart(e) {
 	if (state.isDragging) return;
 
-	const ignoreSelector = 'input, textarea, .history-link, .topic-tabs-scroller, .attachments-container, .viz-stack-container.is-scroll-zoom-active, .tippy-box';
+	const ignoreSelector = 'input, textarea, .history-link, .topic-tabs-scroller, .attachments-container, .is-scroll-zoom-active, .tippy-box';
 	if (e.target.closest(ignoreSelector)) return;
 	
 	if (window.tippy) {
@@ -109,31 +109,38 @@ function handleStart(e) {
 	}
 
 	if (isAnimating) {
-		if (cleanupTimer) clearTimeout(cleanupTimer);
-		if (tabHidingTimeoutId) clearTimeout(tabHidingTimeoutId);
-		cleanupTimer = null;
-		tabHidingTimeoutId = null;
-		isAnimating = false;
+		return; 
 	}
-
+	
 	if (tabHidingTimeoutId) clearTimeout(tabHidingTimeoutId);
 
 	const isPopupOpen = document.querySelector('.recorder-overlay.is-visible') ||
-		document.querySelector('.download-popup-overlay.is-visible');
+			document.querySelector('.download-popup-overlay.is-visible') ||
+	        document.querySelector('.faq-search-overlay.is-active'); 
 	if (isPopupOpen) return;
 
 	let clientX, clientY, identifier;
 
+	window.isSwiping = true;
+	
 	if (e.type === 'mousedown') {
 		if (e.button !== 0) return;
 
 		const menuEl = document.getElementById('sidebar-menu');
 		const isMenuOpen = menuEl && menuEl.classList.contains('is-open');
 
-		let contentElement = document.querySelector('.idea-form') || document.querySelector('.legal-content-wrapper');
+		let contentElement = null;
+		const candidates = document.querySelectorAll('.idea-form, .legal-content-wrapper');
+		for (const el of candidates) {
+			if (!el.closest('.mockup-isolation-wrapper')) {
+				contentElement = el;
+				break;
+			}
+		}
+
 		if (!contentElement) {
 			const activePane = document.querySelector('.viz-content-pane.active');
-			if (activePane) contentElement = activePane.querySelector('*:not(hr)');
+			if (activePane) contentElement = activePane.querySelector('*:not(hr):not(.mockup-isolation-wrapper)');
 		}
 
 		let maxTriggerWidth = CONFIG.edgeZone;
@@ -180,7 +187,8 @@ function handleStart(e) {
 		leftShadow: lShadow,
 		rightShadow: rShadow,
 		stylesPrepared: false,
-		cachedScrollYs: [] // Cache Reset
+		cachedScrollYs:[],
+		cachedViewportY: 0
 	};
 }
 
@@ -193,6 +201,12 @@ function setSwipeLock(locked) {
 function handleMove(e) {
 	if (!state.isDragging) return;
 
+	if (e.touches && e.touches.length > 1) {
+		state.isDragging = false;
+		cleanupStyles();
+		return;
+	}
+	
 	let clientX, clientY;
 
 	if (state.activeTouchId === 'mouse') {
@@ -283,7 +297,7 @@ function prepareStylesForSwipe() {
 
 	if (availableTabs.length > 0) {
 		availableTabs.forEach(t => {
-			t.content.style.transition = 'none';
+			t.content.style.setProperty('transition', 'none', 'important');
 		});
 	}
 	state.stylesPrepared = true;
@@ -292,53 +306,59 @@ function prepareStylesForSwipe() {
 function prepareAllTabs() {
 	syncAllTabsToHeaderState();
 
-	let currentPaddingTop = '0px';
-	if (state.activeTabIndex >= 0 && availableTabs[state.activeTabIndex]) {
-		const computed = window.getComputedStyle(availableTabs[state.activeTabIndex].content);
-		currentPaddingTop = computed.paddingTop;
-	}
+	// FIX BUG 1: Die exakte vertikale Scroll-Position erst NACH dem Lock speichern, um diagonales "Wackeln" auszugleichen!
+	state.cachedViewportY = window.scrollY;
 
 	if (state.resultsContainer) {
+		const currentDocHeight = document.documentElement.scrollHeight;
+		state.resultsContainer.style.minHeight = `${currentDocHeight}px`;
 		state.resultsContainer.classList.add('is-swiping');
 	}
 
-	// PERFORMANCE FIX 1: Einmaliges Cachen der Y-Positionen für den gesamten Swipe!
-	state.cachedScrollYs = [];
+	state.cachedScrollYs =[];
 
 	availableTabs.forEach((t, i) => {
-		// Y Position cachen um DOM Reads im Loop zu vermeiden
-		state.cachedScrollYs[i] = getScrollYForTabIndex(i);
+		const vizContainer = t.content.querySelector('.viz-stack-container');
+		if (i !== state.activeTabIndex && vizContainer && vizContainer.classList.contains('has-snapshot')) {
+			vizContainer.classList.add('is-swipe-simplified');
+		}	
 		
-		const isNeighbor = Math.abs(i - state.activeTabIndex) <= 1;
+		state.cachedScrollYs[i] = getScrollYForTabIndex(i);
+			
+			const isNeighbor = Math.abs(i - state.activeTabIndex) <= 1;
 
-		if (!isNeighbor) {
-			t.content.style.display = 'none';
-		} else {
-			t.content.style.display = 'block';
-			t.content.style.position = 'absolute';
+			if (!isNeighbor) {		
+				t.content.style.display = 'none';
+			} else {
+				t.content.style.setProperty('transition', 'none', 'important');
+				
+				// FIX: Den Transform VOR dem display: block und Reflow berechnen und setzen!
+				// So sieht der Browser das Element niemals bei X=0 und triggert kein Scroll-Anchoring.
+				const basePos = (i - state.activeTabIndex) * state.containerWidth;
+				const offsetY = (i === state.activeTabIndex) ? 0 : (state.cachedViewportY - state.cachedScrollYs[i]);
+				t.content.style.transform = `translate3d(${basePos}px, ${offsetY}px, 0)`;
+				
+				t.content.style.position = 'absolute';
+				t.content.style.top = '0';
+				t.content.style.left = '0';
+				t.content.style.width = '100%';
 
-			t.content.style.top = '0';
-			t.content.style.left = '0';
-			t.content.style.width = '100%';
+	            // Erst jetzt sichtbar machen
+				t.content.style.display = 'block';
 
-			t.content.style.paddingTop = currentPaddingTop;
-			t.content.style.height = 'auto';
+				void t.content.offsetHeight; // Force Reflow
 
-			t.content.style.willChange = 'transform';
+				requestAnimationFrame(() => {
+					const vizContainer = t.content.querySelector('.viz-stack-container');
+					if (vizContainer) {
+						triggerPositionUpdateForViz(vizContainer.id);
+					}
+				});
+			}
 
-			void t.content.offsetHeight;
-
-			requestAnimationFrame(() => {
-				const vizContainer = t.content.querySelector('.viz-stack-container');
-				if (vizContainer) {
-					triggerPositionUpdateForViz(vizContainer.id);
-				}
-			});
-		}
-
-		const dist = Math.abs(i - state.activeTabIndex);
-		t.content.style.zIndex = 10 - dist;
-	});
+			const dist = Math.abs(i - state.activeTabIndex);
+			t.content.style.zIndex = 10 - dist;
+		});
 }
 
 function executeSwipe(deltaX) {
@@ -397,15 +417,17 @@ function executeSwipe(deltaX) {
 			setShadowIntensity(state.leftShadow, 0);
 			setShadowIntensity(state.rightShadow, 0);
 		}
-
+		
 		availableTabs.forEach((tab, i) => {
 			const basePos = (i - idx) * width;
 			const finalX = basePos + effectiveDelta;
 
-			// HARTE OPTIMIERUNG: Wert kommt aus dem Cache, kein Reflow/DOM-Read mehr!
 			const myScrollY = state.cachedScrollYs[i];
+			
+			// FIX BUG 1: Zwinge den aktuellen Tab hart auf offsetY=0. Er darf sich keinen Pixel nach unten bewegen!
+			const offsetY = (i === idx) ? 0 : (state.cachedViewportY - myScrollY);
 
-			tab.content.style.transform = `translate3d(${finalX}px, -${myScrollY}px, 0)`;
+			tab.content.style.transform = `translate3d(${finalX}px, ${offsetY}px, 0)`;
 		});
 	}
 }
@@ -414,6 +436,8 @@ function executeSwipe(deltaX) {
 function handleEnd(e) {
 	if (!state.isDragging) return;
 
+	window.isSwiping = false;
+	
 	if (state.activeTouchId === 'mouse') {
 	} else {
 		if (!e.changedTouches) return;
@@ -434,7 +458,12 @@ function handleEnd(e) {
 	if (state.overlayEl) state.overlayEl.style.transition = easing;
 	if (state.leftShadow) { state.leftShadow.style.transition = `opacity ${CONFIG.animDuration}ms ease-out`; state.leftShadow.style.opacity = '0'; }
 	if (state.rightShadow) { state.rightShadow.style.transition = `opacity ${CONFIG.animDuration}ms ease-out`; state.rightShadow.style.opacity = '0'; }
-	if (availableTabs.length > 0) { availableTabs.forEach(t => t.content.style.transition = easing); }
+	
+	if (availableTabs.length > 0) { 
+		availableTabs.forEach(t => {
+			t.content.style.transition = easing;
+		}); 
+	}
 
 	let actionTaken = false;
 
@@ -477,8 +506,9 @@ function finalizeTabSwitch(newIndex) {
 
 	availableTabs.forEach((tab, i) => {
 		const finalPos = (i - newIndex) * width;
-		const myScrollY = state.cachedScrollYs[i]; // Auch hier den Cache nutzen
-		tab.content.style.transform = `translate(${finalPos}px, -${myScrollY}px)`;
+		const myScrollY = state.cachedScrollYs[i];
+		const offsetY = (i === state.activeTabIndex) ? 0 : (state.cachedViewportY - myScrollY);
+		tab.content.style.transform = `translate3d(${finalPos}px, ${offsetY}px, 0)`;
 	});
 
 	tabHidingTimeoutId = setTimeout(() => {
@@ -500,8 +530,9 @@ function resetTabs() {
 
 	availableTabs.forEach((tab, i) => {
 		const finalPos = (i - idx) * width;
-		const myScrollY = state.cachedScrollYs[i]; // Cache nutzen
-		tab.content.style.transform = `translate(${finalPos}px, -${myScrollY}px)`;
+		const myScrollY = state.cachedScrollYs[i];
+		const offsetY = (i === idx) ? 0 : (state.cachedViewportY - myScrollY);
+		tab.content.style.transform = `translate3d(${finalPos}px, ${offsetY}px, 0)`;
 	});
 
 	tabHidingTimeoutId = setTimeout(() => {
@@ -521,6 +552,7 @@ function cleanupStyles() {
 	setSwipeLock(false);
 	if (state.resultsContainer) {
 		state.resultsContainer.classList.remove('is-swiping');
+		state.resultsContainer.style.minHeight = ''; 
 	}
 
 	if (state.menuEl) {
@@ -539,14 +571,17 @@ function cleanupStyles() {
 
 	if (availableTabs.length > 0) {
 		availableTabs.forEach(t => {
+			const vizContainer = t.content.querySelector('.viz-stack-container');
+			if (vizContainer) {
+			    vizContainer.classList.remove('is-swipe-simplified');
+			}
+			
 			t.content.style.transition = '';
 			t.content.style.position = '';
 			t.content.style.top = '';
 			t.content.style.left = '';
 			t.content.style.width = '';
-			t.content.style.paddingTop = '';
-			t.content.style.height = '';
-			t.content.style.willChange = '';
+			t.content.style.transform = ''; 
 		});
 
 		window.dispatchEvent(new Event('scroll'));

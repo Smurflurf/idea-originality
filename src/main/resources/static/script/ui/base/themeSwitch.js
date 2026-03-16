@@ -1,3 +1,5 @@
+import { emit, EVENTS } from '/script/core/eventBus.js';
+
 const STORAGE_KEY = 'ideenatlas-theme';
 const DARK = 'dark';
 const LIGHT = 'light';
@@ -17,6 +19,7 @@ function applyTheme(themeSetting) {
         effectiveTheme = getSystemTheme();
     }
     document.documentElement.setAttribute('data-theme', effectiveTheme);
+	emit(EVENTS.THEME_CHANGED, { theme: effectiveTheme });
 }
 
 

@@ -34,6 +34,9 @@
     --bg-deep-blue: #1a3259;
     --bg-deep-blue-rgb: 26, 50, 89;
 
+    /* Inverse of --bg-app */
+    --bg-inverse: #090806;
+    --bg-inverse-rgb: 9, 8, 6;
 
     /* =========================================
        INTERACTIVE ELEMENTS
@@ -168,9 +171,6 @@
        Special elements (Simulation colors/visualization filters)
        ========================================= */
 
-	/* Visualization Image Filter */
-    --viz-base-filter: opacity(0.6);
-    
     /* SPINNER (query popup ladespinner) */
     --color-spinner: #6C90E0; 
     --color-spinner-bg: rgba(37, 99, 235, 0.15);
@@ -189,9 +189,6 @@
     /* =========================================
        Visualization elements 
        ========================================= */
-    
-	/* Visualization Image Filter (Standard: Original) */
-    --viz-base-filter: opacity(0.6);
     
     /* FADENKREUZ: Das dunklere Stern-Gold */
     --color-crosshair: #000000; 

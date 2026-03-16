@@ -1,5 +1,6 @@
 @import './colours.css';
 @import './translate.css';
+@import './faq.css';
 
 /* menu.css - Speziell für Sidebar & Navigation */
 
@@ -732,9 +733,12 @@
 
 .check-icon {
 	padding-left: 6px;
-    color: var(--color-primary);
     opacity: 0; 
     transition: opacity 0.2s;
+}
+
+.theme-submenu-item .primary-check-icon {
+    color: var(--color-primary);
 }
 
 .menu-action-btn {

@@ -1,16 +1,16 @@
 import { addAttachment } from '/script/features/media/attachmentManager.js';
 import { t, applyGeneralTranslations } from '/script/core/localization.js';
+import { renderTemplate, getTemplate } from '/script/core/templateManager.js';
   
-
 let mediaRecorder;
-let audioChunks = [];
+let audioChunks =[];
 let audioBlob;
 let audioUrl;
 let mediaStream;
 let audioContext;
 let analyser;
 let animationFrameId;
-const rings = [];
+const rings =[];
 let rps = 10;
 
 /**
@@ -19,26 +19,24 @@ let rps = 10;
  * @param {function} onConfirm Die Funktion, die ausgeführt wird, wenn der Benutzer bestätigt.
  */
 function showConfirmationDialog(message, onConfirm) {
-    // Entferne einen eventuell bereits existierenden Dialog
-    const existingDialog = document.querySelector('.confirmation-dialog-overlay');
+    // 1. Altes Dialogfeld entfernen
+    const existingDialog = document.querySelector('#confirmation-dialog-overlay');
     if (existingDialog) {
         existingDialog.remove();
     }
 
-    const dialogOverlay = document.createElement('div');
-    dialogOverlay.className = 'confirmation-dialog-overlay';
+    // 2. Template holen (nicht rendern, da es nicht in den body soll!)
+    const fragment = getTemplate('tpl-confirmation-dialog-overlay');
+    if (!fragment) return;
 
-	dialogOverlay.innerHTML = `
-	        <div class="confirmation-dialog">
-	            <p>${message}</p>
-	            <div class="confirmation-dialog-buttons">
-	                <button class="recorder-btn text-only" id="confirm-cancel-btn" data-i18n="global.cancel">Cancel</button>
-	                <button class="recorder-btn confirmation-btn-confirm" id="confirm-confirm-btn" data-i18n="global.confirm">Confirm</button>
-	            </div>
-	        </div>
-	    `;
-	applyGeneralTranslations(dialogOverlay);
-		
+    // Das Wurzelelement aus dem Fragment extrahieren
+    const dialogOverlay = fragment.firstElementChild; 
+
+    // 3. Dynamischen Inhalt und Übersetzungen anwenden
+    dialogOverlay.querySelector('.confirm-msg').textContent = message;
+    applyGeneralTranslations(dialogOverlay);
+
+    // 4. In das Elternelement (das Recorder-Modal) einfügen
     const recorderModal = document.querySelector('.recorder-modal');
     if (recorderModal) {
         recorderModal.appendChild(dialogOverlay);
@@ -47,9 +45,10 @@ function showConfirmationDialog(message, onConfirm) {
         return;
     }
 
+    // 5. Events binden
     const cleanup = () => dialogOverlay.remove();
-    const confirmBtn = document.getElementById('confirm-confirm-btn');
-    const cancelBtn = document.getElementById('confirm-cancel-btn');
+    const confirmBtn = dialogOverlay.querySelector('.confirm-confirm-btn');
+    const cancelBtn = dialogOverlay.querySelector('.confirm-cancel-btn');
 
     cancelBtn.addEventListener('click', cleanup);
     confirmBtn.addEventListener('click', () => {
@@ -58,116 +57,122 @@ function showConfirmationDialog(message, onConfirm) {
     });
 }
 
-
 export function openAudioRecorder() {
-    const modal = createModalElement();
-    document.body.appendChild(modal);
-	applyGeneralTranslations(modal);
+    // 1. Erstellen, einfügen und übersetzen mit einem Aufruf
+    const overlay = renderTemplate('audio-recorder-overlay');
+    if (!overlay) return;
 
-    const overlay = document.querySelector('.recorder-overlay');
-    const startBtn = document.getElementById('start-btn');
-    const stopBtn = document.getElementById('stop-btn');
-    const rerecordBtn = document.getElementById('rerecord-btn');
-    const addBtn = document.getElementById('add-btn');
-    const closeBtn = document.querySelector('.recorder-close-btn');
-    const audioPlayer = document.querySelector('.audio-player');
+    // 2. Events nur einmal binden (Da wir remove() nutzen, ist es bei jedem neuen Aufruf false)
+    if (overlay.dataset.eventsAttached !== 'true') {
+        const startBtn = overlay.querySelector('#start-btn');
+        const stopBtn = overlay.querySelector('#stop-btn');
+        const rerecordBtn = overlay.querySelector('#rerecord-btn');
+        const addBtn = overlay.querySelector('#add-btn');
+        const closeBtn = overlay.querySelector('.recorder-close-btn');
+        const audioPlayer = overlay.querySelector('.audio-player');
 
-    function shutdownRecordingResources() {
-        if (animationFrameId) {
-            cancelAnimationFrame(animationFrameId);
-            animationFrameId = null;
-        }
-        if (audioContext && audioContext.state !== 'closed') {
-            audioContext.close();
-        }
-        if (mediaStream) {
-            mediaStream.getTracks().forEach(track => track.stop());
-            console.log("Mikrofon-Stream erfolgreich geschlossen.");
-        }
-        const canvas = document.getElementById('modal-visualizer');
-        if (canvas) {
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
-    }
-
-    function closeModal() {
-        shutdownRecordingResources();
-        if (mediaRecorder && mediaRecorder.state === "recording") {
-            mediaRecorder.stop();
-        }
-        if (audioUrl) {
-            URL.revokeObjectURL(audioUrl);
-        }
-        overlay.remove();
-    }
-
-    stopBtn.addEventListener('click', () => {
-        if (mediaRecorder && mediaRecorder.state === "recording") {
-            mediaRecorder.stop();
-        }
-        shutdownRecordingResources();
-    });
-
-    startBtn.addEventListener('click', startRecording);
-
-	rerecordBtn.addEventListener('click', () => {
-		showConfirmationDialog(
-			t('recorder.confirm_rerecord'),
-			() => setModalState('initial')
-		);
-	});
-
-    addBtn.addEventListener('click', () => {
-		const fileName = `${t('recorder.filename_prefix')}${new Date().toLocaleString()}.webm`;
-        const audioFile = new File([audioBlob], fileName, { type: audioBlob.type, lastModified: Date.now() });
-
-        addAttachment(audioFile, 'audio');
-        closeModal();
-    });
-    
-    closeBtn.addEventListener('click', closeModal);
-
-    function setModalState(state) {
-        if (state === 'initial') {
-            audioPlayer.src = '';
-            if (audioUrl) {
-                URL.revokeObjectURL(audioUrl);
-                audioUrl = null;
+        function shutdownRecordingResources() {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+            if (audioContext && audioContext.state !== 'closed') {
+                audioContext.close();
+            }
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+                console.log("Mikrofon-Stream erfolgreich geschlossen.");
+            }
+            const canvas = overlay.querySelector('#modal-visualizer');
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
             }
         }
-        overlay.querySelector('.recorder-modal').className = `recorder-modal is-${state}`;
-    }
 
-    function startRecording() {
-        navigator.mediaDevices.getUserMedia({ audio: true })
-            .then(stream => {
-                mediaStream = stream;
-                audioChunks = [];
-                mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-                mediaRecorder.addEventListener("dataavailable", e => audioChunks.push(e.data));
-                mediaRecorder.addEventListener("stop", () => {
-                    audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    audioUrl = URL.createObjectURL(audioBlob);
-                    audioPlayer.src = audioUrl;
-                    setModalState('reviewing');
+        function closeModal() {
+            shutdownRecordingResources();
+            if (mediaRecorder && mediaRecorder.state === "recording") {
+                mediaRecorder.stop();
+            }
+            if (audioUrl) {
+                URL.revokeObjectURL(audioUrl);
+            }
+            // Wir entfernen das Element sauber aus dem DOM
+            overlay.remove();
+        }
+
+        function setModalState(state) {
+            if (state === 'initial') {
+                audioPlayer.src = '';
+                if (audioUrl) {
+                    URL.revokeObjectURL(audioUrl);
+                    audioUrl = null;
+                }
+            }
+            overlay.querySelector('.recorder-modal').className = `recorder-modal is-${state}`;
+        }
+
+        function startRecording() {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    mediaStream = stream;
+                    audioChunks =[];
+                    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+                    mediaRecorder.addEventListener("dataavailable", e => audioChunks.push(e.data));
+                    mediaRecorder.addEventListener("stop", () => {
+                        audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        audioUrl = URL.createObjectURL(audioBlob);
+                        audioPlayer.src = audioUrl;
+                        setModalState('reviewing');
+                    });
+                    initVisualizer(stream, overlay);
+                    mediaRecorder.start();
+                    setModalState('recording');
+                })
+                .catch(err => {
+                    alert(t('recorder.error_access'));
+                    console.error(err);
+                    closeModal();
                 });
-                initVisualizer(stream);
-                mediaRecorder.start();
-                setModalState('recording');
-            })
-            .catch(err => {
-                alert(t('recorder.error_access'));
-                console.error(err);
-                closeModal();
-            });
+        }
+
+        stopBtn.addEventListener('click', () => {
+            if (mediaRecorder && mediaRecorder.state === "recording") {
+                mediaRecorder.stop();
+            }
+            shutdownRecordingResources();
+        });
+
+        startBtn.addEventListener('click', startRecording);
+
+        rerecordBtn.addEventListener('click', () => {
+            showConfirmationDialog(
+                t('recorder.confirm_rerecord'),
+                () => setModalState('initial')
+            );
+        });
+
+        addBtn.addEventListener('click', () => {
+            const fileName = `${t('recorder.filename_prefix')}${new Date().toLocaleString()}.webm`;
+            const audioFile = new File([audioBlob], fileName, { type: audioBlob.type, lastModified: Date.now() });
+
+            addAttachment(audioFile, 'audio');
+            closeModal();
+        });
+        
+        closeBtn.addEventListener('click', closeModal);
+
+        overlay.dataset.eventsAttached = 'true';
     }
 
+    // 3. Status zurücksetzen und anzeigen
+    overlay.querySelector('.recorder-modal').className = `recorder-modal is-initial`;
     setTimeout(() => overlay.classList.add('is-visible'), 10);
 }
 
 
-function initVisualizer(stream) {
+function initVisualizer(stream, overlay) {
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
     analyser = audioContext.createAnalyser();
     const source = audioContext.createMediaStreamSource(stream);
@@ -177,13 +182,14 @@ function initVisualizer(stream) {
     const bufferLength = analyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
 
-    const canvas = document.getElementById('modal-visualizer');
+    // Canvas aus dem übergebenen Overlay holen
+    const canvas = overlay.querySelector('#modal-visualizer');
     const ctx = canvas.getContext('2d');
 
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
 
-    const recordIcon = document.querySelector('.record-icon');
+    const recordIcon = overlay.querySelector('.record-icon');
     const iconRect = recordIcon.getBoundingClientRect();
     const canvasRect = canvas.getBoundingClientRect();
 
@@ -191,6 +197,7 @@ function initVisualizer(stream) {
     const centerY = (iconRect.top - canvasRect.top) + (iconRect.height / 2);
 
     let lastRingTime = 0;
+    rings.length = 0; // Array leeren beim Neustart
 
     function draw() {
         animationFrameId = requestAnimationFrame(draw);
@@ -239,41 +246,4 @@ function initVisualizer(stream) {
         }
     }
     draw();
-}
-
-function createModalElement() {
-    const overlay = document.createElement('div');
-    overlay.className = 'recorder-overlay';
-    overlay.innerHTML = `
-        <div class="recorder-modal is-initial">
-            <canvas id="modal-visualizer"></canvas> 
-            <div class="recorder-header">
-                <h2 data-i18n="recorder.title">Record new audio</h2>
-                <button class="recorder-close-btn">×</button>
-            </div>
-            <div class="record-icon">
-                <div class="record-icon-inner"></div>
-            </div>
-
-            <div class="recorder-body">
-                <audio class="audio-player" controls></audio>
-            </div>
-            <div class="recorder-footer">
-                <span class="footer-text" data-i18n="recorder.footer_text">Explain your idea.</span>
-                <div class="footer-buttons">
-                    <div class="initial-controls">
-                        <button id="start-btn" class="recorder-btn" data-i18n="recorder.btn_start">Start recording</button>
-                    </div>
-                    <div class="recording-controls">
-                        <button id="stop-btn" class="recorder-btn" data-i18n="recorder.btn_stop">Stop recording</button>
-                    </div>
-                    <div class="review-controls">
-                        <button id="rerecord-btn" class="recorder-btn text-only" data-i18n="recorder.btn_rerecord">Re-record</button>
-                        <button id="add-btn" class="recorder-btn" data-i18n="recorder.btn_add">Add to prompt</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    return overlay;
 }

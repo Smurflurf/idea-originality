@@ -1,6 +1,5 @@
 package de.simon.originality;
 
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -8,6 +7,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -208,7 +208,6 @@ public class FrontendTestServer {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
             String reqPath = exchange.getRequestURI().getPath();
-
             if (reqPath.contains("/image/")) {
                 sendGeneratedImage(exchange, reqPath);
                 return;
@@ -243,6 +242,8 @@ public class FrontendTestServer {
             if (path.equals("/licenses")) return "licenses";
             if (path.startsWith("/results/")) return "results";
             if (path.startsWith("/ai")) return "ai-search";
+            if (path.startsWith("/faq")) return "faq";
+            if (path.startsWith("/about")) return "about";
             return "index";
         }
     }
@@ -490,6 +491,32 @@ public class FrontendTestServer {
 
         // --- HELPER METHODS FOR RESULTS ---
 
+        public String getOutlinesJson() {
+            Map<String, String> outlines = new HashMap<>();
+            String p1 = "M 3.79,-1.96 L 3.43,-1.72 1.98,0.32 1.68,1.98 2.14,4.43 3.94,8.94 4.22,9.09 4.54,9.23 5.74,9.74 5.89,9.78 6.27,9.52 9.11,5.82 9.44,5.09 9.94,3.30 9.95,3.19 9.96,3.11 9.96,2.53 9.49,1.59 8.93,0.47 8.59,-0.17 8.55,-0.24 8.51,-0.28 8.51,-0.29 5.12,-1.77 3.87,-1.96 3.84,-1.96 3.79,-1.96 Z";
+            String p2 = "M 11.13,0.72 L 7.75,1.72 7.69,1.86 7.70,2.45 7.74,2.64 9.46,7.60 9.48,7.65 9.53,7.68 9.70,7.66 13.52,6.06 13.58,6.02 14.30,4.70 14.39,4.13 14.41,3.29 14.37,2.82 14.31,2.40 14.15,2.14 14.14,2.13 13.83,1.86 12.14,1.07 11.30,0.75 11.19,0.72 11.13,0.72 Z";
+            String p3 = "M 9.77,7.35 L 5.77,7.46 5.75,7.47 4.97,8.02 4.41,8.49 4.07,8.86 3.78,9.30 3.94,10.44 4.02,10.73 4.06,10.83 4.18,10.99 4.24,11.04 6.48,12.51 7.57,12.99 8.11,13.14 8.55,13.24 8.57,13.24 8.67,13.23 8.71,13.23 8.76,13.22 10.91,11.93 11.81,10.93 11.84,10.81 11.93,8.79 11.48,8.38 9.92,7.37 9.85,7.36 9.82,7.36 9.77,7.35 Z";
+            String p4 = "M 20.29,0.49 L 20.23,0.50 17.32,2.78 17.30,2.85 17.29,3.67 17.39,5.53 17.47,5.59 18.28,6.12 18.78,6.17 20.17,6.16 20.44,6.12 20.68,5.91 20.83,5.76 20.91,5.66 20.93,5.61 22.11,2.12 22.11,1.97 22.07,1.81 22.03,1.64 22.01,1.60 21.71,1.15 21.40,0.83 21.29,0.75 20.68,0.52 20.31,0.49 20.29,0.49 Z";
+
+            outlines.put("all_vectors-0", p3);
+            outlines.put("all_vectors-1", p1);
+            outlines.put("all_vectors-1-1", p1);
+            outlines.put("all_vectors-1-1-1", p1);
+            outlines.put("all_vectors-2", p2);
+            outlines.put("all_vectors-2-1", p2);
+            outlines.put("all_vectors-2-1-1", p2);
+            outlines.put("all_vectors-2-1-2", p2);
+            outlines.put("all_vectors-2-1-3", p2);
+            outlines.put("all_vectors-3", p4);
+            outlines.put("all_vectors-4", p4);
+            outlines.put("all_vectors-4-2", p4);
+            outlines.put("all_vectors-4-2-1", p4);
+            
+            try {
+                return objectMapper.writeValueAsString(outlines);
+            } catch(Exception e) { return "{}"; }
+        }
+        
         private Map<String, Object> createPaperResult(String id, String title, double score, String clusterId, String clusterName) {
             Map<String, Object> map = new HashMap<>();
             map.put("id", id);
@@ -730,7 +757,7 @@ public class FrontendTestServer {
     static class SseHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
-            exchange.getResponseHeaders().set("Content-Type", "text/event-stream; charset=utf-8");
+        	exchange.getResponseHeaders().set("Content-Type", "text/event-stream; charset=utf-8");
             exchange.getResponseHeaders().set("Cache-Control", "no-cache");
             exchange.getResponseHeaders().set("Connection", "keep-alive");
             
@@ -758,29 +785,67 @@ public class FrontendTestServer {
             } else {
                 sendJson(exchange, "{\"status\": \"error\"}");
             }
-        }
-    }
-    
-    static class AjaxResultHandler implements HttpHandler {
-        @Override
-        public void handle(HttpExchange exchange) throws IOException {
-            String html = "<div class='result-card'>Test Result via Ajax</div>";
-            String jsonResponse = "{\"html\": \"" + html + "\", \"pointsData\": []}";
-            sendJson(exchange, jsonResponse);
-        }
-    }
+		}
+	}
+
+	static class AjaxResultHandler implements HttpHandler {
+		@Override
+		public void handle(HttpExchange exchange) throws IOException {
+			try {
+				// Liest den anfragenden Cluster aus dem JSON-Body
+				InputStream is = exchange.getRequestBody();
+				String body = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+
+				String clusterId = "all_vectors-1"; // Fallback
+				if (!body.isEmpty()) {
+					Map<String, Object> reqData = objectMapper.readValue(body, Map.class);
+					clusterId = (String) reqData.getOrDefault("clusterId", "all_vectors-1");
+				}
+
+				MockDataGenerator generator = new MockDataGenerator();
+				List<Map<String, Object>> points = new ArrayList<>();
+				StringBuilder htmlBuilder = new StringBuilder();
+
+				// Generiert echte Mock-Punkte + dazugehörige UI Karten
+				for (int i = 1; i <= 4; i++) {
+					String paperId = "ajax-paper-" + clusterId + "-" + i;
+					points.add(generator.createPaperResult(paperId, "Dynamic Ajax Title " + i, 0.95 - (i * 0.05),
+							clusterId, "Dynamic Cluster " + clusterId));
+
+					htmlBuilder.append("<div class='result-card' id='result-card-").append(paperId).append("'>")
+							.append("<div class='result-header'>").append("<span class='result-score'>")
+							.append((int) ((0.95 - (i * 0.05)) * 100)).append("% Match</span>").append("</div>")
+							.append("<div class='result-summary'>").append("<h3>Dynamic Ajax Title ").append(i)
+							.append("</h3>")
+							.append("<p class='expandable-abstract'>This is dynamically loaded content via AJAX for the cluster ")
+							.append(clusterId).append(". It comes directly from the FrontendTestServer!</p>")
+							.append("</div>").append("</div>");
+				}
+
+				Map<String, Object> jsonResponse = new HashMap<>();
+				jsonResponse.put("html", htmlBuilder.toString());
+				jsonResponse.put("pointsData", points);
+
+				sendJson(exchange, objectMapper.writeValueAsString(jsonResponse));
+
+			} catch (Exception e) {
+				e.printStackTrace();
+				sendJson(exchange, "{\"html\": \"<p>Error</p>\", \"pointsData\": []}");
+			}
+		}
+	}
 
     private static void runSimulationSequence() {
         try {
-            Thread.sleep(1000);
+        	Thread.sleep(100);
             sendEvent("EXTRACTING_COMPLETE", "Idee extrahiert.");
-            Thread.sleep(1000);
+            Thread.sleep(100);
             sendEvent("CLUSTERING_COMPLETE", "Cluster zugeordnet.");
             Thread.sleep(600);
             sendEvent("CREATING_OWN_VISUALIZATIONS", "Rendering...");
             
             for(int i=0; i<4; i++) {
-	            Thread.sleep(1000);
+	            Thread.sleep(200);
 	            sendEvent("IMAGE_READY", "Bild fertig.");
             }
             

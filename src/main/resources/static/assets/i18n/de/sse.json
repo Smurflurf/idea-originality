@@ -1,0 +1,27 @@
+{
+	"sse": {
+		"EXTRACTING_IDEA": "Idee wird von Gemini extrahiert...",
+		"EXTRACTING_COMPLETE": "Idee-Extraktion abgeschlossen...",
+		"EMBEDDING_IDEA": "Bette Idee in den Vektorraum ein...",
+		"EMBEDDING_COMPLETE": "Einbettung abgeschlossen.",
+		"REDUCING_GLOBAL": "Reduziere Dimensionen für globales Clustering...",
+		"REDUCING_LOCAL": "Reduziere Dimensionen für lokales Clustering...",
+		"REDUCING_2": "Vektor wird auf 2 Dimensionen reduziert...",
+		"REDUCING_COMPLETE": "Dimensionsreduktion abgeschlossen.",
+		"CLUSTERING_IDEA": "Idee wird geclustert...",
+		"STILL_CLUSTERING": "Themengebiete werden gefunden...",
+		"CLUSTERING_COMPLETE": "Clustering abgeschlossen.",
+		"QUERYING_VECTOR_DATABASE": "Datenbank wird nach ähnlichen Papern durchsucht...",
+		"QUERYING_VECTORS_COMPLETE": "Paper-Suche abgeschlossen.",
+		"QUERYING_CLUSTER_DATABASE": "Ähnliche Themen-Cluster werden gesucht...",
+		"QUERYING_CLUSTERS_COMPLETE": "Datenbankabfragen abgeschlossen.",
+		"ANALYZING_SERENDIPITY": "Serendipitöse Verbindungen werden gesucht...",
+		"SERENDIPITY_ANALYSIS_COMPLETE": "Serendipitöse Verbindungen entdeckt.",
+		"CREATING_OWN_VISUALIZATIONS": "Erstelle Visualisierungen...",
+		"OWN_VISUALIZATIONS_COMPLETE": "Visualisierungen der Idee erstellt.",
+		"CREATING_NEIGHBOR_VISUALIZATIONS": "Erstelle Visualisierungen für Nachbarn...",
+		"NEIGHBOR_VISUALIZATIONS_COMPLETE": "Visualisierungen für Nachbarn erstellt.",
+		"IMAGE_READY": "Visualisierung abgeschlossen...",
+		"COMPLETE": "Prozess abgeschlossen."
+	}
+}

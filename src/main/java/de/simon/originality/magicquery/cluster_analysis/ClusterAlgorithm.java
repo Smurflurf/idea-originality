@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -56,6 +58,12 @@ public class ClusterAlgorithm {
         
         if (serendipityPool.isEmpty()) {
             return Collections.emptyMap();
+        }
+        
+        // Set um später die angezeigten neighborcluster aus dem nc view hier nicht zu berücksichtigen.
+        Set<String> filterClusterIDs = new HashSet<String>();
+        for(int i=0; i<numTopToExclude; i++) {
+        	filterClusterIDs.add((String) allNeighborClusters.get(i).payload().get("id"));
         }
 
         // Schritt 3: Finde den kleinsten gemeinsamen Kontext (Vorfahren-Cluster) für den Serendipity-Pool.
@@ -113,10 +121,10 @@ public class ClusterAlgorithm {
 
          // Feuere die Sonde ab, um den Gewinner-Cluster zu finden.
             List<QueryResult> probeResults = databaseQuery.search(
-                MagicNumbers.QDRANT_CENTROID_COLLECTION_NAME.asString(), steeredProbeVector, 1);
+                MagicNumbers.QDRANT_CENTROID_COLLECTION_NAME.asString(), steeredProbeVector, MagicNumbers.N_NEAREST_CLUSTERS_FOR_FRONTEND.asInteger() + 1);
 
             if (!probeResults.isEmpty()) {
-                String winnerId = (String) probeResults.get(0).payload().get("id");
+                String winnerId = getFilteredWinnerID(probeResults, filterClusterIDs);
 
                 // NEUER SCHRITT: "Ground Truth"-Suche innerhalb des Gewinner-Clusters.
                 List<QueryResult> bestPaperResult = databaseQuery.searchWithFilter(
@@ -135,6 +143,21 @@ public class ClusterAlgorithm {
         }
         
         return winnerMap;
+    }
+    
+    /**
+     * Returns the first item from a List of QueryResults which is not in the filter Set.
+     * @param beforeFilter plain query results, expects the best result to be at place 0
+     * @param filterCluster Set of cluster IDs, this is a filter, what is in here will be ignored in beforeFilter
+     * @return ID of the best ranked cluster excluding filterCluster
+     */
+    private static String getFilteredWinnerID(List<QueryResult> beforeFilter, Set<String> filterCluster) {
+        for(QueryResult result : beforeFilter) {
+        	String resultID = (String) result.payload().get("id");
+        	if(!filterCluster.contains(resultID))
+        		return resultID;
+        }
+    	return "";
     }
 
     /**

@@ -8,7 +8,7 @@
 		},
 		{
 			"type": "subsection_title",
-			"text": "REST API (Empfohlen für Code & API-Agenten)"
+			"text": "REST API"
 		},
 		{
 			"type": "paragraph",
@@ -27,7 +27,8 @@
 				},
 				{
 					"label": "Endpunkt",
-					"text": "/api/search"
+					"text": "/api/search",
+					"url": "https://ideenatlas.eu/api/search"
 				},
 				{
 					"label": "Content-Type",
@@ -41,7 +42,41 @@
 		},
 		{
 			"type": "subsection_title",
-			"text": "Browsing API (Für Web-Scraping LLMs)"
+			"text": "MCP (Model Context Protocol)"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Neben der klassischen API wird auch ein MCP Server zur Verfügung gestellt. Dieser liefert über das 'search' Tool dieselben JSON-Ergebnisse wie die REST-API, kann aber direkt und oft einfacher an LLMs angebunden werden. Es wird keine Authentifizierung benötigt."
+				}
+			]
+		},
+		{
+			"type": "list",
+			"items": [
+				{
+					"label": "Transport Type",
+					"text": "SSE"
+				},
+				{
+					"label": "Endpunkt",
+					"text": "/sse",
+					"url": "https://ideenatlas.eu/sse"
+				},
+				{
+					"label": "Authentifizierung",
+					"text": "Keine"
+				},
+				{
+					"label": "Tools",
+					"text": "search"
+				}
+			]
+		},
+		{
+			"type": "subsection_title",
+			"text": "Browsing API"
 		},
 		{
 			"type": "paragraph",
@@ -60,7 +95,8 @@
 				},
 				{
 					"label": "Endpunkt",
-					"text": "/api/search/view?q=Zu+bearbeitende+Suchanfrage,+halte+sie+spezifisch"
+					"text": "/api/search/view?q=Zu+bearbeitende+Suchanfrage,+halte+sie+spezifisch",
+					"url": "https://ideenatlas.eu/api/search/view?q=optimising+the+internet+for+large+language+models"
 				}
 			]
 		},
@@ -72,7 +108,7 @@
 			"type": "paragraph",
 			"content": [
 				{
-					"text": "Für KI-Agenten, die keine URLs manuell konstruieren dürfen, steht ein minimalistischer HTML-Einstiegspunkt bereit. Dieser enthält ein Suchformular, das zur API-Ansicht weiterleitet."
+					"text": "Für KI-Agenten, die URLs nicht manuell konstruieren, jedoch mit Internetseiten interagieren dürfen, steht ein minimalistischer HTML-Einstiegspunkt bereit. Dieser enthält ein Suchformular, das zur API-Ansicht weiterleitet."
 				}
 			]
 		},
@@ -81,7 +117,8 @@
 			"items": [
 				{
 					"label": "URL",
-					"text": "https://ideenatlas.eu/ai"
+					"text": "https://ideenatlas.eu/ai",
+					"url": "https://ideenatlas.eu/ai"
 				},
 				{
 					"label": "Aktion",

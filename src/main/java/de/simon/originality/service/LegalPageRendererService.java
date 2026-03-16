@@ -43,16 +43,16 @@ public class LegalPageRendererService {
     private String buildHtmlFromJson(JsonNode root) {
         StringBuilder html = new StringBuilder();
 
-        // 0. Globale Labels laden (für License Section benötigt)
-        JsonNode labels = root.has("labels") ? root.get("labels") : null;
+     // 0. Globale Labels laden (für License Section benötigt)
+		JsonNode labels = root.has("labels") ? root.get("labels") : null;
 
-        // 1. Titel & Intro
-        if (root.has("page_title")) {
-            html.append("<h1>").append(escapeHtml(root.get("page_title").asText())).append("</h1>\n");
-        }
-        if (root.has("intro")) {
-            html.append(renderParagraphContent(root.get("intro"))).append("\n");
-        }
+		// 1. Titel & Intro
+		if (root.has("page_title")) {
+			html.append("<h1>").append(escapeHtml(root.get("page_title").asText())).append("</h1>\n");
+		}
+		if (root.has("intro")) {
+			html.append("<p>").append(renderParagraphContent(root.get("intro"))).append("</p>\n");
+		}
 
         // 2. Struktur-Blöcke iterieren
         if (root.has("structure") && root.get("structure").isArray()) {
@@ -88,7 +88,7 @@ public class LegalPageRendererService {
                         }
                         break;
                     case "lines_block":
-                    case "address_block": // Beides gleich behandeln
+                    case "address_block": 
                         if (block.has("headline")) {
                             html.append("<h2>").append(escapeHtml(block.get("headline").asText())).append("</h2>\n");
                         }
@@ -104,7 +104,6 @@ public class LegalPageRendererService {
                                 } else {
                                     html.append(renderSmartContent(line));
                                 }
-                                // Zeilenumbruch, außer beim letzten Element
                                 if (i < lines.size() - 1) {
                                     html.append("<br>\n");
                                 }
@@ -114,13 +113,24 @@ public class LegalPageRendererService {
                         break;
                     case "warning_box":
                         html.append("<p class=\"legal-warning-box\">");
-                        // Wir bauen ein temporäres Objekt für smart content
-                        // Hier wird implizit angenommen, dass der Block 'text' und optional 'label' hat
                         html.append(renderSmartContent(block)); 
                         html.append("</p>\n");
                         break;
                     case "license_section":
                         html.append(renderLicenseSection(block, labels));
+                        break;
+                    // --- NEUE FAQ BLÖCKE ---
+                    case "faq_search":
+                        html.append(renderFaqSearch(block));
+                        break;
+                    case "cascade_block":
+                        html.append(renderCascadeBlock(block, 2));
+                        break;
+                    default:
+                        // Fallback, falls ein FAQ Item direkt auf oberster Ebene liegt
+                        if (block.has("question") && block.has("answer")) {
+                            html.append(renderFaqItem(block));
+                        }
                         break;
                 }
             }
@@ -128,7 +138,6 @@ public class LegalPageRendererService {
         
         // 3. Warnbox (Globales Feld am Anfang, falls vorhanden)
         if (root.has("warning_box")) {
-            // Um es kompatibel mit renderSmartContent zu machen, bauen wir ein Dummy-Objekt oder nutzen direkt HTML
             html.append("<br>");
             html.append("<p class=\"legal-warning-box\">");
             html.append(escapeHtml(root.get("warning_box").asText()));
@@ -138,29 +147,118 @@ public class LegalPageRendererService {
         return html.toString();
     }
 
-    /**
-     * Entspricht der Logik in JS: renderLicenseSection
-     */
+    // =========================================================================
+    // FAQ RENDERER METHODS
+    // =========================================================================
+
+    private String renderFaqSearch(JsonNode block) {
+        String placeholder = block.has("placeholder") ? escapeHtml(block.get("placeholder").asText()) : "Search...";
+        return "<div class=\"faq-search-container\" id=\"static-faq-search-box\">\n" +
+               "  <div class=\"faq-input-wrapper\">\n" +
+               "    <input type=\"text\" class=\"faq-search-input\" placeholder=\"" + placeholder + "\" readonly style=\"cursor: pointer; pointer-events: none;\">\n" +
+               "  </div>\n" +
+               "</div>\n";
+    }
+
+    private String renderCascadeBlock(JsonNode block, int level) {
+        StringBuilder sb = new StringBuilder();
+        boolean hasTitle = block.has("title") && !block.get("title").asText().isEmpty();
+
+        if (!hasTitle) {
+            sb.append("<div class=\"cascade-wrapper\">\n");
+            if (block.has("items") && block.get("items").isArray()) {
+                for (JsonNode item : block.get("items")) {
+                    String type = item.has("type") ? item.get("type").asText() : "";
+                    if ("cascade_block".equals(type)) {
+                        sb.append(renderCascadeBlock(item, level + 1));
+                    } else {
+                        sb.append(renderFaqItem(item));
+                    }
+                }
+            }
+            sb.append("</div>\n");
+            return sb.toString();
+        }
+
+        sb.append("<div class=\"faq-category-card\">\n");
+        sb.append("  <button class=\"faq-category-header\">\n");
+        sb.append("    <h3>").append(escapeHtml(block.get("title").asText())).append("</h3>\n");
+        sb.append("  </button>\n");
+        sb.append("  <div class=\"faq-category-body-wrapper\">\n");
+        sb.append("    <div class=\"faq-category-body-inner\">\n");
+
+        if (block.has("items") && block.get("items").isArray()) {
+            for (JsonNode item : block.get("items")) {
+                String type = item.has("type") ? item.get("type").asText() : "";
+                if ("cascade_block".equals(type)) {
+                    sb.append(renderCascadeBlock(item, level + 1));
+                } else {
+                    sb.append(renderFaqItem(item));
+                }
+            }
+        }
+
+        sb.append("    </div>\n");
+        sb.append("  </div>\n");
+        sb.append("</div>\n");
+
+        return sb.toString();
+    }
+
+    private String renderFaqItem(JsonNode item) {
+        if (!item.has("question")) return "";
+
+        StringBuilder sb = new StringBuilder();
+        String idAttr = item.has("id") ? " id=\"" + escapeHtml(item.get("id").asText()) + "\"" : "";
+
+        sb.append("<div class=\"faq-item\"").append(idAttr).append(">\n");
+        sb.append("  <button class=\"faq-question\">\n");
+        sb.append("    <span>").append(escapeHtml(item.get("question").asText())).append("</span>\n");
+        sb.append("  </button>\n");
+        sb.append("  <div class=\"faq-answer-wrapper\">\n");
+        sb.append("    <div class=\"faq-answer-inner\">\n");
+        sb.append("      <div class=\"faq-answer-content\">\n");
+
+        // Answer parsen (kann String oder Array sein)
+        if (item.has("answer")) {
+            JsonNode answerNode = item.get("answer");
+            if (answerNode.isArray()) {
+                for (JsonNode ans : answerNode) {
+                    sb.append("<p>").append(renderParagraphContent(ans)).append("</p>\n");
+                }
+            } else {
+                sb.append("<p>").append(renderParagraphContent(answerNode)).append("</p>\n");
+            }
+        }
+
+        sb.append("      </div>\n");
+        sb.append("    </div>\n");
+        sb.append("  </div>\n");
+        sb.append("</div>\n");
+
+        return sb.toString();
+    }
+
+    // =========================================================================
+    // GENERAL RENDERER METHODS
+    // =========================================================================
+
     private String renderLicenseSection(JsonNode block, JsonNode labels) {
         StringBuilder sb = new StringBuilder();
         
-        // 1. Titel
         if (block.has("title")) {
             sb.append("<h2>").append(escapeHtml(block.get("title").asText())).append("</h2>\n");
         }
         
-        // 2. Beschreibung
         if (block.has("description")) {
             sb.append("<p>").append(escapeHtml(block.get("description").asText())).append("</p>\n");
         }
         
-        // 3. Items
         if (block.has("items") && block.get("items").isArray()) {
             sb.append("<ul>\n");
             for (JsonNode item : block.get("items")) {
                 sb.append("<li>");
                 
-                // A) Name & Link
                 String url = item.has("url") ? item.get("url").asText() : "#";
                 String name = item.has("name") ? item.get("name").asText() : "";
                 
@@ -168,16 +266,13 @@ public class LegalPageRendererService {
                   .append(escapeHtml(name))
                   .append("</a></strong><br>");
                 
-                // B) Purpose
                 if (item.has("purpose")) {
                     sb.append(escapeHtml(item.get("purpose").asText())).append("<br>");
                 }
                 
-                // C) Helper für Lizenzen (addLicenseLine)
                 appendLicenseLine(sb, item, "license", labels);
                 appendLicenseLine(sb, item, "metadata_license", labels);
                 
-                // D) Citation Block
                 if (item.has("citation")) {
                     sb.append("<div class=\"citation-block\">")
                       .append(escapeHtml(item.get("citation").asText()).replace("\n", "<br>"))
@@ -200,13 +295,10 @@ public class LegalPageRendererService {
             sb.append("<em><small><strong>")
               .append(escapeHtml(labelTxt)).append(": </strong>")
               .append(escapeHtml(value))
-              .append("</small></em> "); // Leerzeichen am Ende wie im JS
+              .append("</small></em> ");
         }
     }
 
-    /**
-     * Wrapper für renderParagraph (String oder Array von SmartContent)
-     */
     private String renderParagraphContent(JsonNode contentNode) {
         StringBuilder sb = new StringBuilder();
         if (contentNode.isArray()) {
@@ -219,9 +311,6 @@ public class LegalPageRendererService {
         return sb.toString();
     }
 
-    /**
-     * Entspricht der Logik in JS: appendSmartContent
-     */
     private String renderSmartContent(JsonNode item) {
         if (item.isTextual()) {
             return escapeHtml(item.asText());
@@ -229,23 +318,19 @@ public class LegalPageRendererService {
         
         StringBuilder out = new StringBuilder();
         
-        // A: Label (z.B. "E-Mail:")
         if (item.has("label")) {
             out.append("<strong>").append(escapeHtml(item.get("label").asText())).append(": </strong> ");
         }
         
         String text = item.has("text") ? item.get("text").asText() : "";
-        // Fallback: Wenn kein Text, aber URL da ist, nimm URL als Text
         if (text.isEmpty() && item.has("url")) {
             text = item.get("url").asText();
         }
         
-        // B: Link oder Text
         if (item.has("url")) {
             String url = item.get("url").asText();
             out.append("<a href=\"").append(url).append("\"");
             
-            // Mailto Check wie im JS
             if (!url.startsWith("mailto:")) {
                 out.append(" target=\"_blank\" rel=\"noopener noreferrer\"");
             }
@@ -253,14 +338,17 @@ public class LegalPageRendererService {
             
             if (item.has("bold") && item.get("bold").asBoolean()) {
                 out.append("<strong>").append(escapeHtml(text)).append("</strong>");
+            } else if (item.has("italic") && item.get("italic").asBoolean()) {
+                out.append("<cite>").append(escapeHtml(text)).append("</cite>");
             } else {
                 out.append(escapeHtml(text));
             }
             out.append("</a>");
         } else {
-            // Nur Text (ggf. fett)
             if (item.has("bold") && item.get("bold").asBoolean()) {
                 out.append("<strong>").append(escapeHtml(text)).append("</strong>");
+            } else if (item.has("italic") && item.get("italic").asBoolean()) {
+                out.append("<cite>").append(escapeHtml(text)).append("</cite>");
             } else {
                 out.append(escapeHtml(text));
             }
@@ -269,9 +357,6 @@ public class LegalPageRendererService {
         return out.toString();
     }
 
-    /**
-     * Einfache HTML-Escaping Methode, um XSS im Fallback zu verhindern und Darstellung zu sichern.
-     */
     private String escapeHtml(String text) {
         if (text == null) return "";
         return text.replace("&", "&amp;")

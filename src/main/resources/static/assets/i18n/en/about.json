@@ -1,0 +1,187 @@
+{
+	"page_title": "About the Ideenatlas",
+	"intro": "The Ideenatlas is primarily a curation engine for questions. It was developed to locate and refine ideas in an early stage, uncover research gaps, and reveal thematic connections whose existence you weren't even aware of.",
+	"structure": [
+		{
+			"type": "section_title",
+			"text": "1. The Vision: From Searching to Finding"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Conventional search engines rely on keywords. ",
+					"bold": true
+				},
+				{
+					"text": "This creates a fundamental problem: To find something, you must already know what it's called... and that it even exists. Anyone with a truly novel idea often doesn't know its academic name yet and remains trapped in their own terminology."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Alternative approaches like citation graphs have other weaknesses: They often require a specific starting paper and rely on subjective metrics of popularity. An excellent but previously under-cited paper lands in their blind spot. AI language models (LLMs) are also unreliable here, as they act as a black box, frequently hallucinate results, and rely on randomness as a fundamental building block of their answers."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "The Ideenatlas bridges this gap by using processed vector spaces. This approach evaluates not by citations or click-through rates, but as objectively as possible based purely on thematic and semantic proximity. The central evaluation metric is cosine similarity (proximity in space), which is calculated deterministically and is therefore transparently traceable. We give data sovereignty back to the user."
+				}
+			]
+		},
+		{
+			"type": "section_title",
+			"text": "2. Why an Atlas? The Power of Pattern Recognition"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "The goal is not to outsource thinking to a machine, but to direct attention to the unforeseen. A classic \"wall of text\" or abstract list is unsuited for this. The human mind processes spatial and visual relationships far more intuitively."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "The Ideenatlas projects millions of scientific documents onto an interactive 2D map. The hierarchical clusters and the display of nearest neighbors allow for an immediate diagnosis:"
+				}
+			]
+		},
+		{
+			"type": "list",
+			"items": [
+				{
+					"label": "The Dense Spot",
+					"text": "Are all results close together? Then the idea is firmly located within an established field."
+				},
+				{
+					"label": "The Scatter",
+					"text": "Do the results spread across the entire map? This suggests an interdisciplinary approach connecting different \"continents of knowledge\"."
+				},
+				{
+					"label": "The Outlier",
+					"text": "Is a single neighbor extremely far away from everything else? This could indicate an interdisciplinary cross-connection worth investigating further."
+				}
+			]
+		},
+		{
+			"type": "section_title",
+			"text": "3. Serendipity: Finding Something While Looking for Something Else"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Serendipity is often misunderstood as pure chance. But the definition contains a crucial component: An unexpected discovery occurs "
+				},
+				{
+					"text": "thanks to an observant mind",
+					"italic": true,
+					"url": "https://en.wiktionary.org/wiki/serendipity#:~:text=finding%20something%20when%20looking%20for%20something%20else%2C%20thanks%20to%20an%20observant%20mind"
+				},
+				{
+					"text": ". Without your own cognitive effort, serendipity cannot happen."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Science often takes place in silos. An algorithm in computer science could be structurally identical to a problem in biology; yet the disciplines speak different languages. While RAG, for example, is primarily known for factually improving LLM answers, similar concepts are used in biology to compare genome sequences with reference databases and identify functional patterns. A vector space can technically establish, but not interpret this link."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "The system is designed to process data in a way that makes these unexpected bridges visible. However, recognizing the value of the results remains up to the user. The Atlas provides the map; the user must search."
+				}
+			]
+		},
+		{
+			"type": "section_title",
+			"text": "4. The Technology: RAG without the G"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "For the technically inclined: The system is based on a high-dimensional vector space that is projected onto a much lower dimension using "
+				},
+				{
+					"text": "UMAP",
+					"url": "https://umap-learn.readthedocs.io/en/latest/"
+				},
+				{
+					"text": ". Subsequently, a clustering algorithm ("
+				},
+				{
+					"text": "HDBSCAN",
+					"url": "https://hdbscan.readthedocs.io/en/latest/"
+				},
+				{
+					"text": ") identifies the thematic fields. Using the cluster centroids, a new vector space is populated, enabling context-based thematic searches."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "The approach is best described as "
+				},
+				{
+					"text": "'RAG without the G with extra steps'",
+					"bold": true
+				},
+				{
+					"text": " (Retrieval-Augmented Generation, but without the final text generation). Instead of feeding search results directly to an AI, we present the raw, structured data. The data is optimized not for LLMs, but for human users: with dynamic visualizations, appropriate information density, and maximum transparency. We show the corpus from which the knowledge originates and leave the synthesis to the most intelligent component in the system: the user themselves."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "In case you actually want to apply real RAG, you can always download the results as JSON for further use or alternatively use the "
+				},
+				{
+					"text": "API",
+					"url": "https://ideenatlas.eu/api"
+				},
+				{
+					"text": "."
+				}
+			]
+		},
+		{
+			"type": "section_title",
+			"text": "5. Status & Future"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "The Ideenatlas is an active, independent research project in the state of an advanced proof-of-concept. In addition to actively improving the website, the to-do list includes further developing the clustering pipeline and expanding the metadata database."
+				}
+			]
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "The long-term goal is to keep this form of transparent, visual research available as an open tool—without tracking, without advertising, and with a strict focus on scientific integrity."
+				}
+			]
+		}
+	]
+}

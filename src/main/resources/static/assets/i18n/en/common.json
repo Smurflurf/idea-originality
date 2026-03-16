@@ -28,7 +28,21 @@
 		"impressum": "Impressum",
 		"privacy": "Privacy Policy",
 		"licenses": "Licenses",
-		"api": "API"
+		"api": "API",
+		"faq": "FAQ",
+		"about": "About Ideenatlas"
+	},
+	"faq": {
+		"menu_title": "Help & FAQ",
+		"btn_select": "Select element",
+		"btn_search": "Search",
+		"btn_open_faq": "Open FAQ",
+		"btn_open_about": "About Ideenatlas",
+		"search_placeholder": "Search knowledge base...",
+		"no_elements": "Found no entries for elements on this page.",
+		"no_results": "No results for:",
+		"no_relevant_topics": "Found no relevant topics for this page.",
+		"load_error": "FAQ-data could not be loeaded."
 	},
 	"tts": {
 		"loading": "Loading...",
@@ -81,6 +95,8 @@
 		"no_job_id": "No Job-ID received from server.", 
 		"connection_lost": "Connection to the server was lost.", 
 		"init_failed_prefix": "Initialization failed: ",
-		"results_load_failed": "Error: Results could not be loaded."
+		"results_load_failed": "Error: Results could not be loaded.",
+		"too_many_tokens": "The request would take too many tokens, please reduce the amount of files.",
+		"unsupported_file": "The file format is not supported."
 	}
 }

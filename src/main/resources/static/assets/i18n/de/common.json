@@ -28,12 +28,26 @@
 		"impressum": "Impressum",
 		"privacy": "Datenschutz",
 		"licenses": "Lizenzen",
-		"api": "API"
+		"api": "API",
+		"faq": "FAQ",
+		"about": "Über Ideenatlas"
 	},
 	"tts": {
 		"loading": "Lädt...",
 		"playing": "Liest vor",
 		"paused": "Pausiert"
+	},
+	"faq": {
+		"menu_title": "Hilfe & FAQ",
+		"btn_select": "Element auswählen",
+		"btn_search": "Suchen",
+		"btn_open_faq": "FAQ öffnen",
+		"btn_open_about": "Über Ideenatlas",
+		"search_placeholder": "Wissensdatenbank durchsuchen...",
+		"no_elements": "Keine Hilfethemen für Elemente auf dieser Seite gefunden.",
+		"no_results": "Keine Ergebnisse gefunden für",
+		"no_relevant_topics": "Keine relevanten Themen für diese Seite gefunden.",
+		"load_error": "FAQ-Daten konnten nicht geladen werden."
 	},
 	"global": {
 		"close": "Schließen",
@@ -81,6 +95,8 @@
 		"no_job_id": "Keine Job-ID vom Server empfangen.",
 		"connection_lost": "Die Verbindung zum Server wurde unterbrochen.",
 		"init_failed_prefix": "Initialisierung fehlgeschlagen: ",
-		"results_load_failed": "Fehler: Ergebnisse konnten nicht geladen werden."
+		"results_load_failed": "Fehler: Ergebnisse konnten nicht geladen werden.",
+		"too_many_tokens": "Die Anfrage würde zu viele Tokens verbrauchen, bitte reduzieren Sie die Dateimenge.",
+		"unsupported_file": "Dieser Dateityp wird nicht unterstützt."
 	}
 }

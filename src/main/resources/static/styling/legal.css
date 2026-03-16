@@ -32,6 +32,7 @@ body[data-features="legal-content"] {
 }
 
 .legal-content-wrapper {
+    width: 100%;
     max-width: 1000px;
     margin: 60px auto; 
     padding: 0 20px;
@@ -160,4 +161,3 @@ body[data-features="legal-content"] {
 .legal-content-wrapper ul small {
 	color: var(--text-quaternary);
 }
-

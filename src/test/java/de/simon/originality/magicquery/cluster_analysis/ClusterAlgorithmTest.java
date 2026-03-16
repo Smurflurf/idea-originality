@@ -9,11 +9,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import de.simon.originality.HtmlSanitizerService;
 import de.simon.originality.magicquery.MagicNumbers;
 import de.simon.originality.magicquery.cluster_analysis.graph.KnowledgeGraphService;
 import de.simon.originality.magicquery.database_interact.DatabaseQuery;
 import de.simon.originality.magicquery.database_interact.DatabaseQuery.QueryResult;
+import de.simon.originality.security.HtmlSanitizerService;
 import de.simon.originality.magicquery.database_interact.LatexConverter;
 
 public class ClusterAlgorithmTest {

@@ -4,36 +4,57 @@ let isInitialized = false;
  * Wandelt rohen JSON-Text in farbige HTML-Spans um.
  * Das macht einzelne Keys und Values für den Translator greifbar.
  */
-function formatJsonToHtml(jsonString) {
-    if (!jsonString) return '';
+function formatJsonToFragment(jsonString) {
+    const fragment = document.createDocumentFragment();
+    if (!jsonString) return fragment;
+    
+    let json;
     try {
         const obj = JSON.parse(jsonString);
-        // Neu formatieren mit Einrückung
-        let json = JSON.stringify(obj, null, 2);
-        
-        // HTML Escaping (wichtig!)
-        json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
-        // Regex Magie für Syntax Highlighting
-        return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
-            let cls = 'json-number';
-            if (/^"/.test(match)) {
-                if (/:$/.test(match)) {
-                    cls = 'json-key';
-                } else {
-                    cls = 'json-string';
-                }
-            } else if (/true|false/.test(match)) {
-                cls = 'json-boolean';
-            } else if (/null/.test(match)) {
-                cls = 'json-null';
-            }
-            return '<span class="' + cls + '">' + match + '</span>';
-        });
+        json = JSON.stringify(obj, null, 2);
     } catch (e) {
         console.warn("JSON Formatting failed", e);
-        return jsonString; // Fallback auf rohen Text
+        fragment.appendChild(document.createTextNode(jsonString));
+        return fragment;
     }
+
+    const regex = /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g;
+    let lastIndex = 0;
+    
+    let match;
+    while ((match = regex.exec(json)) !== null) {
+        if (match.index > lastIndex) {
+            fragment.appendChild(document.createTextNode(json.substring(lastIndex, match.index)));
+        }
+        
+        let cls = 'json-number';
+        if (/^"/.test(match[0])) {
+            if (/:$/.test(match[0])) {
+                cls = 'json-key';
+            } else {
+                cls = 'json-string';
+            }
+        } else if (/true|false/.test(match[0])) {
+            cls = 'json-boolean';
+        } else if (/null/.test(match[0])) {
+            cls = 'json-null';
+        }
+        
+        // Füge das Highlight-Wort als Span hinzu
+        const span = document.createElement('span');
+        span.className = cls;
+        span.textContent = match[0];
+        fragment.appendChild(span);
+        
+        lastIndex = regex.lastIndex;
+    }
+    
+    // Den restlichen Text am Ende anfügen
+    if (lastIndex < json.length) {
+        fragment.appendChild(document.createTextNode(json.substring(lastIndex)));
+    }
+    
+    return fragment;
 }
 
 export function initializeJsonToggles() {
@@ -54,12 +75,12 @@ export function initializeJsonToggles() {
         if (payloadContainer && payloadContainer.classList.contains('result-payload')) {
             payloadContainer.classList.toggle('active');
 
-            // +++ NEUE LOGIK: JSON formatieren beim ersten Öffnen +++
             const preElement = payloadContainer.querySelector('pre');
             if (preElement && !preElement.dataset.isFormatted) {
                 const rawJson = preElement.textContent;
-                const formattedHtml = formatJsonToHtml(rawJson);
-                preElement.innerHTML = formattedHtml;
+                const fragment = formatJsonToFragment(rawJson);
+                preElement.textContent = ''; 
+                preElement.appendChild(fragment);
                 preElement.dataset.isFormatted = 'true';
             }
         }

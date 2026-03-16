@@ -69,6 +69,7 @@ import de.simon.originality.magicquery.python.PythonService;
 import de.simon.originality.magicquery.visualization.LabelData;
 import de.simon.originality.magicquery.visualization.VisualizationLayer;
 import de.simon.originality.magicquery.visualization.VisualizationManager;
+import de.simon.originality.security.HtmlSanitizerService;
 import de.simon.originality.service.LegalPageRendererService;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
@@ -175,6 +176,18 @@ public class Controller {
 	public String licenses(Model model, java.util.Locale locale, @RequestParam(required = false) String lang, 
 			@CookieValue(value = "lang", required = false) String cookieLang) {
 	    return prepareLegalPage(model, locale, lang, "licenses", cookieLang);
+	}
+	
+	@GetMapping("/faq")
+	public String faq(Model model, java.util.Locale locale, @RequestParam(required = false) String lang, 
+			@CookieValue(value = "lang", required = false) String cookieLang) {
+	    return prepareLegalPage(model, locale, lang, "faq", cookieLang);
+	}
+	
+	@GetMapping("/about")
+	public String about(Model model, java.util.Locale locale, @RequestParam(required = false) String lang, 
+			@CookieValue(value = "lang", required = false) String cookieLang) {
+	    return prepareLegalPage(model, locale, lang, "about", cookieLang);
 	}
 
 	@GetMapping("/api")
@@ -835,6 +848,15 @@ public class Controller {
         return layers;
     }
 	
+    
+    
+    @ExceptionHandler(org.springframework.web.context.request.async.AsyncRequestTimeoutException.class)
+	public void handleAsyncRequestTimeoutException(org.springframework.web.context.request.async.AsyncRequestTimeoutException ex) {
+	    // Wenn ein Audio-Stream oder ein anderer Async-Prozess einen Timeout hat, 
+        // ist die HTTP-Response schon lange committed (z.B. als audio/wav). 
+        // Wir fangen das hier stillschweigend ab, um "HttpMessageNotWritableException" zu vermeiden.
+	}
+    
 	@ExceptionHandler(RuntimeException.class)
 	public ResponseEntity<Map<String, String>> handleRuntimeException(RuntimeException ex) {
 		String message = ex.getMessage();

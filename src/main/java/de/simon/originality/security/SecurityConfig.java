@@ -1,4 +1,4 @@
-package de.simon.originality;
+package de.simon.originality.security;
 
 import java.io.IOException;
 import java.util.List;
@@ -98,7 +98,7 @@ public class SecurityConfig {
 				.requestMatchers("/dist/**", "/vendor/**", "/assets/**").permitAll()
 				.requestMatchers("/query/**", "/results/**", "/").permitAll()
 				.requestMatchers("/favicon.ico", "/sw.js", "/robots.txt", "/llms.txt", "/sitemap.xml", "/openapi.json").permitAll()
-				.requestMatchers("/impressum", "/privacy", "/licenses").permitAll()
+				.requestMatchers("/impressum", "/privacy", "/licenses", "/faq", "/about").permitAll()
 				.requestMatchers("/ai/**", "/api/**", "/mcp/**", "/sse/**").permitAll()
 			    
 			    .requestMatchers("/v3/api-docs/**").permitAll()    // Die JSON-Spezifikation

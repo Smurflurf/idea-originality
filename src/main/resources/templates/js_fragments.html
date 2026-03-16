@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<body>
+    <th:block th:fragment="uiTemplates">
+
+        <!-- ========================================== -->
+        <!-- 1. POPUPS (Query, Consent, Download)       -->
+        <!-- ========================================== -->
+        
+        <template id="tpl-consent-popup-overlay">
+            <div id="consent-popup-overlay" class="recorder-overlay is-visible">
+                <div class="recorder-modal query-popup-modal is-consent-mode">
+                    <div class="recorder-header">
+                        <h2 data-i18n="popup.consent.title"><i class="fa-solid fa-shield-halved"></i> Notice on Data Processing</h2>
+                    </div>
+                    <div class="query-popup-body">
+                        <div class="consent-content-wrapper">
+                            <p data-i18n="popup.consent.main_text">To optimize your query, it is securely forwarded to Google Gemini AI.</p>
+                            <p class="google-notice" data-i18n="popup.consent.privacy_guarantee">Server located in EU, data not used for training.</p>
+                            <div class="consent-popup-buttons">
+                                <button id="consent-privacy" class="recorder-btn text-only" data-i18n="popup.consent.privacy_btn">Privacy Policy</button>
+                                <button id="consent-agree" class="recorder-btn" data-i18n="popup.consent.agree_btn">Got it</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <template id="tpl-query-popup-overlay">
+            <div id="query-popup-overlay" class="recorder-overlay">
+                <canvas id="text-explosion-canvas" class="text-explosion-canvas"></canvas>
+                <div class="recorder-modal query-popup-modal is-selecting-intent">
+                    <div class="spinner-container"><canvas class="spinner-canvas" id="spinner-canvas"></canvas></div>
+                    <div class="recorder-header">
+                        <h2 data-i18n="popup.title">What is your goal?</h2>
+                        <button class="recorder-close-btn">&times;</button>
+                    </div>
+                    <div class="query-popup-body">
+                        <div class="popup-intent-selection">
+                            <button class="intent-btn" data-intent="question"><i class="fa-solid fa-circle-question"></i><div class="intent-text-wrapper"><strong data-i18n="popup.btn_question.title">I need answers</strong><p data-i18n="popup.btn_question.desc">You gave a question or incomplete information.</p></div></button>
+                            <button class="intent-btn" data-intent="idea"><i class="fa-solid fa-lightbulb"></i><div class="intent-text-wrapper"><strong data-i18n="popup.btn_idea.title">Extract my idea</strong><p data-i18n="popup.btn_idea.desc">Synthesize core idea after brainstorming.</p></div></button>
+                            <button class="intent-btn" data-intent="summarize"><i class="fa-solid fa-file-lines"></i><div class="intent-text-wrapper"><strong data-i18n="popup.btn_summarize.title">Summarize documents</strong><p data-i18n="popup.btn_summarize.desc">Summarize given data and extract methodologies.</p></div></button>
+                            <button class="intent-btn" data-intent="none"><i class="fa-solid fa-expand"></i><div class="intent-text-wrapper"><strong data-i18n="popup.btn_none.title">No special treatment</strong><p data-i18n="popup.btn_none.desc">I do not have a specific intend.</p></div></button>
+                        </div>
+                        <div class="animation-placeholder"></div>
+                        <span class="popup-status-text" data-i18n="popup.status.uploading">Uploading data & starting process...</span>
+                        <div class="popup-content-area">
+                            <div id="idea-block" class="popup-info-block" style="display: none;"><h4 data-i18n="headers.extracted_idea">Extracted Idea:</h4><div class="scrollable-content-box"></div></div>
+                            <div id="cluster-block" class="popup-info-block" style="display: none;"><h4 data-i18n="card.topic_cluster_tooltip">Cluster Hierarchy:</h4><div class="scrollable-content-box"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <template id="tpl-download-popup-overlay">
+		    <div id="download-popup-overlay" class="download-popup-overlay">
+		        <div class="download-popup-modal">
+					<div class="download-popup-header">
+						<h2 data-i18n="download.popup_title">Download Options</h2>
+						<button class="download-popup-close-btn">&times;</button>
+					</div>
+					<div class="download-popup-body">
+						<button id="download-html-choice-btn"
+							class="download-choice-btn download-html-choice-btn">
+							<i class="fa-solid fa-file-code"></i> <span
+								data-i18n="download.popup_html_btn">Download Interactive
+								HTML</span>
+						</button>
+						<button id="download-json-choice-btn"
+							class="download-choice-btn download-json-choice-btn">
+							<i class="fa-solid fa-file-arrow-down"></i> <span
+								data-i18n="download.popup_json_btn">Download Results as
+								JSON</span>
+						</button>
+					</div>
+				</div>
+		    </div>
+		</template>
+
+        <template id="tpl-offline-archive-banner">
+            <div id="offline-archive-banner" style="position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(30, 30, 30, 0.95); color: #eee; text-align: center; padding: 12px 40px; font-size: 13px; z-index: 2147483647; font-family: sans-serif; box-shadow: 0 -4px 15px rgba(0,0,0,0.4); display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+                <span class="banner-text" data-i18n="download.offline_banner">This is a self-contained, archived version of the page.</span>
+                <button id="offline-banner-close" aria-label="Close" style="position: absolute; right: 15px; background: transparent; border: none; color: #aaa; font-size: 20px; cursor: pointer; padding: 5px 10px; line-height: 1;">&times;</button>
+            </div>
+        </template>
+
+        <!-- ========================================== -->
+        <!-- 2. AUDIO RECORDER                          -->
+        <!-- ========================================== -->
+        
+        <template id="tpl-audio-recorder-overlay">
+            <div id="audio-recorder-overlay" class="recorder-overlay">
+                <div class="recorder-modal is-initial">
+                    <canvas id="modal-visualizer"></canvas> 
+                    <div class="recorder-header">
+                        <h2 data-i18n="recorder.title">Record new audio</h2>
+                        <button class="recorder-close-btn">&times;</button>
+                    </div>
+                    <div class="record-icon">
+                        <div class="record-icon-inner"></div>
+                    </div>
+                    <div class="recorder-body">
+                        <audio class="audio-player" controls></audio>
+                    </div>
+                    <div class="recorder-footer">
+                        <span class="footer-text" data-i18n="recorder.footer_text">Explain your idea.</span>
+                        <div class="footer-buttons">
+                            <div class="initial-controls">
+                                <button id="start-btn" class="recorder-btn" data-i18n="recorder.btn_start">Start recording</button>
+                            </div>
+                            <div class="recording-controls">
+                                <button id="stop-btn" class="recorder-btn" data-i18n="recorder.btn_stop">Stop recording</button>
+                            </div>
+                            <div class="review-controls">
+                                <button id="rerecord-btn" class="recorder-btn text-only" data-i18n="recorder.btn_rerecord">Re-record</button>
+                                <button id="add-btn" class="recorder-btn" data-i18n="recorder.btn_add">Add to prompt</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <template id="tpl-confirmation-dialog-overlay">
+            <div id="confirmation-dialog-overlay" class="confirmation-dialog-overlay">
+                <div class="confirmation-dialog">
+                    <p class="confirm-msg"></p> 
+                    <div class="confirmation-dialog-buttons">
+                        <button class="recorder-btn text-only confirm-cancel-btn" data-i18n="global.cancel">Cancel</button>
+                        <button class="recorder-btn confirmation-btn-confirm confirm-confirm-btn" data-i18n="global.confirm">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- ========================================== -->
+        <!-- 3. MENÜS & DROPDOWNS                       -->
+        <!-- ========================================== -->
+
+        <template id="tpl-generated-theme-menu">
+            <div class="theme-menu-wrapper" id="generated-theme-menu">
+                <button class="theme-main-btn">
+                    <div class="theme-main-btn-content">
+                        <i class="fa-solid fa-palette theme-icon"></i>
+                        <span data-i18n="themes.main_label">Theme</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-right theme-arrow"></i>
+                </button>
+                <div class="theme-submenu">
+                    <button class="theme-submenu-item" data-theme-value="light">
+                        <span><i class="fa-solid fa-sun"></i> <span data-i18n="themes.light">Light</span></span>
+                        <i class="fa-solid fa-check check-icon primary-check-icon"></i>
+                    </button>
+                    <button class="theme-submenu-item" data-theme-value="dark">
+                        <span><i class="fa-solid fa-moon"></i> <span data-i18n="themes.dark">Dark</span></span>
+                        <i class="fa-solid fa-check check-icon primary-check-icon"></i>
+                    </button>
+                    <button class="theme-submenu-item" data-theme-value="midnight">
+                        <span><i class="fa-solid fa-star"></i> <span data-i18n="themes.midnight">Midnight</span></span>
+                        <i class="fa-solid fa-check check-icon primary-check-icon"></i>
+                    </button>
+                    <hr style="margin: 6px 0; border: 0; border-top: 1px solid var(--border-subtle);">
+                    <button class="theme-submenu-item" data-theme-value="system">
+                        <span><i class="fa-solid fa-desktop"></i> <span data-i18n="themes.system">System</span></span>
+                        <i class="fa-solid fa-check check-icon primary-check-icon"></i>
+                    </button>
+                </div>
+            </div>
+        </template>
+
+        <template id="tpl-history-options-menu">
+            <div id="history-options-menu" class="options-dropdown">
+                <button class="dropdown-item" id="global-menu-star">
+                    <i class="fa-regular fa-star"></i> <span data-i18n="history.mark_favorite">Favorite</span>
+                </button>
+                <button class="dropdown-item delete-item" id="global-menu-delete">
+                    <i class="fa-solid fa-trash"></i> <span data-i18n="history.delete_entry">Delete</span>
+                </button>
+            </div>
+        </template>
+
+        <template id="tpl-custom-context-menu">
+            <div class="custom-context-menu" id="custom-context-menu" style="visibility: hidden;"></div>
+        </template>
+        
+        <!-- History Sidebar Elemente -->
+        <template id="tpl-history-fixed-label">
+            <div id="history-fixed-label" style="display: none; align-items: center; gap: 10px; padding: 10px 20px 5px; font-size: 0.8rem; color: var(--text-quaternary); text-transform: uppercase; letter-spacing: 1px; font-weight: bold; margin-top: 0px; flex-shrink: 0;">
+                <i class="fa-regular fa-clock"></i> <span data-i18n="history.label">Recent</span>
+            </div>
+        </template>
+        <template id="tpl-history-bottom-hr">
+            <hr id="history-bottom-hr" style="border: 0; height: 1px; background: linear-gradient(to right, transparent, rgba(var(--text-primary-rgb), 0.1), transparent); margin: 20px 0; flex-shrink: 0; display: none;">
+        </template>
+        <template id="tpl-history-item">
+            <a href="#" class="history-link">
+                <span class="history-text"></span>
+                <div class="history-actions">
+                    <button class="icon-btn options-btn"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                    <button class="icon-btn star-btn">
+                        <i class="fa-regular fa-star star-outline"></i>
+                        <i class="fa-solid fa-star star-fill"></i>
+                    </button>
+                </div>
+            </a>
+        </template>
+
+        <!-- Translation Menu Fallbacks -->
+        <template id="tpl-translate-offline-msg">
+            <div style="padding:10px; color:var(--text-disabled); text-align:center; font-size:0.8rem;">
+                <i data-i18n="translate.offline_msg">Offline / No Data</i>
+            </div>
+        </template>
+
+		<!-- Wrapper ID: 'faq-menu' -->
+		<template id="tpl-faq-menu">
+		    <div class="theme-menu-wrapper" id="generated-faq-menu">
+		        <button class="theme-main-btn">
+		            <div class="theme-main-btn-content">
+		                <i class="fa-solid fa-circle-question theme-icon"></i>
+		                <span data-i18n="faq.menu_title">Help & FAQ</span>
+		            </div>
+		            <div class="theme-arrow-wrapper faq-arrow-zone">
+                        <i class="fa-solid fa-chevron-right theme-arrow"></i>
+                    </div>
+		        </button>
+		        <div class="theme-submenu faq-submenu-panel">
+                    <button class="mode-toggle-btn" id="faq-btn-search">
+                        <span><i class="fa-solid fa-magnifying-glass"></i> <span data-i18n="faq.btn_search">Search</span></span>
+                    </button>
+                    <button class="mode-toggle-btn faq-btn-spaced" id="faq-btn-select">
+                        <span><i class="fa-solid fa-arrow-pointer"></i> <span data-i18n="faq.btn_select">Select Element</span></span>
+                    </button>
+
+                    <div class="faq-submenu-separator"></div>
+
+		            <a href="/faq" class="theme-submenu-item faq-small-link">
+		                <span><i class="fa-solid fa-arrow-up-right-from-square faq-icon-external"></i> <span data-i18n="faq.btn_open_faq">Open FAQ</span></span>
+		            </a>
+		            <a href="/about" class="theme-submenu-item faq-small-link">
+		                <span><i class="fa-solid fa-arrow-up-right-from-square faq-icon-external"></i> <span data-i18n="faq.btn_open_about">About</span></span>
+		            </a>
+		        </div>
+		    </div>
+		</template>
+
+		<!-- Wrapper ID: 'faq-overlay-answer' -->
+        <template id="tpl-faq-overlay-answer">
+            <div id="faq-overlay-answer" class="recorder-overlay">
+                <div class="recorder-modal faq-answer-modal">
+                    <div class="recorder-header">
+                        <h2 class="faq-answer-title"></h2>
+                        <button class="recorder-close-btn">&times;</button>
+                    </div>
+                    <div class="recorder-body">
+                        <div class="faq-answer-content-box scrollable-content-box">
+                            <!-- Inhalt kommt via JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- ========================================== -->
+        <!-- 4. UI ELEMENTE (TTS, FPS, Cards etc.)      -->
+        <!-- ========================================== -->
+
+        <template id="tpl-tts-floating-player">
+            <div id="tts-floating-player" class="tts-floating-player-container">
+                <div class="tts-top-row">
+                    <div class="tts-info-wrapper"><div class="tts-status-text" id="tts-status-text" data-i18n="tts.loading">Loading...</div></div>
+                    <div class="tts-controls">
+                        <button class="tts-btn play-pause-btn" id="tts-play-pause"><i class="fa-solid fa-pause"></i></button>
+                        <button class="tts-btn" id="tts-stop"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                </div>
+                <div class="tts-progress-container" id="tts-progress-bg"><div class="tts-progress-bar" id="tts-progress-bar"></div></div>
+            </div>
+        </template>
+
+        <template id="tpl-fps-counter-wrapper">
+            <div id="fps-counter-wrapper" popover="manual" data-is-persistent="false" style="inset: auto; margin: 0; position: fixed; top: 5px; right: 0px; z-index: 2147483647; display: none; flex-direction: row; align-items: flex-start; pointer-events: auto; background: rgba(0,0,0,0.8); padding: 4px; border-radius: 4px; backdrop-filter: blur(4px); cursor: pointer; border: 1px solid rgba(255,255,255,0.1); gap: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                <div class="fps-info-panel" style="background: transparent; color: #00ff00; font-family: 'Courier New', monospace; font-size: 11px; padding-left: 4px; line-height: 1.3; width: 80px; height: 60px; display: flex; flex-direction: column; justify-content: space-between; user-select: none; flex-shrink: 0;">init...</div>
+            </div>
+        </template>
+        
+        <!-- ========================================== -->
+        <!-- 5. KLEINE SNIPPETS (Für JS Loops & Fallbacks)-->
+        <!-- ========================================== -->
+        
+        <template id="tpl-skeleton-card">
+            <div class="skeleton-card">
+                <div class="skeleton-header"><div class="skeleton-item skeleton-score"></div><div class="skeleton-item skeleton-link"></div></div>
+                <div class="skeleton-item skeleton-title"></div><div class="skeleton-item skeleton-line"></div>
+                <div class="skeleton-item skeleton-line"></div><div class="skeleton-item skeleton-line short"></div>
+            </div>
+        </template>
+
+        <template id="tpl-results-error">
+            <p style="padding: 20px; text-align: center; color: var(--text-secondary);" data-i18n="errors.results_load_failed">Error: Could not load results.</p>
+        </template>
+
+        <template id="tpl-attachment-card">
+            <div class="attachment-card">
+                <div class="attachment-preview"></div>
+                <div class="attachment-caption"></div>
+                <button class="remove-btn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        </template>
+
+        <template id="tpl-abstract-expand-btn">
+            <span class="expand-button" data-tippy-content="Show full description"><i class="fas fa-ellipsis"></i></span>
+        </template>
+        
+        <template id="tpl-faq-search-item">
+            <div class="faq-search-item">
+                <h4 class="faq-search-title"></h4>
+                <p class="faq-search-preview"></p>
+            </div>
+        </template>
+        
+        <template id="tpl-faq-search-no-results">
+            <div class="faq-search-item" style="cursor: default;">
+                <p></p>
+            </div>
+        </template>
+
+        <template id="tpl-language-option">
+            <button class="theme-submenu-item language-option">
+                <span>
+                    <i class="fa-solid fa-globe" style="font-size: 0.8em; opacity: 0.7;"></i> 
+                    <span class="lang-display-name"></span>
+                </span>
+                <i class="fa-solid fa-check check-icon primary-check-icon" style="opacity: 0"></i>
+            </button>
+        </template>
+
+        <template id="tpl-language-system-option">
+            <span>
+                <i class="fa-solid fa-desktop" style="font-size: 0.8em; opacity: 0.7;"></i> 
+                <span class="lang-display-name" data-i18n="themes.system">System Default</span>
+            </span>
+        </template>
+
+        <!-- FAQ Content Renderer Templates -->
+        <template id="tpl-faq-category-header">
+		    <h3></h3><div class="icon-circle"><i class="fa-solid fa-chevron-down"></i></div>
+		</template>
+		
+		<template id="tpl-faq-question-header">
+		    <span></span><div class="icon-circle-small"><i class="fa-solid fa-chevron-down"></i></div>
+		</template>
+		
+		<template id="tpl-mockup-loading-placeholder">
+		    <div class="mockup-loading-placeholder">
+				<i class="fa-solid fa-circle-notch fa-spin fa-2x"></i>
+			</div>
+		</template>
+		
+		<template id="tpl-mockup-badge">
+		    <i class="fa-solid fa-eye"></i> <span data-i18n="global.ui_preview">UI Preview</span>
+		</template>
+		
+		<template id="tpl-faq-search-no-results">
+		    <div class="faq-search-item" style="cursor: default;">
+		        <p></p>
+		    </div>
+		</template>
+
+    </th:block>
+</body>
+</html>

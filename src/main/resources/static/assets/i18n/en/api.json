@@ -8,7 +8,7 @@
 		},
 		{
 			"type": "subsection_title",
-			"text": "REST API (Recommended for Code & API Agents)"
+			"text": "REST API"
 		},
 		{
 			"type": "paragraph",
@@ -27,7 +27,8 @@
 				},
 				{
 					"label": "Endpoint",
-					"text": "/api/search"
+					"text": "/api/search",
+					"url": "https://ideenatlas.eu/api/search"
 				},
 				{
 					"label": "Content-Type",
@@ -41,7 +42,41 @@
 		},
 		{
 			"type": "subsection_title",
-			"text": "Browsing API (For Web-Scraping LLMs)"
+			"text": "MCP (Model Context Protocol)"
+		},
+		{
+			"type": "paragraph",
+			"content": [
+				{
+					"text": "Alongside the classical API, an MCP server is also provided. Using the 'search' tool, the same JSON results as presented by the REST API are returned, but it is more direct and often easier to integrate into LLM workflows. No authentication is needed."
+				}
+			]
+		},
+		{
+			"type": "list",
+			"items": [
+				{
+					"label": "Transport Type",
+					"text": "SSE"
+				},
+				{
+					"label": "Endpoint",
+					"text": "/sse",
+					"url": "https://ideenatlas.eu/sse"
+				},
+				{
+					"label": "Authentication",
+					"text": "None"
+				},
+				{
+					"label": "Tools",
+					"text": "search"
+				}
+			]
+		},
+		{
+			"type": "subsection_title",
+			"text": "Browsing API"
 		},
 		{
 			"type": "paragraph",
@@ -60,7 +95,8 @@
 				},
 				{
 					"label": "Endpoint",
-					"text": "/api/search/view?q=Search+query+to+be+processed,+make+it+specific"
+					"text": "/api/search/view?q=Search+query+to+be+processed,+make+it+specific",
+					"url": "https://ideenatlas.eu/api/search/view?q=optimising+the+internet+for+large+language+models"
 				}
 			]
 		},
@@ -72,7 +108,7 @@
 			"type": "paragraph",
 			"content": [
 				{
-					"text": "For AI agents that cannot construct URLs manually, a minimalist HTML entry point is available. It contains a search form that redirects to the API view."
+					"text": "For AI agents that cannot construct URLs manually, but are allowed to interact with webpages, a minimalist HTML entry point is available. It contains a search form that redirects to the API view."
 				}
 			]
 		},
@@ -81,7 +117,8 @@
 			"items": [
 				{
 					"label": "URL",
-					"text": "https://ideenatlas.eu/ai"
+					"text": "https://ideenatlas.eu/ai",
+					"url": "https://ideenatlas.eu/ai"
 				},
 				{
 					"label": "Action",

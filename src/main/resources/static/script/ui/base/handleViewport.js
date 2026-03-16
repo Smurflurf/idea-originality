@@ -6,54 +6,97 @@ export function initViewportManager() {
     if (!window.visualViewport || window.viewportManagerAttached) return;
     window.viewportManagerAttached = true;
 
+    // HILFSFUNKTION FIX: Prüft, ob ein Element ein Eingabefeld ist 
+    // (inklusive contenteditable divs wie unserem neuen Custom-Editor!)
+    const isEditableElement = (el) => {
+        return el && (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT' || el.isContentEditable);
+    };
+
     const handleResize = () => {
         const vv = window.visualViewport;
         const windowHeight = window.innerHeight;
-        const keyboardHeight = windowHeight - vv.height;
-        const isKeyboardOpen = keyboardHeight > 100;
-
-        // 1. Sidebar & Body-Padding anpassen (für Scroll-Spielraum)
-        const sidebar = document.getElementById('sidebar-menu');
-        if (sidebar) sidebar.style.paddingBottom = isKeyboardOpen ? `${keyboardHeight}px` : '';
         
-        // Wichtig: Padding am Body erlaubt es uns, das Element manuell in die Mitte zu schieben,
-        // auch wenn die Seite eigentlich nicht lang genug zum Scrollen wäre.
-        document.body.style.paddingBottom = isKeyboardOpen ? `${keyboardHeight}px` : '';
+        // 1. SICHERHEITS-CHECK: Ist überhaupt ein Textfeld aktiv?
+        const activeEl = document.activeElement;
+        const isInputFocused = isEditableElement(activeEl);
 
-        // 2. Exakte Zentrierung des aktiven Elements
-        if (isKeyboardOpen) {
-            const activeEl = document.activeElement;
-            const isInput = activeEl && (activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'INPUT');
-            
-            if (isInput) {
-                // Kurzer Timeout, damit die Layout-Engine die neuen Paddings verarbeitet hat
-                setTimeout(() => {
-                    const rect = activeEl.getBoundingClientRect();
-                    
-                    /**
-                     * KORREKTUR-LOGIK:
-                     * Die Textarea hat padding-top: 12px und padding-bottom: 70px.
-                     * Um die *optische* Mitte des Textbereichs zu treffen, müssen wir den 
-                     * Versatz (70 - 12) / 2 = 29px korrigieren.
-                     */
-                    let visualOffset = 0;
-                    if (activeEl.getAttribute('name') === 'idea-text') {
-                        visualOffset = 29; 
-                    }
+        let keyboardHeight = 0;
+        let isKeyboardOpen = false;
 
-                    // Berechnung: Wo liegt die Mitte des Elements im Dokument minus der optischen Korrektur?
-                    const elementMidInDocument = window.scrollY + rect.top + (rect.height / 2);
-                    // Ziel: Dieser Punkt soll in der Mitte des Sichtfensters (vv.height / 2) liegen.
-                    const targetScrollY = (elementMidInDocument - visualOffset) - (vv.height / 2);
+        if (isInputFocused) {
+            keyboardHeight = Math.max(0, windowHeight - vv.height);
+            isKeyboardOpen = keyboardHeight > 100;
+        }
 
-                    window.scrollTo({
-                        top: Math.max(0, targetScrollY),
-                        behavior: 'smooth'
-                    });
-                }, 150);
-            }
+        // ---> NEU: Ort des Eingabefeldes bestimmen <---
+        const isInSidebar = activeEl && !!activeEl.closest('#sidebar-menu');
+
+        // 2. Paddings anpassen
+        const sidebar = document.getElementById('sidebar-menu');
+        if (sidebar) {
+            // Padding in der Sidebar hinzufügen, damit der unterste Punkt nicht
+            // hinter der Tastatur verschwindet.
+            sidebar.style.paddingBottom = isKeyboardOpen ? `${keyboardHeight}px` : '';
+        }
+        
+        // Das Body-Padding für die Hauptseite NUR setzen, wenn wir NICHT im Menü sind
+        if (!isInSidebar) {
+            document.body.style.paddingBottom = isKeyboardOpen ? `${keyboardHeight}px` : '';
+        } else {
+            document.body.style.paddingBottom = '';
+        }
+
+        // 3. Exakte Zentrierung des aktiven Elements
+        if (isKeyboardOpen && isInputFocused) {
+            setTimeout(() => {
+                if (document.activeElement !== activeEl) return;
+
+                // =========================================================
+                // IOS SAFARI FIX:
+                // Wenn wir im fixierten Menü sind, bloß KEIN window.scrollTo aufrufen!
+                // =========================================================
+                if (isInSidebar) {
+                    // Wir stellen nur sicher, dass das Feld innerhalb des Menüs gescrollt wird
+                    activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    return; // GANZ WICHTIG: Abbruch!
+                }
+
+                // =========================================================
+                // Normales Verhalten (für die große Textarea auf der Startseite)
+                // =========================================================
+                const rect = activeEl.getBoundingClientRect();
+                
+                let visualOffset = 0;
+                // FIX: Offset greift nun beim alten Textarea-Namen ODER der neuen Custom-Editor ID
+                if (activeEl.getAttribute('name') === 'idea-text' || activeEl.id === 'editor-content') {
+                    visualOffset = 29; 
+                }
+
+                const elementMidInDocument = window.scrollY + rect.top + (rect.height / 2);
+                const targetScrollY = (elementMidInDocument - visualOffset) - (vv.height / 2);
+
+                window.scrollTo({
+                    top: Math.max(0, targetScrollY),
+                    behavior: 'smooth'
+                });
+            }, 150);
         }
     };
 
+    // Auf Viewport-Änderungen hören
     window.visualViewport.addEventListener('resize', handleResize);
+
+    // Zusätzlich auf das Verlassen von Eingabefeldern hören (Sicherheitsnetz)
+    document.addEventListener('focusout', (e) => {
+        if (isEditableElement(e.target)) {
+            setTimeout(handleResize, 100);
+        }
+    });
+    
+    // Wenn ein Feld angetippt wird, sofort berechnen
+    document.addEventListener('focusin', (e) => {
+        if (isEditableElement(e.target)) {
+            handleResize();
+        }
+    });
 }

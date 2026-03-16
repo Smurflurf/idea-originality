@@ -19,21 +19,12 @@
     left: 0;
     width: 100%;
     height: 100%;
-    border-radius: 8px;
     pointer-events: none;
     color: transparent;
     text-indent: 100%;
     white-space: nowrap;
-    overflow: hidden;
     border: none;
     display: block;
-}
-
-/* Filter für die Basis-Karten (Hintergrundbilder) */
-#viz-layer-own-base,
-#viz-layer-nc-base,
-#viz-layer-serendipity-base {
-    filter: var(--viz-base-filter);
 }
 
 .zoom-pan-wrapper {
@@ -45,6 +36,11 @@
     transform-origin: 0 0; 
 }
 
+/* Wenn der Snapshot aktiv ist, lösche das will-change, um RAM freizugeben! */
+.viz-stack-container.has-snapshot .zoom-pan-wrapper {
+    will-change: auto; 
+}
+
 .zoom-pan-wrapper.is-panning {
     transition: none;
 }
@@ -53,7 +49,7 @@
     position: absolute;
     bottom: 12px;
     right: 12px;
-    z-index: 15; 
+    z-index: 30; 
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -88,8 +84,9 @@
 .dynamic-points-container {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
-    z-index: 5;
+    z-index: 20; 
     display: none;
+    pointer-events: none;
 }
 
 .point-hitbox {
@@ -101,7 +98,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    will-change: transform;
+    pointer-events: auto;
 }
 
 .neighbor-point {
@@ -111,25 +108,115 @@
     border: 2px solid rgba(var(--bg-black-rgb), 0.9);
     box-shadow: 0 0 0 2px rgba(var(--text-primary-rgb), 0.8);
     background-clip: content-box;
-    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out, opacity 0s linear 0s;
     pointer-events: none;
 }
 
-.point-hitbox:hover .neighbor-point {
-    transform: scale(1.8) !important;
-    box-shadow: 0 0 10px rgba(var(--text-primary-rgb), 0.6);
-}
-
+/* Hover-Regeln */
+.point-hitbox:hover .neighbor-point,
 .point-hitbox.is-hovered-from-tooltip .neighbor-point {
     transform: scale(1.8) !important;
-    box-shadow: 0 0 10px rgba(var(--text-primary-rgb), 0.6);
+    box-shadow: 0 0 10px rgba(var(--text-primary-rgb), 0.6) !important;
+    opacity: 1 !important;
 }
 
 /* =================================================================== */
-/* PERFORMANCE OPTIMIERUNGEN FÜR VIZ CONTAINER                         */
+/* PERFORMANCE OPTIMIERUNGEN FÜR VIZ CONTAINER (RASTERIZATION)         */
 /* =================================================================== */
 
 .viz-stack-container {
     transform: translateZ(0); 
     backface-visibility: hidden;
 }
+
+.viz-snapshot-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 10; 
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: none !important; /* Absolut instantan - blockiert alle Animationen */
+    object-fit: cover;
+}
+
+/* Einblenden des Snapshots */
+.viz-stack-container.has-snapshot:not(.is-scroll-zoom-active) .viz-snapshot-overlay {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* BASE-RULES für Live-Layer (Standard: Sofort da) */
+.zoom-pan-wrapper > .viz-layer:not(.viz-snapshot-overlay),
+canvas.viz-layer-overlay {
+    opacity: 1;
+    visibility: visible;
+    transition: none !important;
+}
+
+/* Sofortiges Ausblenden der Live-Layer, wenn der Snapshot aktiv ist */
+.viz-stack-container.has-snapshot:not(.is-scroll-zoom-active) .zoom-pan-wrapper > .viz-layer:not(.viz-snapshot-overlay),
+.viz-stack-container.has-snapshot:not(.is-scroll-zoom-active) canvas.viz-layer-overlay {
+    opacity: 0;
+    visibility: hidden;
+    content-visibility: hidden;
+    transition: none !important;
+    display: none !important; 
+}
+
+/* Die Punkte separat ausblenden. WICHTIG: KEIN visibility: hidden und KEIN transition: none! 
+   Sonst verschluckt der Browser beim Hovern die Startposition der CSS-Animation! */
+.viz-stack-container.has-snapshot:not(.is-scroll-zoom-active) .neighbor-point {
+    opacity: 0;
+}
+
+/* WENN ein Punkt während des Snapshots (oder durch Tooltip) gehovered wird, erzwingen wir Sichtbarkeit! */
+.viz-stack-container.has-snapshot:not(.is-scroll-zoom-active) .point-hitbox:hover .neighbor-point,
+.viz-stack-container.has-snapshot:not(.is-scroll-zoom-active) .point-hitbox.is-hovered-from-tooltip .neighbor-point {
+    opacity: 1 !important;
+    /* Transition wird hier automatisch vom Basis .neighbor-point Selektor übernommen */
+}
+
+
+/*
+  Diese Klasse wird per JS nur während des Swipens hinzugefügt.
+  Sie erzwingt SOFORT den Snapshot-Modus für alle Visualisierungen,
+  die nicht im Fokus stehen, um die GPU-Last dramatisch zu reduzieren.
+*/
+.viz-stack-container.is-swipe-simplified .viz-snapshot-overlay {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.viz-stack-container.is-swipe-simplified .zoom-pan-wrapper {
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+/* =================================================================== */
+/* CURSOR / PANNING STYLES                                             */
+/* =================================================================== */
+
+/* Standardmäßig normaler Cursor */
+.viz-stack-container {
+    cursor: default;
+}
+
+/* Wenn herangezoomt wurde, zeigen wir das offene Grab-Icon an */
+.viz-stack-container.is-zoomed-in {
+    cursor: grab;
+}
+
+/* Wenn man die Maus gedrückt hält (CSS nativ) oder das JS 'panning' meldet */
+.viz-stack-container.is-zoomed-in:active,
+.viz-stack-container.is-panning {
+    cursor: grabbing !important;
+}
+
+/* Wichtig: Über interaktiven Elementen wie Buttons oder Datenpunkten greift die Hand nicht zu! */
+.zoom-controls button,
+.point-hitbox {
+    cursor: pointer;
+}
+
+

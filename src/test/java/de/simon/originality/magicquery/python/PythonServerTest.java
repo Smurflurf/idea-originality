@@ -5,9 +5,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -28,7 +26,7 @@ class PythonServerTest {
 		DataPathService data = new DataPathService(setup);
 		data.initializePaths();
 		manager = new PythonServerManager(data);
-		service = new PythonService(new ObjectMapper(), manager);
+		service = new PythonService(new ObjectMapper(), manager, WebClient.builder());
 
 		try {
 			manager.restartServer();

@@ -1,0 +1,776 @@
+{
+	"page_title": "Frequently Asked Questions (FAQ)",
+	"intro": "Here you will find answers regarding the philosophy, technology, and usage of the Ideenatlas.",
+	"structure": [
+		{
+			"type": "faq_search",
+			"placeholder": "Search for topics, features, or problems..."
+		},
+		{
+			"type": "cascade_block",
+			"title": "Introduction & Basics",
+			"items": [
+				{
+					"id": "faq_what_is",
+					"question": "What exactly is the Ideenatlas and how does it help?",
+					"answer": [
+						"The Ideenatlas is an 'idea curation engine'. It solves a fundamental problem: usually, to find something, you need to know what it's called and what you're looking for. Many ideas lack the appropriate technical vocabulary or expertise to be further developed and pursued; by the time you've acquired this, the idea is often forgotten or seems irrelevant.",
+						"The Atlas helps to locate these nascent ideas, uncover research gaps, and validate thoughts within the context of millions of scientific papers."
+					],
+					"keywords": [
+						"what site for",
+						"ideenatlas purpose",
+						"how it works",
+						"tool benefit",
+						"help with",
+						"meaning of",
+						"explain ideenatlas",
+						"what to do"
+					],
+					"relevant_on": [
+						"about",
+						"index",
+						"faq"
+					]
+				},
+				{
+					"id": "faq_diff_google",
+					"question": "How is the Ideenatlas different from Google or Semantic Scholar?",
+					"answer": [
+						"Classic search engines like Google rely on keywords. Without the exact term, relevant results often remain hidden. Academic alternatives like Semantic Scholar often use citation graphs, which favors already popular papers and disadvantages niche topics.",
+						"Instead, the Ideenatlas uses a semantic vector space. Evaluation is not based on SEO, popularity, or citation counts, but purely on the mathematical proximity of content. It counts semantic similarity, regardless of the exact wording."
+					],
+					"keywords": [
+						"why not google",
+						"better than google",
+						"difference normal search",
+						"advantage semantic scholar",
+						"different regular search",
+						"vector vs keyword",
+						"like google scholar",
+						"scite",
+						"scite.ai",
+						"research rabbit",
+						"research rabit",
+						"zeta alpha",
+						"consensus",
+						"elicit",
+						"connected papers"
+					],
+					"relevant_on": [
+						"about",
+						"faq"
+					]
+				},
+				{
+					"id": "faq_cost",
+					"question": "Are there any costs for usage?",
+					"answer": [
+						"No. The Ideenatlas is operated as an open research prototype. The goal is to make scientific research transparent and accessible without paywalls or advertising."
+					],
+					"keywords": [
+						"is free",
+						"pay for this",
+						"subscription",
+						"cost ideenatlas",
+						"site free",
+						"credit card",
+						"hidden costs",
+						"premium",
+						"pricing"
+					],
+					"relevant_on": [
+						"*"
+					]
+				}
+			]
+		},
+		{
+			"type": "cascade_block",
+			"title": "Search & Input",
+			"items": [
+				{
+					"id": "faq_no_idea",
+					"question": "What can I search for if I don't have a finished thesis?",
+					"answer": [
+						"This is the ideal use case. The Atlas translates everyday language into a scientific context. You can use rough brainstorming for idea extraction, naive questions, summaries of complex texts, or simple term searches."
+					],
+					"keywords": [
+						"no idea",
+						"don't know search",
+						"what to search",
+						"no clue",
+						"how to start",
+						"search field input",
+						"help start",
+						"only keyword",
+						"just brainstorm"
+					],
+					"faq_select": [
+						".custom-editor"
+					],
+					"relevant_on": [
+						"index"
+					]
+				},
+				{
+					"type": "cascade_block",
+					"title": "The Target Buttons",
+					"items": [
+						{
+							"id": "faq_buttons_general",
+							"question": "Why are there four different target buttons?",
+							"answer": [
+								"The inputs in the text field are optimized by an AI (before being processed locally) to maximize the utility of the answers.",
+								"For the AI to formulate the text appropriately, it needs to know what you expect. Depending on the button, it adjusts its focus. It ranges from pure summarization to enriching your idea with scientific terminology."
+							],
+							"keywords": [
+								"what buttons do",
+								"different buttons for",
+								"which button click",
+								"difference target buttons",
+								"why choose target",
+								"decide button",
+								"search options meaning"
+							],
+							"ui_mockup": [
+								".popup-intent-selection"
+							],
+							"faq_select": [
+								".run-button"
+							],
+							"relevant_on": [
+								"index"
+							]
+						},
+						{
+							"id": "faq_btn_question",
+							"question": "What does 'I need answers' do?",
+							"answer": [
+								"Choose this if you have a specific question or are still unsure about a topic.",
+								"The AI is instructed to underpin your gaps with a solid scientific foundation and generate technical answers that are perfect for the subsequent topic search."
+							],
+							"keywords": [
+								"when need answers",
+								"happens need answers",
+								"ask question",
+								"unsure topic",
+								"find answers",
+								"question button"
+							],
+							"ui_mockup": [
+								".intent-btn[data-intent='question']"
+							],
+							"relevant_on": [
+								"index"
+							]
+						},
+						{
+							"id": "faq_btn_idea",
+							"question": "What does 'Extract Idea' do?",
+							"answer": [
+								"Perfect for unstructured brainstorming or rough trains of thought.",
+								"The AI filters out your core ideas, formulates a clear hypothesis from them, and adds (if necessary) suitable scientific terms or methodologies to make your idea discoverable."
+							],
+							"keywords": [
+								"when extract idea",
+								"extract idea do",
+								"brainstorming button",
+								"organize thoughts",
+								"formulate hypothesis",
+								"text into idea"
+							],
+							"ui_mockup": [
+								".intent-btn[data-intent='idea']"
+							],
+							"relevant_on": [
+								"index"
+							]
+						},
+						{
+							"id": "faq_btn_summarize",
+							"question": "What does 'Summarize Documents' do?",
+							"answer": [
+								"Intended for large amounts of text or uploaded documents (like PDFs).",
+								"The AI analyzes the text, extracts the central statements and methodologies, and condenses them into a precise summary. This way, you can check if similar research already exists."
+							],
+							"keywords": [
+								"when summarize documents",
+								"upload pdf summarize",
+								"shorten text",
+								"generate summary",
+								"summarize button do",
+								"summarize text"
+							],
+							"ui_mockup": [
+								".intent-btn[data-intent='summarize']"
+							],
+							"relevant_on": [
+								"index"
+							]
+						},
+						{
+							"id": "faq_btn_none",
+							"question": "What does 'No special treatment' do?",
+							"answer": [
+								"Use this if you already have a very precise, finished text and do not want any further interpretation by the AI.",
+								"The input is translated strictly objectively into a machine-readable format for the vector search, without adding new context or explanations."
+							],
+							"keywords": [
+								"no special treatment",
+								"search directly",
+								"ignore ai",
+								"machine readable",
+								"submit finished text",
+								"happen if none"
+							],
+							"ui_mockup": [
+								".intent-btn[data-intent='none']"
+							],
+							"relevant_on": [
+								"index"
+							]
+						}
+					]
+				},
+				{
+					"id": "faq_input_formats",
+					"question": "Which input formats are supported?",
+					"answer": [
+						"The Ideenatlas is multimodal and processes various input formats. Besides the obvious text input, you can directly record and submit audio with a built-in recorder. Furthermore, PDFs, images, videos, or any form of text files can be uploaded. Through idea extraction using the LLM and specifying the query's goal, the relevant information can be processed as text."
+					],
+					"keywords": [
+						"upload pdf",
+						"pictures photos",
+						"record voice",
+						"audio microphone",
+						"which files",
+						"videos supported",
+						"upload document",
+						"file formats"
+					],
+					"ui_mockup": [
+						".textarea-wrapper",
+						".media-menu"
+					],
+					"highlight_mockup": [
+						".media-button-label",
+						".media-menu li"
+					],
+					"faq_select": [
+						".media-button-label",
+						".media-menu li"
+					],
+					"relevant_on": [
+						"index"
+					]
+				}
+			]
+		},
+		{
+			"type": "cascade_block",
+			"title": "Understanding Results",
+			"items": [
+				{
+					"id": "faq_tabs_meaning",
+					"question": "What do the three tabs mean: 'Your Idea', 'Related Topics', 'Serendipity'?",
+					"answer": [
+						"The tabs offer different perspectives on the input. Each tab answers a slightly different question, ranging from very specific to broad.",
+						"'Your Idea' shows the direct analysis of the idea. The cluster hierarchy there shows where the idea would be categorized. The results return the most directly relevant scientific papers. Here you find the direct answer to a question.",
+						"'Related Topics' takes a bird's-eye view and leads to the nearest neighboring research fields. Instead of searching for individual scientific articles, entire topic areas are searched, and results are filtered by them.",
+						"'Serendipity' shows content-wise distant but structurally similar topics to break down silo thinking and make solutions from other disciplines visible. Not all results here fit, but when something fits, it is often unexpected and good."
+					],
+					"keywords": [
+						"what serendipity",
+						"difference three tabs",
+						"related topics",
+						"read tabs",
+						"direct answers",
+						"different result views",
+						"meaning your idea"
+					],
+					"ui_mockup": [
+						".viz-toggle-header"
+					],
+					"relevant_on": [
+						"results"
+					]
+				},
+				{
+					"id": "faq_hierarchy",
+					"question": "How should the 'Cluster Hierarchy' be interpreted?",
+					"answer": [
+						"The hierarchy functions like the zoom on a map, from continent to country to city. It clarifies how the input was thematically categorized, from general to specific."
+					],
+					"keywords": [
+						"cluster hierarchy",
+						"read folder structure",
+						"thematic categorization",
+						"levels mean",
+						"zoom map work",
+						"list above results"
+					],
+					"ui_mockup": [
+						".hierarchy-list"
+					],
+					"relevant_on": [
+						"results"
+					]
+				},
+				{
+					"id": "faq_scores",
+					"question": "What do 'Score', 'Confidence', and 'Relevance' mean?",
+					"answer": [
+						"TLDR: The numbers range from 0 to 1, and higher is better.",
+						"The Score represents no judgment of quality. It simply measures mathematical proximity in vector space. A high value means strong content agreement with the query. It measures with the same metric as 'Relevance', cosine similarity.",
+						"'Confidence' describes how sure the algorithm was when classifying the idea (or scientific work) into the topic field. If it is not absolutely sure (Confidence < 1.0), the idea is likely interdisciplinary or the classification is imprecise.",
+						"'Relevance' is a peculiarity of 'Related Topics' and 'Serendipity'; it is the cosine similarity between the input vector and the centroid of the respective topic area. A higher value here means greater similarity and thus more promising results."
+					],
+					"keywords": [
+						"understand percentages",
+						"good score",
+						"meaning confidence",
+						"meaning relevance",
+						"ranking calculated",
+						"number values",
+						"value next result"
+					],
+					"ui_mockup": [
+						".result-score",
+						"#own-viz-content .hierarchy-list li:first-child .hierarchy-item-box",
+						"#neighbor-viz-content .hierarchy-list li:first-child .hierarchy-item-box"
+					],
+					"highlight_mockup": [
+						".result-score",
+						".hierarchy-item-confidence"
+					],
+					"faq_select": [
+						".result-score",
+						".hierarchy-item-confidence"
+					],
+					"relevant_on": [
+						"results"
+					]
+				},
+				{
+					"type": "cascade_block",
+					"title": "Visualization in Detail",
+					"items": [
+						{
+							"id": "faq_viz_map",
+							"question": "Why is a map used?",
+							"answer": [
+								"Lists are one-dimensional and hide connections. A map reveals patterns that would be lost in a text list, such as dense clusters or isolated outliers... and all at a glance."
+							],
+							"keywords": [
+								"why not list",
+								"map good for",
+								"visualization advantage",
+								"see landscape",
+								"graphical purpose",
+								"why picture"
+							],
+							"relevant_on": [
+								"results"
+							]
+						},
+						{
+							"id": "faq_viz_colors",
+							"question": "How do I read the map's 'landscape'?",
+							"answer": [
+								"The map functions as an atlas of knowledge. Colored clusters represent thematically related areas, empty spaces show a lack of content overlap. Densely packed points indicate a well-researched field, while scattered points point to interdisciplinary connections."
+							],
+							"keywords": [
+								"map colors",
+								"interpret clusters",
+								"map gaps",
+								"points close together",
+								"colored areas",
+								"read map"
+							],
+							"ui_mockup": [
+								"cache:own_base",
+								"cache:serendipity_points"
+							],
+							"ui_mockup_stack": true,
+							"relevant_on": [
+								"results"
+							]
+						},
+						{
+							"id": "faq_viz_nav",
+							"question": "How does navigation in the visualization work?",
+							"answer": [
+								"Navigation is intuitive via the mouse wheel or the +/- keys for zooming, as well as clicking and dragging to pan. To interact with the map, it must be active, meaning it needs the blue border. You activate it by clicking once on the map."
+							],
+							"keywords": [
+								"zoom map",
+								"move map",
+								"map not moving",
+								"activate map",
+								"blue border",
+								"use picture",
+								"map navigation"
+							],
+							"ui_mockup": [
+								".zoom-controls"
+							],
+							"relevant_on": [
+								"results"
+							]
+						},
+						{
+							"type": "cascade_block",
+							"title": "The Analysis Layers (Toggle-Buttons)",
+							"items": [
+								{
+									"id": "faq_viz_toggle_crosshair",
+									"question": "What does 'Your Idea' / The Crosshair do?",
+									"answer": [
+										"This toggle shows the crosshair, which marks the exact position of your input in the 2D knowledge universe.",
+										"It serves primarily for orientation: where is the idea located? Through interaction with the other visualization layers, further connections can be inferred."
+									],
+									"keywords": [
+										"idea on map",
+										"crosshair meaning",
+										"locate input",
+										"find position",
+										"cross middle"
+									],
+									"ui_mockup": [
+										".viz-controls"
+									],
+									"highlight_mockup": [
+										"#viz-toggle-own-crosshair"
+									],
+									"faq_select": [
+										"#viz-toggle-own-crosshair",
+										"#viz-toggle-nc-crosshair",
+										"#viz-toggle-serendipity-crosshair"
+									],
+									"relevant_on": [
+										"results"
+									]
+								},
+								{
+									"id": "faq_viz_toggle_points",
+									"question": "What does the 'Points' button do?",
+									"answer": [
+										"This toggle highlights the relevant topic areas in color.",
+										"The high contrast allows for immediate recognition of where the topic areas are located, how large (specific) they are, and how they relate to each other."
+									],
+									"keywords": [
+										"colored dots",
+										"highlight topics",
+										"points view",
+										"points toggle",
+										"spots view"
+									],
+									"ui_mockup": [
+										".viz-controls"
+									],
+									"highlight_mockup": [
+										"#viz-toggle-own-points"
+									],
+									"faq_select": [
+										"#viz-toggle-own-points",
+										"#viz-toggle-nc-points",
+										"#viz-toggle-serendipity-points"
+									],
+									"relevant_on": [
+										"results"
+									]
+								},
+								{
+									"id": "faq_viz_toggle_outlines",
+									"question": "What is the 'Outlines' button for?",
+									"answer": [
+										"It toggles the colored outlines of the active topic areas on and off. ",
+										"This helps to visually delineate the boundaries of topic areas better, especially on maps with many overlapping colors. It is reminiscent of contour lines on a map and makes the structure more tangible."
+									],
+									"keywords": [
+										"contour lines",
+										"borders topics",
+										"outlines toggle",
+										"overlapping colors",
+										"turn on outlines"
+									],
+									"ui_mockup": [
+										".viz-controls"
+									],
+									"highlight_mockup": [
+										"#viz-toggle-own-outlines"
+									],
+									"faq_select": [
+										"#viz-toggle-own-outlines",
+										"#viz-toggle-nc-outlines",
+										"#viz-toggle-serendipity-outlines"
+									],
+									"relevant_on": [
+										"results"
+									]
+								},
+								{
+									"id": "faq_viz_toggle_context",
+									"question": "What does the 'Context' button show?",
+									"answer": [
+										"This toggle displays the names and outlines of the parent, large-scale topic areas.",
+										"You can think of it as showing the continents on a world map to get a rough orientation in the vector space."
+									],
+									"keywords": [
+										"large area names",
+										"parent topics",
+										"rough orientation",
+										"show continents",
+										"context toggle"
+									],
+									"ui_mockup": [
+										".viz-controls"
+									],
+									"highlight_mockup": [
+										"#viz-toggle-own-context"
+									],
+									"faq_select": [
+										"#viz-toggle-own-context",
+										"#viz-toggle-nc-context",
+										"#viz-toggle-serendipity-context"
+									],
+									"relevant_on": [
+										"results"
+									]
+								},
+								{
+									"id": "faq_viz_toggle_labels",
+									"question": "What does the 'Labels' button do?",
+									"answer": [
+										"It displays the names of the topic areas on the map.",
+										"This is useful for quickly grasping the exact names of the areas.",
+										"However, especially with small, closely packed areas, this can be distracting and cluttered, which is why it is disabled by default. If you cannot find a topic area at a glance because it is too small or inconspicuous, it is worth briefly activating the labels as they stand out prominently."
+									],
+									"keywords": [
+										"topic names",
+										"names on map",
+										"no labels",
+										"turn on labels",
+										"text on map"
+									],
+									"ui_mockup": [
+										".viz-controls"
+									],
+									"highlight_mockup": [
+										"#viz-toggle-own-labels"
+									],
+									"faq_select": [
+										"#viz-toggle-own-labels",
+										"#viz-toggle-nc-labels",
+										"#viz-toggle-serendipity-labels"
+									],
+									"relevant_on": [
+										"results"
+									]
+								},
+								{
+									"id": "faq_viz_toggle_neighbors",
+									"question": "What does the 'Neighbors' button show?",
+									"answer": [
+										"It marks the positions of the found scientific articles (which appear in the results list below) as small, interactive dots directly on the map.",
+										"This makes it possible to see at a glance where the specific hits are located. Their positions allow for several conclusions to be drawn:",
+										"The Dense Spot: Are all results close together? Then the idea is firmly located within an established field.",
+										"The Scatter: Do the results spread across the entire map? This suggests an interdisciplinary approach connecting different \"continents of knowledge\".",
+										"The Outlier: Is a single neighbor extremely far away from everything else? This could indicate an interdisciplinary cross-connection worth investigating further.",
+										"And in conjunction with the crosshair: As a rule, the results from the 'Your Idea' tab should be located directly at the crosshair. However, if they are far from it, this may indicate that no suitable results are in the database. In this case, it may make sense to expand the research to other platforms. In this specific case, however, it is particularly worthwhile to study the results closely, as they can provide new insights and facets to the search."
+									],
+									"keywords": [
+										"results on map",
+										"articles on map",
+										"small dots",
+										"dense spot outlier",
+										"locate results",
+										"neighbors toggle"
+									],
+									"ui_mockup": [
+										".viz-controls"
+									],
+									"highlight_mockup": [
+										"#viz-toggle-own-neighbors"
+									],
+									"faq_select": [
+										"#viz-toggle-own-neighbors",
+										"#viz-toggle-nc-neighbors",
+										"#viz-toggle-serendipity-neighbors"
+									],
+									"relevant_on": [
+										"results"
+									]
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"type": "cascade_block",
+			"title": "Technology & Data",
+			"items": [
+				{
+					"id": "faq_tech_rag",
+					"question": "How does the underlying technology work?",
+					"answer": [
+						"The Ideenatlas is no simple ChatGPT wrapper or RAG. Several data processing steps occur between data collection and the final page.",
+						"Once the raw data is collected and cleaned, it is converted into a vector using a sentence embedder (Title + Abstract -> Vector) and written to a vector database.",
+						"When this is finished, a UMAP model is created to reduce the vectors from 1024 dimensions down to a lower dimension (10). You can imagine this process like taking a picture: the camera transforms the 3D world into a 2D image. This allows us to bypass the curse of dimensionality in the subsequent steps.",
+						"Now, clustering takes place. HDBSCAN models are recursively created based on the low-dimensional vectors. First, the entire vector space is clustered. Then, the resulting clusters are clustered again. It is as if we were drawing continents on a map in the first step, followed by countries, states, cities, and neighborhoods.",
+						"In the final step, the clusters are prepared for later use. First, the cluster centroids are calculated in their original dimensionality and written to a new vector database. Then, names and descriptions are generated for all clusters. We do not just rely solely on an LLM for this: it is provided with all the important information, such as TF-IDF keywords, cluster size, cluster hierarchy, the keywords of surrounding clusters, and meaningful titles + abstracts of papers from within the cluster.",
+						"Finally, the most important element is generated: the map of the atlas. Generating a 2D representation of the vector space using UMAP is a no-brainer. To make it more navigable, cluster outlines are generated. To make this computationally feasible and visually appealing, convex hulls are wrapped around a random selection of 2D vectors from a cluster that has been denoised using DBSCAN.",
+						"With every user query, all of these steps are then applied to the user's text."
+					],
+					"keywords": [
+						"work technically",
+						"in background",
+						"algorithm used",
+						"vector search explain",
+						"website technology",
+						"ai model"
+					],
+					"relevant_on": [
+						"about"
+					]
+				},
+				{
+					"id": "faq_data_sources",
+					"question": "Where does the data come from?",
+					"answer": [
+						"The data comes from established Open Access repositories such as arXiv, PubMed Central, or RePEc."
+					],
+					"keywords": [
+						"articles from",
+						"database used",
+						"scientific sources",
+						"arxiv pubmed",
+						"data origin",
+						"sources"
+					],
+					"relevant_on": [
+						"about"
+					]
+				},
+				{
+					"id": "faq_data_update",
+					"question": "Is the data up-to-date?",
+					"answer": [
+						"The database and the algorithms to process the data are updated at regular intervals. During the last few months the frontend was in focus and I have to reapply for the beUniCluster 3.0, so the current status of the data basis is August/September 2025."
+					],
+					"keywords": [
+						"article age",
+						"new studies",
+						"database age",
+						"data status",
+						"results update",
+						"updates"
+					],
+					"relevant_on": [
+						"about"
+					]
+				}
+			]
+		},
+		{
+			"type": "cascade_block",
+			"title": "Data, Export & Security",
+			"items": [
+				{
+					"id": "faq_privacy_input",
+					"question": "What happens to entered ideas?",
+					"answer": [
+						"Inputs are processed temporarily to perform vector analysis. Permanent storage on the server does not take place. Uploaded files are deleted immediately after analysis completion."
+					],
+					"keywords": [
+						"idea safe",
+						"inputs saved",
+						"uploaded files",
+						"text privacy",
+						"text deleted",
+						"privacy"
+					],
+					"relevant_on": [
+						"privacy"
+					]
+				},
+				{
+					"id": "faq_ai_training",
+					"question": "Is data used for AI training?",
+					"answer": [
+						"No. External APIs used for text optimization are subject to strict data protection regulations that exclude training with user data. The actual vector search takes place locally on the server."
+					],
+					"keywords": [
+						"ai learn data",
+						"train models",
+						"data openai",
+						"ai privacy",
+						"ai training"
+					],
+					"relevant_on": [
+						"privacy"
+					]
+				},
+				{
+					"id": "faq_export",
+					"question": "Can results be exported?",
+					"answer": [
+						"Yes, data sovereignty is guaranteed. Results can be exported as interactive HTML for offline use or as raw JSON data for further processing."
+					],
+					"keywords": [
+						"save map",
+						"download results",
+						"export",
+						"html json download",
+						"use offline"
+					],
+					"ui_mockup": [
+						".download-btn-styled",
+						".download-popup-modal"
+					],
+					"highlight_mockup": [
+						".download-btn-styled",
+						".download-html-choice-btn",
+						".download-json-choice-btn"
+					],
+					"faq_select": [
+						".download-btn-styled",
+						".download-html-choice-btn",
+						".download-json-choice-btn"
+					],
+					"relevant_on": [
+						"results"
+					]
+				},
+				{
+					"id": "faq_history",
+					"question": "Is the history saved?",
+					"answer": [
+						"The history is stored exclusively locally in the browser (IndexedDB) and does not leave the device. Clearing browser data also removes the history."
+					],
+					"keywords": [
+						"old searches",
+						"delete history",
+						"save history",
+						"find old results",
+						"view history"
+					],
+					"ui_mockup": [
+						"#menu-trigger",
+						"#history-fixed-label"
+					],
+					"highlight_mockup": [
+						"#history-fixed-label"
+					],
+					"faq_select": [],
+					"relevant_on": [
+						"*"
+					]
+				}
+			]
+		}
+	]
+}

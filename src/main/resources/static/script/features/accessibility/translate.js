@@ -1,6 +1,8 @@
 import { getCsrfToken } from '/script/core/security.js';
 import { setLanguage, t } from '/script/core/localization.js';
 import { getContext } from '/script/core/context.js';
+import { getTemplate } from '/script/core/templateManager.js';
+import { applyGeneralTranslations } from '/script/core/localization.js';
 
 
 // --- CONFIG & STATE ---
@@ -202,8 +204,8 @@ export function initializeTranslator() {
                 const selectedLang = btn.dataset.lang;
                 if (selectedLang !== currentTargetLanguage) {
                     let pageName = (window.location.pathname.substring(1).split('/')[0] || 'index').replace('.html', '');
-                    setLanguage(selectedLang, ['common', pageName]).then(() => {
-                        currentTargetLanguage = selectedLang;
+					setLanguage(selectedLang, ['common', 'sse', 'index', 'results', pageName]).then(() => {
+					    currentTargetLanguage = selectedLang;
                         renderLanguageList(currentTargetLanguage);
                         // Filter & Checkmarks UI aktualisieren
                         const filterInput = document.getElementById('language-filter-input');
@@ -263,16 +265,26 @@ function renderLanguageList(displayLocale) {
     const submenu = document.getElementById('translate-submenu');
     let topActiveBtn = null;
     if (submenu) {
+        // Wir suchen den Button, der NICHT im Scroll-Container liegt (der fixierte Header-Button)
         topActiveBtn = Array.from(submenu.querySelectorAll('.language-option')).find(btn => !container.contains(btn));
     }
 
     const languages = getLanguages();
     if (languages.length === 0) {
-        container.innerHTML = `<div style="padding:10px; color:var(--text-disabled); text-align:center; font-size:0.8rem;"><i>Offline / No Data</i></div>`;
+        container.textContent = '';
+        const offlineDiv = document.createElement('div');
+        offlineDiv.style.cssText = 'padding:10px; color:var(--text-disabled); text-align:center; font-size:0.8rem;';
+        const italicEl = document.createElement('i');
+        italicEl.setAttribute('data-i18n', 'translate.offline_msg');
+        italicEl.textContent = 'Offline / No Data';
+        offlineDiv.appendChild(italicEl);
+        container.appendChild(offlineDiv);
         return;
     }
 
     const activeSetting = localStorage.getItem(STORAGE_KEY_LANG) || 'system';
+    // Ermittle die echte System-Sprache des Browsers (z.B. "de" oder "en")
+    const browserLang = (navigator.language || 'en').split('-')[0];
 
     let uiLocale = displayLocale;
     if (!uiLocale || uiLocale === 'system') uiLocale = navigator.language || 'en';
@@ -281,30 +293,24 @@ function renderLanguageList(displayLocale) {
     try { uiFormatter = new Intl.DisplayNames([uiLocale], { type: 'language' }); } catch (e) { uiFormatter = { of: (code) => code }; }
     try { englishFormatter = new Intl.DisplayNames(['en'], { type: 'language' }); } catch (e) { englishFormatter = { of: (code) => code }; }
 
+    // 1. Liste der echten Sprachen erstellen
     const fullList = languages.map(lang => {
         const code = lang.code;
         let displayName = lang.name;
         
-        // Ein Set filtert automatisch doppelte Begriffe raus
         const uniqueTerms = new Set([code, lang.name]);
-
-        // 1. Name in der aktuellen UI-Sprache (z.B. "Französisch")
         try {
             const uiName = uiFormatter.of(code);
             if (uiName && uiName.toLowerCase() !== code.toLowerCase()) {
-                displayName = uiName; // Das zeigen wir im UI an
+                displayName = uiName;
                 uniqueTerms.add(uiName);
             }
         } catch(e) {}
-
-        // 2. Nativer Name (wie die Sprache sich selbst nennt, z.B. "Français")
         try {
             const nativeFormatter = new Intl.DisplayNames([code], { type: 'language' });
             const nativeName = nativeFormatter.of(code);
             if (nativeName) uniqueTerms.add(nativeName);
         } catch(e) {}
-
-        // 3. Englischer Name (als globaler Fallback, z.B. "French")
         try {
             const enName = englishFormatter.of(code);
             if (enName) uniqueTerms.add(enName);
@@ -314,63 +320,81 @@ function renderLanguageList(displayLocale) {
         return { code, displayName, searchString };
     });
 
-    fullList.unshift({
-        code: 'system',
-        displayName: t('themes.system') || 'System Default',
-        searchString: 'system default automatic',
-    });
+	// 2. Top Button ("System") Konfiguration
+	if (topActiveBtn) {
+		topActiveBtn.dataset.lang = 'system';
+		topActiveBtn.dataset.search = 'system default automatic';
 
-    let activeIndex = fullList.findIndex(item => item.code === activeSetting);
-    let activeItem = fullList[activeIndex];
-    
-    if (!activeItem) {
-        activeItem = fullList.find(item => item.code === 'system');
-        activeIndex = fullList.indexOf(activeItem);
-    }
+		// Template holen und Inhalt in den Button einfügen
+		const sysFrag = getTemplate('tpl-language-system-option');
+		if (sysFrag) {
+			topActiveBtn.textContent = ''; 
+			topActiveBtn.appendChild(sysFrag);
+			applyGeneralTranslations(topActiveBtn); 
 
-    if (topActiveBtn && activeItem) {
-        topActiveBtn.dataset.lang = activeItem.code;
-        topActiveBtn.dataset.search = activeItem.searchString;
-        const iconClass = activeItem.code === 'system' ? 'fa-solid fa-desktop' : 'fa-solid fa-globe';
-        
-        topActiveBtn.innerHTML = `
-            <span>
-                <i class="${iconClass}" style="font-size: 0.8em; opacity: 0.7;"></i> 
-                <span>${activeItem.displayName}</span>
-            </span>
-            <i class="fa-solid fa-check check-icon" style="opacity: 1"></i>
-        `;
-    }
+			let iconEl;
+			if (activeSetting === 'system') {
+				iconEl = document.createElement('i');
+				iconEl.className = 'fa-solid fa-check check-icon primary-check-icon';
+				iconEl.style.opacity = '1';
+			} else if (activeSetting === browserLang) {
+				iconEl = document.createElement('i');
+				iconEl.className = 'fa-solid fa-globe check-icon';
+				iconEl.style.cssText = 'opacity: 1; font-size: 0.9em;';
+			} else {
+				iconEl = document.createElement('span');
+				iconEl.className = 'check-icon';
+				iconEl.style.cssText = 'opacity: 1; font-size: 0.75em; font-weight: bold; width: 14px; text-align: center; color: var(--text-secondary);';
+				iconEl.textContent = browserLang.toUpperCase();
+			}
+			topActiveBtn.appendChild(iconEl);
+		}
+	}
 
-    if (activeIndex > -1) {
-        fullList.splice(activeIndex, 1);
-    }
-
+    // 3. Liste sortieren
     fullList.sort((a, b) => {
-        if (a.code === 'system') return -1;
-        if (b.code === 'system') return 1;
-        return a.displayName.localeCompare(b.displayName);
-    });
+        const topCode = (activeSetting === 'system') ? browserLang : activeSetting;
+        
+        if (a.code === topCode) return -1;
+        if (b.code === topCode) return 1;
+		return a.displayName.localeCompare(b.displayName);
+	});
 
-    container.innerHTML = '';
-    const fragment = document.createDocumentFragment();
-    
-    fullList.forEach(item => {
-        const btn = document.createElement('button');
-        btn.className = 'theme-submenu-item language-option';
-        btn.dataset.lang = item.code;
-        btn.dataset.search = item.searchString;
-        const iconClass = item.code === 'system' ? 'fa-solid fa-desktop' : 'fa-solid fa-globe';
+	// 4. Liste rendern
+	container.textContent = '';
+	const fragment = document.createDocumentFragment();
 
-        btn.innerHTML = `
-            <span>
-                <i class="${iconClass}" style="font-size: 0.8em; opacity: 0.7;"></i> 
-                <span>${item.displayName}</span>
-            </span>
-            <i class="fa-solid fa-check check-icon" style="opacity: 0"></i>
-        `;
-        fragment.appendChild(btn);
-    });
-    
-    container.appendChild(fragment);
+	fullList.forEach(item => {
+		// Template holen
+		const optFrag = getTemplate('tpl-language-option');
+		if (!optFrag) return;
+
+		const btn = optFrag.firstElementChild;
+		btn.dataset.lang = item.code;
+		btn.dataset.search = item.searchString;
+
+		// Name setzen
+		btn.querySelector('.lang-display-name').textContent = item.displayName;
+
+		// Icon Logik aktualisieren
+		const iconEl = btn.querySelector('.check-icon');
+		const globeEl = btn.querySelector('.fa-globe'); // Das Globe Icon aus dem Template
+
+		if (activeSetting === 'system') {
+			if (item.code === browserLang) {
+				iconEl.className = 'fa-solid fa-desktop check-icon primary-check-icon';
+				iconEl.style.opacity = '1';
+				if (globeEl) globeEl.style.opacity = '0.4'; 
+			}
+		} else {
+			if (item.code === activeSetting) {
+				iconEl.style.opacity = '1';
+			}
+		}
+
+		fragment.appendChild(btn);
+	});
+
+	container.appendChild(fragment);
 }
+

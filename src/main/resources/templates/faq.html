@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="page_title">API</title>
+    <th:block th:replace="~{collected_imports :: generalHeadImports}"></th:block>
+    
+    <!-- 0. Menu -->
+    <link rel="stylesheet" th:href="@{/dist/menu.css(v=${appVersion})}">
+    
+    <!-- 1. Fonts -->
+    <link rel="stylesheet" th:href="@{/vendor/fonts/roboto.css(v=${appVersion})}">
+    <link rel="stylesheet" th:href="@{/vendor/fontawesome/css/all.min.css(v=${appVersion})}">
+    
+    <!-- 2. Tippy & Popper -->
+    <link rel="stylesheet" th:href="@{/vendor/tippy/tippy.css(v=${appVersion})}">
+    <script th:src="@{/vendor/tippy/popper.min.js(v=${appVersion})}"></script>
+    <script th:src="@{/vendor/tippy/tippy-bundle.umd.min.js(v=${appVersion})}"></script>
+    
+    <!-- 3. Base Styles (Hintergrundfarbe, Reset) -->
+    <link rel="stylesheet" th:href="@{/dist/style.css(v=${appVersion})}">
+    
+    <!-- 4. Page Specific Styles -->
+    <link rel="stylesheet" th:href="@{/dist/legal.css(v=${appVersion})}">
+    <link rel="stylesheet" th:href="@{/dist/faq.css(v=${appVersion})}">
+</head>
+<body data-features="legal-content">
+    <th:block th:replace="~{collected_imports :: generalBodyImports}"></th:block>
+    
+	<div id="faq-content" class="legal-content-wrapper">
+		<!-- 1. Fallback für Bots/Curl (Server-Side Rendered) -->
+		<th:block th:if="${fallbackHtml}">
+			<div th:utext="${fallbackHtml}"></div>
+		</th:block>
+
+		<!-- 2. Ladespinner für JS-Clients (wird bei Hydration ersetzt) -->
+		<th:block th:unless="${fallbackHtml}">
+			<div class="loading-placeholder">
+				<i class="fa-solid fa-circle-notch fa-spin fa-2x"></i>
+			</div>
+		</th:block>
+	</div>
+
+    <script type="module" th:src="@{/dist/main.js(v=${appVersion})}" defer></script>
+</body>
+</html>

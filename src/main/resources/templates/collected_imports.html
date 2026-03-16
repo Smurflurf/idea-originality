@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<body>
+    <!-- Dieses Fragment wird überall im head eingebunden -->
+    <th:block th:fragment="generalHeadImports">
+    <div th:replace="~{collected_imports :: generalCssImports}"></div>
+		<link rel="stylesheet" th:href="@{/dist/main.css(v=${appVersion})}">
+
+		<th:block th:replace="~{shared_fragments :: importMapScript}"></th:block>
+    </th:block>
+    
+
+    <!-- Dieses Fragment wird überall im body eingebunden -->
+    <th:block th:fragment="generalBodyImports">
+		<th:block th:replace="~{js_fragments :: uiTemplates}"></th:block>
+	    <th:block th:replace="~{shared_fragments :: llmRedirectBodyNotice}"></th:block>	
+
+		<div th:replace="~{shared_fragments :: sideMenu}"></div>
+    </th:block>
+    
+    
+    <!-- CSS das überall gebraucht wird -->
+    <th:block th:fragment="generalCssImports">
+		<link rel="stylesheet" th:href="@{/dist/main.css(v=${appVersion})}">
+    </th:block>
+</body>
+</html>
