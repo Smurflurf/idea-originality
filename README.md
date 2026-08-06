@@ -1,3 +1,5 @@
+> README is very much outdated, needs an update
+
 # Idea Originality Analyzer
 This repository contains the full-stack application for the "Idea Originality Analyzer", a tool to analyze the originality of an idea by mapping it into a high-dimensional vector space and comparing it against a large corpus of existing knowledge. This project utilizes the [e5-base-4k](https://huggingface.co/dwzhu/e5-base-4k) sentence-transformer model.
 
